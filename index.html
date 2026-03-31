@@ -3,46 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kleber Informática - Gestão Profissional</title>
+    <title>Kleber Informática - Gestor de OS</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     
     <style>
-        :root { --primary: #007bff; --secondary: #28a745; --dark: #333; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        :root { --primary: #007bff; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --dark: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 950px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
-        h2 { color: var(--dark); border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         .full { grid-column: span 2; }
-        
-        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; color: #555; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+        label { font-weight: bold; font-size: 13px; color: #666; display: block; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
         
         .btn-group { display: flex; gap: 10px; margin-top: 20px; }
         button { flex: 1; padding: 15px; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; color: white; transition: 0.3s; }
         .btn-blue { background: var(--primary); }
-        .btn-green { background: var(--secondary); }
-        .btn-dark { background: var(--dark); }
-        button:hover { opacity: 0.8; }
+        .btn-green { background: var(--success); }
+        .btn-red { background: var(--danger); }
+        
+        /* Status Badges */
+        .badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; color: white; }
+        .status-aberto { background: var(--danger); }
+        .status-executando { background: var(--warning); color: black; }
+        .status-concluida { background: #17a2b8; }
+        .status-finalizada { background: var(--success); }
 
-        /* Documento de Impressão */
-        #documento { display: none; border: 2px solid #000; padding: 40px; background: white; color: #000; }
-        .header-doc { text-align: center; border-bottom: 2px solid #000; margin-bottom: 20px; padding-bottom: 15px; }
-        #docLogo { max-height: 120px; margin-bottom: 15px; }
-        .info-row { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0; font-size: 16px; }
-        .total-box { background: #eee; padding: 15px; text-align: right; margin-top: 20px; font-size: 20px; border-radius: 4px; }
-
-        /* Histórico e Busca */
-        .historico { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
-        .busca-container { margin-bottom: 20px; }
+        /* Impressão */
+        #documento { display: none; border: 2px solid #000; padding: 40px; background: white; }
+        .info-row { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 10px 0; }
+        
+        /* Histórico */
         .os-card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .os-info { flex-grow: 1; }
 
         @media print {
             .no-print { display: none !important; }
-            #documento { display: block !important; border: none; padding: 0; width: 100%; }
-            body { background: white; padding: 0; }
+            #documento { display: block !important; border: none; padding: 0; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
@@ -51,89 +50,71 @@
 
 <div class="container">
     <div class="no-print">
-        <h2>🛠️ Kleber Informática - Nova OS</h2>
+        <h2>🛠️ Gestão de Ordem de Serviço</h2>
         
-        <details style="background: #e9ecef; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
-            <summary>⚙️ Configurações da Loja (Logo e Endereço)</summary>
+        <details style="background: #eee; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <summary>⚙️ Configurações da Loja</summary>
             <div class="grid" style="margin-top:10px;">
-                <div><label>Logomarca:</label><input type="file" id="inputLogo" accept="image/*"></div>
-                <div><label>Telefone:</label><input type="text" id="lojaTel" placeholder="(91) 99999-9999"></div>
-                <div class="full"><label>Endereço Completo:</label><input type="text" id="lojaEnd" placeholder="Rua, Bairro, Cidade..."></div>
+                <div><label>Logo:</label><input type="file" id="inputLogo"></div>
+                <div><label>Telefone:</label><input type="text" id="lojaTel"></div>
+                <div class="full"><label>Endereço:</label><input type="text" id="lojaEnd"></div>
             </div>
-            <button class="btn-dark" onclick="salvarConfig()">SALVAR DADOS DA LOJA</button>
+            <button class="btn-blue" onclick="salvarConfig()" style="width:200px">Salvar Config</button>
         </details>
 
-        <div id="avisoEdicao" style="display:none; background: #ffc107; padding:15px; border-radius:8px; margin-bottom:20px; font-weight:bold;">
-            ⚠️ EDITANDO OS: <span id="idEdicao"></span>
-            <button onclick="cancelarEdicao()" style="background:red; padding:5px 10px; margin-left:20px; width:auto;">Sair da Edição</button>
+        <div id="avisoEdicao" style="display:none; background: #fff3cd; padding:15px; border: 1px solid #ffeeba; border-radius:8px; margin-bottom:20px;">
+            <strong>✏️ Editando OS: <span id="idEdicao"></span></strong>
+            <button onclick="location.reload()" style="background:none; color:red; cursor:pointer; width:auto; padding:0; margin-left:15px;">[Cancelar]</button>
         </div>
 
         <div class="grid">
-            <div><label>Nome do Cliente:</label><input type="text" id="cliente"></div>
+            <div><label>Situação da OS:</label>
+                <select id="status">
+                    <option value="EM ABERTO">🔴 EM ABERTO</option>
+                    <option value="EXECUTANDO">🟡 EXECUTANDO</option>
+                    <option value="CONCLUÍDA">🔵 CONCLUÍDA</option>
+                    <option value="FINALIZADA">🟢 FINALIZADA</option>
+                </select>
+            </div>
+            <div><label>Cliente:</label><input type="text" id="cliente"></div>
             <div><label>WhatsApp:</label><input type="text" id="whatsapp"></div>
-            <div><label>Equipamento:</label><input type="text" id="equip" placeholder="Ex: Notebook Dell"></div>
-            <div><label>Modelo / Nº Série:</label><input type="text" id="serie" placeholder="Ex: Inspiron 15 / TAG: XYZ123"></div>
-            <div class="full"><label>Acessórios Deixados:</label><input type="text" id="aces" placeholder="Ex: Carregador, Mouse, Cabo..."></div>
-            <div class="full"><label>Defeito / Relato do Cliente:</label><textarea id="defeito" rows="3"></textarea></div>
-        </div>
-
-        <div class="grid">
-            <div><label>Valor Peças (R$):</label><input type="number" id="vPecas" value="0"></div>
-            <div><label>Mão de Obra (R$):</label><input type="number" id="vObra" value="0"></div>
-            <div><label>Garantia Peças:</label><input type="text" id="garPecas" value="90 dias"></div>
-            <div><label>Garantia Mão de Obra:</label><input type="text" id="garObra" value="90 dias"></div>
+            <div><label>Equipamento:</label><input type="text" id="equip"></div>
+            <div class="full"><label>Relato do Defeito / Serviço:</label><textarea id="defeito" rows="2"></textarea></div>
+            <div><label>Valor Peças:</label><input type="number" id="vPecas" value="0"></div>
+            <div><label>Mão de Obra:</label><input type="number" id="vObra" value="0"></div>
         </div>
 
         <div class="btn-group">
-            <button class="btn-blue" onclick="gerarDoc('ENTRADA')">GERAR ENTRADA</button>
-            <button class="btn-green" onclick="gerarDoc('ORÇAMENTO/RECIBO')">GERAR RECIBO FINAL</button>
+            <button class="btn-blue" onclick="salvarOS('ENTRADA')">GERAR ENTRADA</button>
+            <button class="btn-green" onclick="salvarOS('RECIBO')">GERAR RECIBO/FINAL</button>
         </div>
     </div>
 
     <div id="documento">
-        <div class="header-doc">
-            <img id="docLogo" src="">
-            <h2 id="nomeLojaDoc">Kleber Informática</h2>
-            <p id="infoLojaDoc"></p>
-            <h1 id="tituloDoc" style="text-transform: uppercase; letter-spacing: 2px;">Comprovante</h1>
-            <p style="font-size: 20px;">ORDEM DE SERVIÇO Nº: <strong id="resOS"></strong></p>
+        <div style="text-align:center; border-bottom:2px solid #000; margin-bottom:20px;">
+            <img id="docLogo" style="max-height:80px; display:none;">
+            <h3>Kleber Informática</h3>
+            <p id="docEnd"></p>
+            <h2>ORDEM DE SERVIÇO Nº: <span id="resOS"></span></h2>
         </div>
-
-        <div class="info-row"><span><strong>Data:</strong></span><span id="resData"></span></div>
-        <div class="info-row"><span><strong>Cliente:</strong></span><span id="resCliente"></span></div>
-        <div class="info-row"><span><strong>WhatsApp:</strong></span><span id="resZap"></span></div>
-        <div class="info-row"><span><strong>Equipamento:</strong></span><span id="resEquip"></span></div>
-        <div class="info-row"><span><strong>Modelo/Série:</strong></span><span id="resSerie"></span></div>
-        <div class="info-row"><span><strong>Acessórios:</strong></span><span id="resAces"></span></div>
-        
-        <div style="margin-top:20px;">
-            <label><strong>Descrição do Serviço / Defeito:</strong></label>
-            <p id="resDefeito" style="border:1px solid #ddd; padding:15px; min-height:60px;"></p>
-        </div>
-
-        <div class="info-row"><span><strong>Garantia Peças:</strong></span><span id="resGarP"></span></div>
-        <div class="info-row"><span><strong>Garantia Mão de Obra:</strong></span><span id="resGarO"></span></div>
-
-        <div class="total-box"><strong id="resValor"></strong></div>
-
-        <div style="margin-top:60px; display:flex; justify-content: space-around; text-align:center;">
-            <div><p>__________________________</p><p>Assinatura Técnica</p></div>
-            <div><p>__________________________</p><p>Assinatura Cliente</p></div>
-        </div>
-        <button class="btn-dark no-print" style="margin-top:30px;" onclick="window.print()">🖨️ IMPRIMIR / SALVAR PDF</button>
+        <div class="info-row"><strong>STATUS:</strong> <span id="resStatus"></span></div>
+        <div class="info-row"><strong>DATA:</strong> <span id="resData"></span></div>
+        <div class="info-row"><strong>CLIENTE:</strong> <span id="resCliente"></span></div>
+        <div class="info-row"><strong>EQUIPAMENTO:</strong> <span id="resEquip"></span></div>
+        <div class="info-row"><strong>DEFEITO:</strong> <span id="resDefeito"></span></div>
+        <div class="info-row" style="background:#eee; font-size:18px;"><strong>TOTAL:</strong> <span id="resTotal"></span></div>
+        <div style="margin-top:50px; text-align:center;"><p>_________________________________</p><p>Assinatura</p></div>
+        <button class="btn-blue no-print" onclick="window.print()">IMPRIMIR</button>
     </div>
 
-    <div class="historico no-print">
-        <h3>📂 Histórico de Serviços</h3>
-        <div class="busca-container">
-            <input type="text" id="buscaInput" onkeyup="buscarOS()" placeholder="🔍 Buscar por nome do cliente ou equipamento...">
-        </div>
-        <div id="listaHistorico">Carregando serviços...</div>
+    <div class="historico no-print" style="margin-top:30px;">
+        <h3>📋 Lista de Ordens de Serviço</h3>
+        <input type="text" id="busca" onkeyup="buscar()" placeholder="Buscar por nome ou equipamento..." style="margin-bottom:15px;">
+        <div id="listaHistorico">Carregando...</div>
     </div>
 </div>
 
 <script>
-    // CONFIGURAÇÃO REAL DO KLEBER
     const firebaseConfig = {
         apiKey: "AIzaSyDKxyJBXMgh0Vi6dwOCr7oHthyVaq3hcPE",
         authDomain: "sistema-kleber-informatica.firebaseapp.com",
@@ -150,149 +131,132 @@
     window.onload = function() {
         document.getElementById('lojaEnd').value = localStorage.getItem('end') || "";
         document.getElementById('lojaTel').value = localStorage.getItem('tel') || "";
-        carregarHistorico();
+        carregarLista();
     };
 
     function salvarConfig() {
         localStorage.setItem('end', document.getElementById('lojaEnd').value);
         localStorage.setItem('tel', document.getElementById('lojaTel').value);
-        const file = document.getElementById('inputLogo').files[0];
-        if(file) {
+        const logo = document.getElementById('inputLogo').files[0];
+        if(logo) {
             const reader = new FileReader();
-            reader.onload = function(e) { localStorage.setItem('logo', e.target.result); alert("Logo e dados salvos!"); };
-            reader.readAsDataURL(file);
-        } else { alert("Dados salvos!"); }
+            reader.onload = (e) => localStorage.setItem('logo', e.target.result);
+            reader.readAsDataURL(logo);
+        }
+        alert("Configurações salvas!");
     }
 
-    async function gerarDoc(tipo) {
-        const vP = parseFloat(document.getElementById('vPecas').value) || 0;
-        const vO = parseFloat(document.getElementById('vObra').value) || 0;
+    async function obterProximaOS() {
+        const snap = await db.collection("servicos").orderBy("os", "desc").limit(1).get();
+        if (snap.empty) return 1;
+        return snap.docs[0].data().os + 1;
+    }
+
+    async function salvarOS(tipoDoc) {
+        const p = parseFloat(document.getElementById('vPecas').value) || 0;
+        const o = parseFloat(document.getElementById('vObra').value) || 0;
         
+        let osNum;
+        if(editandoId) {
+            osNum = parseInt(document.getElementById('idEdicao').innerText);
+        } else {
+            osNum = await obterProximaOS();
+        }
+
         const dados = {
+            os: osNum,
+            status: document.getElementById('status').value,
             cliente: document.getElementById('cliente').value.toUpperCase(),
             whatsapp: document.getElementById('whatsapp').value,
             equip: document.getElementById('equip').value.toUpperCase(),
-            serie: document.getElementById('serie').value,
-            aces: document.getElementById('aces').value,
             defeito: document.getElementById('defeito').value,
-            vPecas: vP,
-            vObra: vO,
-            total: vP + vO,
-            garP: document.getElementById('garPecas').value,
-            garO: document.getElementById('garObra').value,
-            data: new Date().toLocaleString('pt-BR'),
-            tipo: tipo,
-            os: Math.floor(1000 + Math.random() * 9000)
+            total: p + o,
+            data: new Date().toLocaleString('pt-BR')
         };
-
-        if(!dados.cliente) { alert("Nome do cliente é obrigatório!"); return; }
 
         try {
             if(editandoId) {
                 await db.collection("servicos").doc(editandoId).update(dados);
                 editandoId = null;
-                document.getElementById('avisoEdicao').style.display = 'none';
             } else {
                 await db.collection("servicos").add(dados);
             }
-            prepararImpressao(dados);
-            carregarHistorico();
-        } catch(e) { alert("Erro: " + e.message); }
+            imprimirDoc(dados, tipoDoc);
+            carregarLista();
+        } catch(e) { alert("Erro ao salvar: " + e.message); }
     }
 
-    function prepararImpressao(d) {
+    function imprimirDoc(d, tipo) {
         const logo = localStorage.getItem('logo');
-        const imgDoc = document.getElementById('docLogo');
-        if(logo) { imgDoc.src = logo; imgDoc.style.display = 'inline'; } else { imgDoc.style.display = 'none'; }
-        
-        document.getElementById('infoLojaDoc').innerText = `${localStorage.getItem('end')} | Tel: ${localStorage.getItem('tel')}`;
-        document.getElementById('tituloDoc').innerText = d.tipo;
+        if(logo) { document.getElementById('docLogo').src = logo; document.getElementById('docLogo').style.display = 'block'; }
+        document.getElementById('docEnd').innerText = localStorage.getItem('end') + " | " + localStorage.getItem('tel');
         document.getElementById('resOS').innerText = d.os;
+        document.getElementById('resStatus').innerText = d.status;
         document.getElementById('resData').innerText = d.data;
         document.getElementById('resCliente').innerText = d.cliente;
-        document.getElementById('resZap').innerText = d.whatsapp;
         document.getElementById('resEquip').innerText = d.equip;
-        document.getElementById('resSerie').innerText = d.serie;
-        document.getElementById('resAces').innerText = d.aces;
         document.getElementById('resDefeito').innerText = d.defeito;
-        document.getElementById('resGarP').innerText = d.garP;
-        document.getElementById('resGarO').innerText = d.garO;
-        
-        document.getElementById('resValor').innerText = d.tipo === 'ENTRADA' ? "STATUS: EQUIPAMENTO EM ANÁLISE" : `VALOR TOTAL: R$ ${d.total.toFixed(2)}`;
-        
+        document.getElementById('resTotal').innerText = tipo === 'ENTRADA' ? "EM ANÁLISE" : "R$ " + d.total.toFixed(2);
         document.getElementById('documento').style.display = 'block';
         window.scrollTo(0, document.body.scrollHeight);
     }
 
-    async function carregarHistorico() {
-        const snap = await db.collection("servicos").orderBy("data", "desc").limit(20).get();
-        renderizarLista(snap);
+    async function carregarLista() {
+        const snap = await db.collection("servicos").orderBy("os", "desc").get();
+        renderizar(snap);
     }
 
-    function renderizarLista(snap) {
+    function renderizar(snap) {
         let html = "";
         snap.forEach(doc => {
             const d = doc.data();
+            const cor = d.status === 'EM ABERTO' ? 'status-aberto' : d.status === 'EXECUTANDO' ? 'status-executando' : d.status === 'CONCLUÍDA' ? 'status-concluida' : 'status-finalizada';
             html += `
             <div class="os-card">
-                <div>
-                    <strong>OS ${d.os} - ${d.cliente}</strong><br>
-                    <small>${d.equip} | ${d.data}</small>
+                <div class="os-info">
+                    <strong>#${d.os} - ${d.cliente}</strong> <span class="badge ${cor}">${d.status}</span><br>
+                    <small>${d.equip} | R$ ${d.total.toFixed(2)}</small>
                 </div>
                 <div>
-                    <button onclick="editarOS('${doc.id}')" style="background:#ffc107; color:black; padding:8px;">✏️</button>
-                    <button onclick="reimprimir('${doc.id}')" style="background:#6c757d; padding:8px;">🖨️</button>
+                    <button onclick="prepararEdicao('${doc.id}')" style="background:orange; width:40px; margin-right:5px;">✏️</button>
+                    <button onclick="excluirOS('${doc.id}')" style="background:red; width:40px;">🗑️</button>
                 </div>
             </div>`;
-        });
-        document.getElementById('listaHistorico').innerHTML = html || "Nenhum serviço encontrado.";
-    }
-
-    async function buscarOS() {
-        const termo = document.getElementById('buscaInput').value.toUpperCase();
-        const snap = await db.collection("servicos").get();
-        let html = "";
-        snap.forEach(doc => {
-            const d = doc.data();
-            if(d.cliente.includes(termo) || d.equip.includes(termo) || d.os.toString().includes(termo)) {
-                html += `
-                <div class="os-card">
-                    <div><strong>OS ${d.os} - ${d.cliente}</strong><br><small>${d.equip}</small></div>
-                    <div>
-                        <button onclick="editarOS('${doc.id}')" style="background:#ffc107; color:black; padding:8px;">✏️</button>
-                        <button onclick="reimprimir('${doc.id}')" style="background:#6c757d; padding:8px;">🖨️</button>
-                    </div>
-                </div>`;
-            }
         });
         document.getElementById('listaHistorico').innerHTML = html;
     }
 
-    async function editarOS(id) {
+    async function excluirOS(id) {
+        if(confirm("Deseja realmente excluir esta OS permanentemente?")) {
+            await db.collection("servicos").doc(id).delete();
+            carregarLista();
+        }
+    }
+
+    async function prepararEdicao(id) {
         const doc = await db.collection("servicos").doc(id).get();
         const d = doc.data();
+        document.getElementById('status').value = d.status;
         document.getElementById('cliente').value = d.cliente;
         document.getElementById('whatsapp').value = d.whatsapp;
         document.getElementById('equip').value = d.equip;
-        document.getElementById('serie').value = d.serie;
-        document.getElementById('aces').value = d.aces;
         document.getElementById('defeito').value = d.defeito;
-        document.getElementById('vPecas').value = d.vPecas;
-        document.getElementById('vObra').value = d.vObra;
-        document.getElementById('garPecas').value = d.garP;
-        document.getElementById('garObra').value = d.garO;
+        document.getElementById('vObra').value = d.total; // Simplificado para a edição
         editandoId = id;
         document.getElementById('idEdicao').innerText = d.os;
         document.getElementById('avisoEdicao').style.display = 'block';
         window.scrollTo(0,0);
     }
 
-    async function reimprimir(id) {
-        const doc = await db.collection("servicos").doc(id).get();
-        prepararImpressao(doc.data());
+    async function buscar() {
+        const termo = document.getElementById('busca').value.toUpperCase();
+        const snap = await db.collection("servicos").get();
+        const docsFiltrados = snap.docs.filter(doc => {
+            const d = doc.data();
+            return d.cliente.includes(termo) || d.equip.includes(termo) || d.os.toString().includes(termo);
+        });
+        renderizar(docsFiltrados);
     }
-
-    function cancelarEdicao() { location.reload(); }
 </script>
 </body>
 </html>
