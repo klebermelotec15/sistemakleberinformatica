@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kleber Informática - Gestão Profissional</title>
+    <title>Kleber Informática - Gestão Total</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
@@ -20,8 +20,8 @@
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; color: #555; }
         input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
         
-        /* Cores de Status */
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: white; }
+        /* Status Badges */
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; color: white; text-transform: uppercase; }
         .bg-aberto { background: #dc3545; }
         .bg-executando { background: #ffc107; color: #000; }
         .bg-concluida { background: #17a2b8; }
@@ -33,21 +33,23 @@
         .btn-green { background: var(--secondary); }
         .btn-dark { background: var(--dark); }
         .btn-red { background: var(--danger); }
-        button:hover { opacity: 0.8; }
+        .btn-small { padding: 5px 8px; font-size: 12px; flex: none; width: auto; }
 
-        #documento { display: none; border: 2px solid #000; padding: 40px; background: white; color: #000; }
+        /* Impressão */
+        #documento, #etiqueta { display: none; background: white; color: #000; }
         .header-doc { text-align: center; border-bottom: 2px solid #000; margin-bottom: 20px; padding-bottom: 15px; }
-        #docLogo { max-height: 120px; margin-bottom: 15px; }
         
-        .historico { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
-        .filtros { display: flex; gap: 5px; margin-bottom: 15px; flex-wrap: wrap; }
-        .btn-filtro { padding: 5px 10px; font-size: 11px; background: #6c757d; border-radius: 4px; color: white; cursor: pointer; border: none; }
-        
-        .os-card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 6px solid #ccc; }
+        /* Layout Etiqueta */
+        #etiqueta { width: 300px; border: 1px dashed #000; padding: 10px; text-align: center; }
+
+        .os-card { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 6px solid #ccc; }
+        .os-actions { display: flex; gap: 5px; }
 
         @media print {
+            body { background: white; padding: 0; }
             .no-print { display: none !important; }
-            #documento { display: block !important; border: none; padding: 0; width: 100%; }
+            #documento.print-mode { display: block !important; border: none; }
+            #etiqueta.print-mode { display: block !important; border: 1px solid #000; }
         }
     </style>
 </head>
@@ -58,23 +60,22 @@
         <h2>🛠️ Kleber Informática - Gestão de OS</h2>
         
         <details style="background: #e9ecef; padding: 10px; border-radius: 8px; margin-bottom: 20px;">
-            <summary>⚙️ Configurações da Loja (Endereço e Logo)</summary>
+            <summary>⚙️ Configurações da Loja</summary>
             <div class="grid" style="margin-top:10px;">
-                <div><label>Logo:</label><input type="file" id="inputLogo"></div>
-                <div><label>WhatsApp da Loja:</label><input type="text" id="lojaTel" value="(91) 99999-9999"></div>
-                <div class="full"><label>Endereço:</label><input type="text" id="lojaEnd" value="Seu Endereço Aqui, Nº 00 - Bairro"></div>
+                <div><label>WhatsApp da Loja:</label><input type="text" id="lojaTel" value="(91) 98888-7777"></div>
+                <div class="full"><label>Endereço:</label><input type="text" id="lojaEnd" value="Seu Endereço Aqui, Nº 00"></div>
             </div>
-            <button class="btn-dark" onclick="salvarConfig()">SALVAR CONFIGURAÇÕES</button>
+            <button class="btn-dark" onclick="salvarConfig()">SALVAR DADOS</button>
         </details>
 
         <div id="avisoEdicao" style="display:none; background: #ffc107; padding:15px; border-radius:8px; margin-bottom:20px; font-weight:bold;">
             ⚠️ EDITANDO OS: <span id="idEdicao"></span>
-            <button onclick="location.reload()" style="background:red; padding:5px 10px; margin-left:20px; width:auto;">Cancelar</button>
+            <button onclick="location.reload()" style="background:red; padding:5px 10px; margin-left:20px; width:auto; color:white; border:none; border-radius:4px; cursor:pointer;">Sair da Edição</button>
         </div>
 
         <div class="grid">
             <div class="full">
-                <label>Situação Atual do Serviço:</label>
+                <label>Situação do Serviço:</label>
                 <select id="status">
                     <option value="EM ABERTO">🔴 EM ABERTO</option>
                     <option value="EXECUTANDO">🟡 EXECUTANDO</option>
@@ -83,9 +84,9 @@
                 </select>
             </div>
             <div><label>Cliente:</label><input type="text" id="cliente"></div>
-            <div><label>WhatsApp Cliente:</label><input type="text" id="whatsapp" placeholder="Ex: 91988887777"></div>
+            <div><label>WhatsApp Cliente (Com DDD):</label><input type="text" id="whatsapp" placeholder="Ex: 91988887777"></div>
             <div><label>Equipamento:</label><input type="text" id="equip"></div>
-            <div><label>Nº Série/Modelo:</label><input type="text" id="serie"></div>
+            <div><label>Modelo / Série:</label><input type="text" id="serie"></div>
             <div class="full"><label>Defeito / Relato:</label><textarea id="defeito" rows="2"></textarea></div>
             <div><label>Valor Peças:</label><input type="number" id="vPecas" value="0"></div>
             <div><label>Mão de Obra:</label><input type="number" id="vObra" value="0"></div>
@@ -99,44 +100,45 @@
 
     <div id="documento">
         <div class="header-doc">
-            <img id="docLogo" src="" style="display:none;">
             <h2 id="nomeLojaDoc">Kleber Informática</h2>
             <p id="infoLojaDoc"></p>
-            <h2 id="tituloDoc">COMPROVANTE</h2>
-            <p style="font-size: 20px;">OS Nº: <strong id="resOS"></strong></p>
+            <h2 id="tituloDoc">ORDEM DE SERVIÇO</h2>
+            <p style="font-size: 20px;">Nº: <strong id="resOS"></strong></p>
         </div>
-        <div style="border-bottom:1px solid #000; padding:10px 0;">
-            <p><strong>Status:</strong> <span id="resStatus"></span> | <strong>Data:</strong> <span id="resData"></span></p>
-            <p><strong>Cliente:</strong> <span id="resCliente"></span></p>
-            <p><strong>Equipamento:</strong> <span id="resEquip"></span> | <strong>Série:</strong> <span id="resSerie"></span></p>
-            <p><strong>Defeito:</strong> <span id="resDefeito"></span></p>
+        <div style="border-bottom:1px solid #000; padding:10px 0; font-size: 16px; line-height: 1.6;">
+            <p><strong>STATUS:</strong> <span id="resStatus"></span> | <strong>DATA:</strong> <span id="resData"></span></p>
+            <p><strong>CLIENTE:</strong> <span id="resCliente"></span></p>
+            <p><strong>EQUIPAMENTO:</strong> <span id="resEquip"></span> | <strong>SÉRIE:</strong> <span id="resSerie"></span></p>
+            <p><strong>DEFEITO:</strong> <span id="resDefeito"></span></p>
         </div>
-        <div style="text-align:right; padding:20px; font-size:22px; background:#eee;">
+        <div style="text-align:right; padding:20px; font-size:22px; background:#eee; margin-top:20px;">
             <strong id="resValor"></strong>
         </div>
-        <div style="margin-top:50px; display:flex; justify-content:space-around;">
-            <div style="text-align:center;"><p>___________________</p><p>Técnico</p></div>
-            <div style="text-align:center;"><p>___________________</p><p>Cliente</p></div>
+        <div style="margin-top:50px; display:flex; justify-content:space-around; text-align:center;">
+            <div><p>___________________</p><p>Técnico</p></div>
+            <div><p>___________________</p><p>Cliente</p></div>
         </div>
-        <button class="btn-dark no-print" onclick="window.print()" style="margin-top:20px;">🖨️ IMPRIMIR AGORA</button>
+        <button class="btn-dark no-print" onclick="window.print()" style="margin-top:30px;">🖨️ IMPRIMIR DOCUMENTO</button>
+    </div>
+
+    <div id="etiqueta">
+        <h3 style="margin:0;">Kleber Informática</h3>
+        <hr>
+        <p style="font-size:24px; margin:5px 0;"><strong>OS: <span id="etiOS"></span></strong></p>
+        <p style="margin:5px 0;">Cliente: <span id="etiCliente"></span></p>
+        <p style="font-size:12px;">Equip: <span id="etiEquip"></span></p>
+        <button class="btn-dark no-print" onclick="window.print()" style="width:100%; padding:5px;">🖨️ IMPRIMIR ETIQUETA</button>
     </div>
 
     <div class="historico no-print">
-        <h3>📂 Histórico de Serviços</h3>
-        <div class="filtros">
-            <button class="btn-filtro" onclick="carregarHistorico()">TODOS</button>
-            <button class="btn-filtro" onclick="filtrar('EM ABERTO')">ABERTOS</button>
-            <button class="btn-filtro" onclick="filtrar('EXECUTANDO')">EXECUTANDO</button>
-            <button class="btn-filtro" onclick="filtrar('CONCLUÍDA')">CONCLUÍDOS</button>
-            <button class="btn-filtro" onclick="filtrar('FINALIZADA')">FINALIZADOS</button>
-        </div>
-        <input type="text" id="busca" onkeyup="buscar()" placeholder="🔍 Buscar por nome ou OS...">
-        <div id="listaHistorico" style="margin-top:15px;">Carregando serviços...</div>
+        <h3>📂 Controle de Serviços</h3>
+        <input type="text" id="busca" onkeyup="buscar()" placeholder="🔍 Buscar cliente ou nº OS..." style="margin-bottom:15px;">
+        <div id="listaHistorico">Carregando registros...</div>
     </div>
 </div>
 
 <script>
-    // CONFIGURAÇÃO DO FIREBASE (CORRIGIDA)
+    // CONFIGURAÇÃO CORRIGIDA
     const firebaseConfig = {
         apiKey: "AIzaSyDKxyJBXMgh0Vi6dwOCr7oHthyVaq3hcPE",
         authDomain: "sistema-kleber-informatica.firebaseapp.com",
@@ -159,13 +161,7 @@
     function salvarConfig() {
         localStorage.setItem('end', document.getElementById('lojaEnd').value);
         localStorage.setItem('tel', document.getElementById('lojaTel').value);
-        const file = document.getElementById('inputLogo').files[0];
-        if(file) {
-            const reader = new FileReader();
-            reader.onload = (e) => localStorage.setItem('logo', e.target.result);
-            reader.readAsDataURL(file);
-        }
-        alert("Configurações Salvas!");
+        alert("Dados da loja salvos!");
     }
 
     async function obterProximaOS() {
@@ -191,7 +187,7 @@
             tipo: tipoDoc
         };
 
-        if(!dados.cliente) return alert("Preencha o nome do cliente!");
+        if(!dados.cliente) return alert("Digite o nome do cliente!");
 
         if(editandoId) {
             await db.collection("servicos").doc(editandoId).update(dados);
@@ -200,23 +196,37 @@
             await db.collection("servicos").add(dados);
         }
         
-        prepararImpressao(dados);
+        prepararImpressao(dados, 'documento');
         carregarHistorico();
     }
 
-    function prepararImpressao(d) {
-        const logo = localStorage.getItem('logo');
-        if(logo) { document.getElementById('docLogo').src = logo; document.getElementById('docLogo').style.display = 'inline'; }
-        document.getElementById('infoLojaDoc').innerText = `${localStorage.getItem('end')} | Tel: ${localStorage.getItem('tel')}`;
-        document.getElementById('resOS').innerText = d.os;
-        document.getElementById('resStatus').innerText = d.status;
-        document.getElementById('resData').innerText = d.data;
-        document.getElementById('resCliente').innerText = d.cliente;
-        document.getElementById('resEquip').innerText = d.equip;
-        document.getElementById('resSerie').innerText = d.serie;
-        document.getElementById('resDefeito').innerText = d.defeito;
-        document.getElementById('resValor').innerText = d.tipo === 'ENTRADA' ? "EM ANÁLISE" : "TOTAL: R$ " + d.total.toFixed(2);
-        document.getElementById('documento').style.display = 'block';
+    function prepararImpressao(d, modo) {
+        document.getElementById('documento').classList.remove('print-mode');
+        document.getElementById('etiqueta').classList.remove('print-mode');
+        document.getElementById('documento').style.display = 'none';
+        document.getElementById('etiqueta').style.display = 'none';
+
+        if(modo === 'documento') {
+            document.getElementById('infoLojaDoc').innerText = `${localStorage.getItem('end')} | Tel: ${localStorage.getItem('tel')}`;
+            document.getElementById('resOS').innerText = d.os;
+            document.getElementById('resStatus').innerText = d.status;
+            document.getElementById('resData').innerText = d.data;
+            document.getElementById('resCliente').innerText = d.cliente;
+            document.getElementById('resEquip').innerText = d.equip;
+            document.getElementById('resSerie').innerText = d.serie;
+            document.getElementById('resDefeito').innerText = d.defeito;
+            document.getElementById('resValor').innerText = d.tipo === 'ENTRADA' ? "STATUS: EM ANÁLISE" : "TOTAL: R$ " + d.total.toFixed(2);
+            const doc = document.getElementById('documento');
+            doc.style.display = 'block';
+            doc.classList.add('print-mode');
+        } else {
+            document.getElementById('etiOS').innerText = d.os;
+            document.getElementById('etiCliente').innerText = d.cliente;
+            document.getElementById('etiEquip').innerText = d.equip;
+            const eti = document.getElementById('etiqueta');
+            eti.style.display = 'block';
+            eti.classList.add('print-mode');
+        }
         window.scrollTo(0, document.body.scrollHeight);
     }
 
@@ -229,26 +239,33 @@
         let html = "";
         snap.forEach(doc => {
             const d = doc.data();
-            const cor = d.status === 'EM ABERTO' ? '#dc3545' : d.status === 'EXECUTANDO' ? '#ffc107' : d.status === 'CONCLUÍDA' ? '#17a2b8' : '#28a745';
-            const linkZap = d.whatsapp ? `<a href="https://wa.me/55${d.whatsapp}" target="_blank" style="text-decoration:none;">🟢</a>` : "";
+            const corStatus = d.status === 'EM ABERTO' ? 'bg-aberto' : d.status === 'EXECUTANDO' ? 'bg-executando' : d.status === 'CONCLUÍDA' ? 'bg-concluida' : 'bg-finalizada';
             
             html += `
-            <div class="os-card" style="border-left-color: ${cor}">
+            <div class="os-card">
                 <div style="flex-grow:1">
-                    <strong>#${d.os} - ${d.cliente} ${linkZap}</strong><br>
-                    <small>${d.equip} | <span style="color:${cor}; font-weight:bold;">${d.status}</span></small>
+                    <strong>#${d.os} - ${d.cliente}</strong> <span class="status-badge ${corStatus}">${d.status}</span><br>
+                    <small>${d.equip} | R$ ${d.total.toFixed(2)}</small>
                 </div>
-                <div>
-                    <button onclick="editarOS('${doc.id}')" style="background:orange; width:35px; padding:5px;">✏️</button>
-                    <button onclick="excluirOS('${doc.id}')" style="background:red; width:35px; padding:5px;">🗑️</button>
+                <div class="os-actions">
+                    <button class="btn-green btn-small" onclick='enviarOrcamento(${JSON.stringify(d)})' title="Enviar Orçamento">💬</button>
+                    <button class="btn-dark btn-small" onclick='prepararImpressao(${JSON.stringify(d)}, "etiqueta")' title="Etiqueta">🏷️</button>
+                    <button class="btn-blue btn-small" onclick="editarOS('${doc.id}')">✏️</button>
+                    <button class="btn-red btn-small" onclick="excluirOS('${doc.id}')">🗑️</button>
                 </div>
             </div>`;
         });
-        document.getElementById('listaHistorico').innerHTML = html || "Sem registros.";
+        document.getElementById('listaHistorico').innerHTML = html || "Nenhuma OS cadastrada.";
+    }
+
+    function enviarOrcamento(d) {
+        if(!d.whatsapp) return alert("WhatsApp não cadastrado!");
+        const msg = `Olá ${d.cliente}, o orçamento para o conserto do seu ${d.equip} (OS #${d.os}) ficou em R$ ${d.total.toFixed(2)}. Podemos seguir com o serviço?`;
+        window.open(`https://wa.me/55${d.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
     async function excluirOS(id) {
-        if(confirm("Excluir esta OS para sempre?")) {
+        if(confirm("Excluir esta OS permanentemente?")) {
             await db.collection("servicos").doc(id).delete();
             carregarHistorico();
         }
@@ -263,15 +280,11 @@
         document.getElementById('equip').value = d.equip;
         document.getElementById('serie').value = d.serie;
         document.getElementById('defeito').value = d.defeito;
+        document.getElementById('vObra').value = d.total;
         editandoId = id;
         document.getElementById('idEdicao').innerText = d.os;
         document.getElementById('avisoEdicao').style.display = 'block';
         window.scrollTo(0,0);
-    }
-
-    async function filtrar(status) {
-        const snap = await db.collection("servicos").where("status", "==", status).get();
-        renderizar(snap);
     }
 
     async function buscar() {
