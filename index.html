@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kleber Informática - Pro v5.0</title>
+    <title>Kleber Informática - Pro v5.1</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -11,24 +11,30 @@
     <style>
         :root { --primary: #1a2a3a; --accent: #3498db; --success: #27ae60; --light: #f8f9fa; --dark: #2c3e50; }
         body { font-family: 'Segoe UI', sans-serif; background: #e9ecef; margin: 0; padding: 10px; color: #333; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .container { max-width: 950px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         
         header { display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--primary); padding-bottom: 15px; margin-bottom: 20px; }
         .logo-area { display: flex; align-items: center; gap: 15px; cursor: pointer; }
         .logo-placeholder { width: 70px; height: 70px; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; }
         .logo-placeholder img { max-width: 100%; max-height: 100%; }
         
-        .section-title { background: var(--primary); color: white; padding: 8px 15px; font-size: 13px; border-radius: 5px; margin: 25px 0 15px 0; text-transform: uppercase; letter-spacing: 1px; }
+        .section-title { background: var(--primary); color: white; padding: 8px 15px; font-size: 13px; border-radius: 5px; margin: 25px 0 10px 0; text-transform: uppercase; letter-spacing: 1px; }
         
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .col-2 { grid-column: span 2; }
+        .col-3 { grid-column: span 3; }
         .full-width { grid-column: 1 / -1; }
         
-        label { display: block; font-size: 11px; font-weight: bold; margin-bottom: 5px; color: var(--dark); }
-        input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 14px; transition: 0.3s; }
-        input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 5px rgba(52,152,219,0.3); }
+        label { display: block; font-size: 10px; font-weight: bold; margin-bottom: 4px; color: var(--dark); text-transform: uppercase; }
+        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; transition: 0.3s; }
+        
+        /* Checklist Styling */
+        .checklist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; background: #f1f3f5; padding: 15px; border-radius: 8px; }
+        .check-item { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
+        .check-item input { width: auto; transform: scale(1.1); }
 
-        .btn-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 30px; }
-        button { padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; transition: 0.3s; color: white; text-transform: uppercase; }
+        .btn-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 30px; }
+        button { padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; color: white; text-transform: uppercase; }
         .btn-save { background: var(--success); }
         .btn-pdf { background: var(--accent); }
         .btn-wa { background: #25D366; }
@@ -36,7 +42,7 @@
 
         .os-card { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 5px solid var(--accent); cursor: pointer; }
         .hidden { display: none; }
-        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+        @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } .col-2, .col-3 { grid-column: span 1; } }
     </style>
 </head>
 <body>
@@ -45,91 +51,105 @@
     <header>
         <div class="logo-area" onclick="document.getElementById('upload-logo').click()">
             <div class="logo-placeholder" id="logo-view">
-                <span id="logo-text">LOGO</span>
+                <span id="logo-text">FOTO LOGO</span>
                 <img id="img-logo" class="hidden">
             </div>
             <input type="file" id="upload-logo" class="hidden" accept="image/*" onchange="previewLogo(this)">
             <div>
-                <h1 style="margin:0; font-size: 22px;">Kleber Informática</h1>
-                <small id="modo-label" style="color: var(--accent);">GERANDO NOVA OS</small>
+                <h1 style="margin:0; font-size: 20px;">Kleber Informática</h1>
+                <small style="color: #666; font-size: 11px;">Belém/Ananindeua - Pará | (91) 9XXXX-XXXX</small>
             </div>
         </div>
         <div style="text-align: right">
-            <label>Nº DA OS</label>
-            <input type="text" id="f-os" style="font-weight: bold; color: red; text-align: center; border: none; font-size: 18px;" readonly>
+            <label>Nº DA ORDEM DE SERVIÇO</label>
+            <input type="text" id="f-os" style="font-weight: bold; color: #e74c3c; text-align: center; border: none; font-size: 22px; width: 120px;" readonly>
         </div>
     </header>
 
-    <div style="margin-bottom: 20px;">
-        <button onclick="showTab('form')" style="background: var(--dark); width: auto; padding: 10px 20px;">Formulário</button>
-        <button onclick="showTab('lista')" style="background: var(--dark); width: auto; padding: 10px 20px;">Histórico</button>
+    <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+        <button onclick="showTab('form')" style="background: var(--dark); flex: 1;">Nova OS / Editar</button>
+        <button onclick="showTab('lista')" style="background: var(--dark); flex: 1;">Histórico de Serviços</button>
     </div>
 
     <div id="tab-form">
         <input type="hidden" id="f-id">
         
-        <div class="section-title">1. Identificação do Cliente</div>
+        <div class="section-title">1. Dados do Cliente e Identificação</div>
         <div class="grid">
-            <div class="full-width"><label>Nome Completo</label><input type="text" id="f-cliente"></div>
-            <div><label>WhatsApp (com DDD)</label><input type="tel" id="f-whatsapp"></div>
-            <div><label>Status do Serviço</label>
+            <div class="col-2"><label>Nome Completo</label><input type="text" id="f-cliente"></div>
+            <div><label>WhatsApp</label><input type="tel" id="f-whatsapp"></div>
+            <div><label>Status</label>
                 <select id="f-status">
-                    <option value="ORÇAMENTO">🟠 ORÇAMENTO</option>
-                    <option value="APROVADO">🔵 APROVADO</option>
-                    <option value="FINALIZADO">🟢 FINALIZADO</option>
-                    <option value="ENTREGUE">⚪ ENTREGUE</option>
+                    <option value="ORÇAMENTO">ORÇAMENTO</option>
+                    <option value="APROVADO">APROVADO</option>
+                    <option value="FINALIZADO">FINALIZADO</option>
+                    <option value="ENTREGUE">ENTREGUE</option>
                 </select>
             </div>
+            <div><label>CPF</label><input type="text" id="f-cpf" placeholder="000.000.000-00"></div>
+            <div><label>RG</label><input type="text" id="f-rg"></div>
+            <div><label>CEP (Busca Automática)</label><input type="text" id="f-cep" onblur="buscarCEP(this.value)"></div>
+            <div class="col-2"><label>Endereço / Logradouro</label><input type="text" id="f-rua"></div>
+            <div><label>Nº / Apto</label><input type="text" id="f-num"></div>
+            <div><label>Bairro</label><input type="text" id="f-bairro"></div>
+            <div><label>Cidade / UF</label><input type="text" id="f-cidade"></div>
         </div>
 
-        <div class="section-title">2. Equipamento e Checklist</div>
+        <div class="section-title">2. Equipamento e Checklist de Acessórios</div>
         <div class="grid">
-            <div><label>Aparelho/Modelo</label><input type="text" id="f-equip"></div>
-            <div><label>Nº de Série</label><input type="text" id="f-serie"></div>
+            <div class="col-2"><label>Aparelho / Modelo</label><input type="text" id="f-equip"></div>
+            <div class="col-2"><label>Nº de Série / Tag</label><input type="text" id="f-serie"></div>
+            
             <div class="full-width">
-                <label>Checklist / Acessórios</label>
-                <input type="text" id="f-checklist" placeholder="Ex: Carregador, Bolsa, Mouse...">
+                <label>Itens Deixados pelo Cliente (Checklist)</label>
+                <div class="checklist-grid">
+                    <label class="check-item"><input type="checkbox" class="chk" value="Carregador"> Carregador</label>
+                    <label class="check-item"><input type="checkbox" class="chk" value="Cabo de Força"> Cabo de Força</label>
+                    <label class="check-item"><input type="checkbox" class="chk" value="Bateria"> Bateria</label>
+                    <label class="check-item"><input type="checkbox" class="chk" value="Mouse"> Mouse</label>
+                    <label class="check-item"><input type="checkbox" class="chk" value="Teclado"> Teclado</label>
+                    <label class="check-item"><input type="checkbox" class="chk" value="Case / Bolsa"> Case / Bolsa</label>
+                    <label class="check-item"><input type="checkbox" class="chk" value="Cabo HDMI/VGA"> Cabo HDMI/VGA</label>
+                    <label class="check-item"><input type="checkbox" class="chk" value="Adaptador Wi-Fi"> Adaptador Wi-Fi</label>
+                </div>
+                <input type="text" id="f-outros" placeholder="Outros acessórios ou observações visuais..." style="margin-top: 10px;">
             </div>
         </div>
 
-        <div class="section-title">3. Diagnóstico e Solução</div>
+        <div class="section-title">3. Detalhes Técnicos e Garantia</div>
         <div class="grid">
-            <div class="full-width"><label>Defeito Relatado</label><textarea id="f-defeito" rows="2"></textarea></div>
-            <div class="full-width"><label>Serviço Executado / Peças Trocadas</label><textarea id="f-servico" rows="3"></textarea></div>
+            <div class="col-2"><label>Defeito Relatado pelo Cliente</label><textarea id="f-defeito" rows="3"></textarea></div>
+            <div class="col-2"><label>Serviço Executado / Diagnóstico</label><textarea id="f-servico" rows="3"></textarea></div>
+            <div class="col-2"><label>Garantia de Mão de Obra</label><input type="text" id="f-garantia-mo" value="90 Dias"></div>
+            <div class="col-2"><label>Garantia de Peças</label><input type="text" id="f-garantia-pc" value="90 Dias"></div>
         </div>
 
-        <div class="section-title">4. Prazos de Garantia</div>
+        <div class="section-title">4. Valores e Pagamento</div>
         <div class="grid">
-            <div><label>Garantia Mão de Obra</label><input type="text" id="f-garantia-mo" value="90 Dias"></div>
-            <div><label>Garantia de Peças</label><input type="text" id="f-garantia-pc" value="90 Dias"></div>
-        </div>
-
-        <div class="section-title">5. Valores</div>
-        <div class="grid">
-            <div><label>Mão de Obra (R$)</label><input type="number" id="v-obra" value="0" oninput="calcTotal()"></div>
-            <div><label>Peças (R$)</label><input type="number" id="v-pecas" value="0" oninput="calcTotal()"></div>
-            <div class="full-width" style="text-align: right; font-size: 20px; font-weight: bold; color: var(--primary);">
-                TOTAL: R$ <span id="lbl-total">0.00</span>
+            <div class="col-2"><label>Valor Mão de Obra (R$)</label><input type="number" id="v-obra" value="0" oninput="calcTotal()"></div>
+            <div class="col-2"><label>Valor Peças (R$)</label><input type="number" id="v-pecas" value="0" oninput="calcTotal()"></div>
+            <div class="full-width" style="text-align: right; font-size: 24px; font-weight: bold; color: var(--primary); padding: 10px;">
+                TOTAL DO SERVIÇO: R$ <span id="lbl-total">0.00</span>
             </div>
         </div>
 
         <div class="btn-group">
             <button class="btn-save" id="btn-main" onclick="salvar()">Salvar no Banco</button>
-            <button class="btn-new" onclick="novaOS()">+ Limpar</button>
-            <button class="btn-pdf" onclick="gerarPDF()">Gerar PDF Pro</button>
-            <button class="btn-wa" onclick="enviarWA()">Enviar Whats</button>
+            <button class="btn-new" onclick="novaOS()">+ Nova OS</button>
+            <button class="btn-pdf" onclick="gerarPDF()">Gerar Orçamento PDF</button>
+            <button class="btn-wa" onclick="enviarWA()">Enviar WhatsApp</button>
         </div>
     </div>
 
     <div id="tab-lista" class="hidden">
-        <input type="text" id="busca" placeholder="Buscar cliente..." onkeyup="buscar()" style="margin-bottom: 20px;">
+        <input type="text" id="busca" placeholder="🔎 Buscar por Nome do Cliente..." onkeyup="buscar()" style="margin-bottom: 20px;">
         <div id="resultados"></div>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, where, doc, updateDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDXkyJBXMgh0Vi6dwOCr7oHthyVaq3hcPE",
@@ -143,8 +163,22 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Gerar Número de OS Inicial
-    window.onload = () => { document.getElementById('f-os').value = Date.now().toString().slice(-6); };
+    // Gerar OS baseada em Minutos/Segundos para ser única
+    window.onload = () => { document.getElementById('f-os').value = "OS-" + Date.now().toString().slice(-6); };
+
+    window.buscarCEP = async (cep) => {
+        const c = cep.replace(/\D/g, "");
+        if(c.length !== 8) return;
+        try {
+            const r = await fetch(`https://viacep.com.br/ws/${c}/json/`);
+            const d = await r.json();
+            if(!d.erro) {
+                document.getElementById('f-rua').value = d.logradouro;
+                document.getElementById('f-bairro').value = d.bairro;
+                document.getElementById('f-cidade').value = `${d.localidade}/${d.uf}`;
+            }
+        } catch(e) { console.error("Erro CEP"); }
+    };
 
     window.previewLogo = (input) => {
         if (input.files && input.files[0]) {
@@ -172,13 +206,18 @@
 
     window.salvar = async () => {
         const id = document.getElementById('f-id').value;
+        const checklist = Array.from(document.querySelectorAll('.chk:checked')).map(c => c.value);
+        
         const dados = {
             os: document.getElementById('f-os').value,
             cliente: document.getElementById('f-cliente').value.toUpperCase(),
             whatsapp: document.getElementById('f-whatsapp').value,
+            cpf: document.getElementById('f-cpf').value,
+            rg: document.getElementById('f-rg').value,
+            endereco: `${document.getElementById('f-rua').value}, ${document.getElementById('f-num').value} - ${document.getElementById('f-bairro').value}, ${document.getElementById('f-cidade').value}`,
             equip: document.getElementById('f-equip').value,
             serie: document.getElementById('f-serie').value,
-            checklist: document.getElementById('f-checklist').value,
+            checklist: checklist.join(", ") + " | " + document.getElementById('f-outros').value,
             defeito: document.getElementById('f-defeito').value,
             servico: document.getElementById('f-servico').value,
             garantia_mo: document.getElementById('f-garantia-mo').value,
@@ -190,10 +229,10 @@
         };
 
         try {
-            if(id) { await updateDoc(doc(db, "servicos", id), dados); alert("Atualizado!"); }
-            else { await addDoc(collection(db, "servicos"), dados); alert("Salvo!"); }
+            if(id) { await updateDoc(doc(db, "servicos", id), dados); alert("OS Atualizada!"); }
+            else { await addDoc(collection(db, "servicos"), dados); alert("Nova OS Salva!"); }
             novaOS();
-        } catch(e) { alert("Erro: " + e); }
+        } catch(e) { alert("Erro ao salvar!"); }
     };
 
     window.buscar = async () => {
@@ -207,7 +246,7 @@
             const item = d.data();
             const div = document.createElement('div');
             div.className = 'os-card';
-            div.innerHTML = `<strong>OS ${item.os} - ${item.cliente}</strong><br><small>${item.equip} | ${item.status}</small>`;
+            div.innerHTML = `<strong>${item.os} - ${item.cliente}</strong><br><small>${item.equip} | Status: ${item.status}</small>`;
             div.onclick = () => carregar(d.id, item);
             res.appendChild(div);
         });
@@ -218,59 +257,58 @@
         document.getElementById('f-os').value = d.os;
         document.getElementById('f-cliente').value = d.cliente;
         document.getElementById('f-whatsapp').value = d.whatsapp;
+        document.getElementById('f-cpf').value = d.cpf || "";
+        document.getElementById('f-rg').value = d.rg || "";
         document.getElementById('f-equip').value = d.equip;
         document.getElementById('f-serie').value = d.serie;
-        document.getElementById('f-checklist').value = d.checklist;
         document.getElementById('f-defeito').value = d.defeito;
         document.getElementById('f-servico').value = d.servico;
-        document.getElementById('f-garantia-mo').value = d.garantia_mo;
-        document.getElementById('f-garantia-pc').value = d.garantia_pc;
         document.getElementById('v-obra').value = d.v_obra;
         document.getElementById('v-pecas').value = d.v_pecas;
         document.getElementById('f-status').value = d.status;
+        
+        // Reset e marca checklist
+        document.querySelectorAll('.chk').forEach(c => c.checked = d.checklist.includes(c.value));
+        
         calcTotal();
         showTab('form');
-        document.getElementById('modo-label').innerText = "EDITANDO OS: " + d.os;
+        document.getElementById('modo-label').innerText = "EDITANDO: " + d.os;
     };
 
     window.gerarPDF = () => {
         const { jsPDF } = window.jspdf;
         const docPDF = new jsPDF();
         
-        // Cabeçalho Profissional
+        // Cabeçalho Kleber Informática
         const logo = document.getElementById('img-logo');
-        if(!logo.classList.contains('hidden')) {
-            docPDF.addImage(logo.src, 'PNG', 15, 10, 25, 25);
-        }
+        if(!logo.classList.contains('hidden')) docPDF.addImage(logo.src, 'PNG', 15, 10, 25, 25);
         
         docPDF.setFontSize(16);
         docPDF.text("KLEBER INFORMÁTICA", 45, 20);
-        docPDF.setFontSize(10);
-        docPDF.text("Especialista em Manutenção e TI", 45, 26);
-        docPDF.text("Belém/Ananindeua - Pará", 45, 31);
+        docPDF.setFontSize(9);
+        docPDF.text("Especialista em Manutenção de Hardware e Sistemas", 45, 26);
+        docPDF.text("Belém/Ananindeua - Pará | Contato: (91) 9XXXX-XXXX", 45, 31);
         
-        docPDF.setDrawColor(200);
         docPDF.line(15, 40, 195, 40);
 
-        // Tabela de Dados
         docPDF.autoTable({
             startY: 45,
             theme: 'grid',
             headStyles: { fillColor: [26, 42, 58] },
-            head: [['ORDEM DE SERVIÇO', 'DATA DE EMISSÃO']],
-            body: [[`Nº ${document.getElementById('f-os').value}`, new Date().toLocaleDateString('pt-BR')]]
+            head: [['ORDEM DE SERVIÇO', 'DATA DE ENTRADA', 'STATUS']],
+            body: [[document.getElementById('f-os').value, new Date().toLocaleDateString('pt-BR'), document.getElementById('f-status').value]]
         });
 
         docPDF.autoTable({
             startY: docPDF.lastAutoTable.finalY + 5,
             theme: 'plain',
-            head: [['DADOS DO CLIENTE E EQUIPAMENTO']],
-            headStyles: { fillColor: [240, 240, 240], textColor: [0,0,0], fontStyle: 'bold' },
+            head: [['DADOS DO CLIENTE']],
+            headStyles: { fillColor: [230, 230, 230], textColor: [0,0,0] },
             body: [
-                [`CLIENTE: ${document.getElementById('f-cliente').value}`],
-                [`CONTATO: ${document.getElementById('f-whatsapp').value}`],
-                [`APARELHO: ${document.getElementById('f-equip').value} (S/N: ${document.getElementById('f-serie').value})`],
-                [`CHECKLIST: ${document.getElementById('f-checklist').value}`]
+                [`NOME: ${document.getElementById('f-cliente').value}`],
+                [`CPF: ${document.getElementById('f-cpf').value} | RG: ${document.getElementById('f-rg').value}`],
+                [`ENDEREÇO: ${document.getElementById('f-rua').value}, ${document.getElementById('f-num').value} - ${document.getElementById('f-bairro').value}`],
+                [`CONTATO: ${document.getElementById('f-whatsapp').value}`]
             ]
         });
 
@@ -278,30 +316,30 @@
             startY: docPDF.lastAutoTable.finalY + 5,
             theme: 'grid',
             headStyles: { fillColor: [26, 42, 58] },
-            head: [['DESCRIÇÃO DO PROBLEMA E SERVIÇO EXECUTADO']],
-            body: [
-                [`DEFEITO: ${document.getElementById('f-defeito').value}`],
-                [`SERVIÇO: ${document.getElementById('f-servico').value}`]
-            ]
+            head: [['EQUIPAMENTO', 'Nº SÉRIE', 'CHECKLIST']],
+            body: [[document.getElementById('f-equip').value, document.getElementById('f-serie').value, Array.from(document.querySelectorAll('.chk:checked')).map(c => c.value).join(", ")]]
+        });
+
+        docPDF.autoTable({
+            startY: docPDF.lastAutoTable.finalY + 5,
+            theme: 'grid',
+            headStyles: { fillColor: [26, 42, 58] },
+            head: [['DEFEITO E SERVIÇO EXECUTADO']],
+            body: [[`DEFEITO: ${document.getElementById('f-defeito').value}\n\nSERVIÇO: ${document.getElementById('f-servico').value}`]]
         });
 
         docPDF.autoTable({
             startY: docPDF.lastAutoTable.finalY + 5,
             theme: 'grid',
             headStyles: { fillColor: [240, 240, 240], textColor: [0,0,0] },
-            head: [['VALORES E GARANTIA']],
             body: [
-                [`Mão de Obra: R$ ${parseFloat(document.getElementById('v-obra').value).toFixed(2)}`, `Garantia MO: ${document.getElementById('f-garantia-mo').value}`],
-                [`Peças/Insumos: R$ ${parseFloat(document.getElementById('v-pecas').value).toFixed(2)}`, `Garantia Peças: ${document.getElementById('f-garantia-pc').value}`],
-                [`TOTAL GERAL: R$ ${document.getElementById('lbl-total').innerText}`, `STATUS: ${document.getElementById('f-status').value}`]
+                [`Mão de Obra: R$ ${parseFloat(document.getElementById('v-obra').value).toFixed(2)}`, `Garantia: ${document.getElementById('f-garantia-mo').value}`],
+                [`Peças: R$ ${parseFloat(document.getElementById('v-pecas').value).toFixed(2)}`, `Garantia: ${document.getElementById('f-garantia-pc').value}`],
+                [`TOTAL GERAL: R$ ${document.getElementById('lbl-total').innerText}`, `FORMA DE PAGAMENTO: _________________`]
             ]
         });
 
-        docPDF.setFontSize(8);
-        docPDF.text("Assinatura do Técnico: ___________________________", 15, docPDF.lastAutoTable.finalY + 25);
-        docPDF.text("Assinatura do Cliente: ___________________________", 110, docPDF.lastAutoTable.finalY + 25);
-
-        docPDF.save(`OS_${document.getElementById('f-os').value}_${document.getElementById('f-cliente').value}.pdf`);
+        docPDF.save(`${document.getElementById('f-os').value}_${document.getElementById('f-cliente').value}.pdf`);
     };
 </script>
 </body>
