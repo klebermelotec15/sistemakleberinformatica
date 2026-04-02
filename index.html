@@ -3,41 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kleber Informática - Gestão de OS</title>
+    <title>Kleber Informática - Gestão Profissional</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --light: #ecf0f1; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 15px; color: #333; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --light: #f4f7f6; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--light); margin: 0; padding: 15px; color: #333; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
         header { border-bottom: 3px solid var(--primary); margin-bottom: 25px; padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
         h1 { margin: 0; font-size: 22px; color: var(--primary); }
 
-        .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab-btn { padding: 10px 18px; border: none; background: var(--light); border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
+        .tab-btn { padding: 12px 20px; border: none; background: #e0e0e0; border-radius: 8px; cursor: pointer; font-weight: bold; white-space: nowrap; transition: 0.3s; }
         .tab-btn.active { background: var(--primary); color: white; }
 
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px; color: #555; text-transform: uppercase; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px; background: #fff; }
+        label { display: block; font-size: 11px; font-weight: 700; margin-bottom: 5px; color: #555; text-transform: uppercase; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; background: #fff; }
         
-        /* Checklist Estilizado */
-        .checklist-container { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; margin-bottom: 20px; }
-        .checklist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
-        .check-item { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; padding: 5px; }
-        .check-item input { width: auto; cursor: pointer; }
+        .checklist-container { background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 20px; }
+        .checklist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; }
+        .check-item { display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; padding: 5px; }
+        .check-item input { width: auto; cursor: pointer; transform: scale(1.2); }
 
-        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
-        button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; flex: 1; min-width: 150px; }
+        .btn-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+        button { padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; flex: 1; min-width: 150px; font-size: 14px; }
         .btn-save { background: var(--success); color: white; }
-        .btn-auth { background: var(--accent); color: white; }
         .btn-wa { background: #25D366; color: white; }
-        .btn-backup { background: #8e44ad; color: white; }
+        .btn-pdf { background: var(--accent); color: white; }
 
-        .os-card { background: #fff; border-left: 5px solid var(--accent); padding: 15px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-top: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee; }
+        .os-card { background: #fff; border: 1px solid #eee; border-left: 6px solid var(--primary); padding: 18px; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
         .hidden { display: none; }
         @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } button { width: 100%; } }
     </style>
@@ -48,90 +46,71 @@
     <header>
         <div>
             <h1>Kleber Informática</h1>
-            <small>Sistema Online de Manutenção</small>
+            <small style="color: #666;">Sistema de Gestão On-line</small>
         </div>
-        <div id="status" style="font-size: 11px; font-weight: bold; color: var(--success);">FIREBASE ATIVO</div>
+        <div id="db-status" style="color: var(--success); font-weight: bold; font-size: 12px;">● CONECTADO</div>
     </header>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('nova')">NOVA OS</button>
-        <button class="tab-btn" onclick="switchTab('historico')">REVISÃO / HISTÓRICO</button>
-        <button class="tab-btn" onclick="switchTab('backup')">BACKUP</button>
+        <button class="tab-btn active" onclick="switchTab('nova')">GERAR NOVA OS</button>
+        <button class="tab-btn" onclick="switchTab('historico')">HISTÓRICO DE REVISÃO</button>
+        <button class="tab-btn" onclick="switchTab('backup')">SEGURANÇA / BACKUP</button>
     </div>
 
     <div id="tab-nova" class="tab-content">
         <div class="grid">
-            <div>
-                <label>Nome do Cliente</label>
-                <input type="text" id="c-nome" placeholder="Nome Completo">
-            </div>
-            <div>
-                <label>WhatsApp</label>
-                <input type="tel" id="c-tel" placeholder="DDD + Número">
-            </div>
+            <div><label>Cliente</label><input type="text" id="f-cliente" placeholder="Nome do Cliente"></div>
+            <div><label>WhatsApp</label><input type="tel" id="f-whatsapp" placeholder="Ex: 919XXXXXXXX"></div>
         </div>
-
         <div class="grid">
-            <div>
-                <label>Aparelho / Modelo</label>
-                <input type="text" id="c-aparelho" placeholder="Ex: Notebook Dell G15">
-            </div>
-            <div>
-                <label>Nº de Série / Service Tag</label>
-                <input type="text" id="c-serial">
-            </div>
+            <div><label>Equipamento / Aparelho</label><input type="text" id="f-equip" placeholder="Ex: Notebook Acer Nitro 5"></div>
+            <div><label>Nº de Série / Service Tag</label><input type="text" id="f-serie" placeholder="S/N"></div>
         </div>
 
         <div class="checklist-container">
-            <label>Checklist de Entrada / Periféricos</label>
+            <label style="margin-bottom: 12px; display: block;">Checklist de Entrada e Acessórios</label>
             <div class="checklist-grid">
-                <label class="check-item"><input type="checkbox" class="os-chk" value="Carregador"> Carregador</label>
-                <label class="check-item"><input type="checkbox" class="os-chk" value="Teclado"> Teclado</label>
-                <label class="check-item"><input type="checkbox" class="os-chk" value="Monitor"> Monitor</label>
-                <label class="check-item"><input type="checkbox" class="os-chk" value="Adapt. Bluetooth"> Adapt. Bluetooth</label>
-                <label class="check-item"><input type="checkbox" class="os-chk" value="Adapt. Wi-Fi"> Adapt. Wi-Fi</label>
-                <label class="check-item"><input type="checkbox" class="os-chk" value="Adapt. Áudio"> Adapt. Áudio</label>
-                <label class="check-item"><input type="checkbox" class="os-chk" value="Placa de Vídeo"> Placa de Vídeo</label>
-                <label class="check-item"><input type="checkbox" class="os-chk" value="Cabo de Força"> Cabo de Força</label>
-                <label class="check-item"><input type="checkbox" class="os-chk" value="Bateria"> Bateria</label>
-                <label class="check-item"><input type="checkbox" class="os-chk" value="Mouse"> Mouse</label>
-                <label class="check-item"><input type="checkbox" class="os-chk" value="Case/Bolsa"> Case/Bolsa</label>
+                <label class="check-item"><input type="checkbox" class="chk" value="Carregador"> Carregador</label>
+                <label class="check-item"><input type="checkbox" class="chk" value="Teclado"> Teclado</label>
+                <label class="check-item"><input type="checkbox" class="chk" value="Monitor"> Monitor</label>
+                <label class="check-item"><input type="checkbox" class="chk" value="Adaptador Bluetooth"> Adapt. Bluetooth</label>
+                <label class="check-item"><input type="checkbox" class="chk" value="Adaptador Wi-Fi"> Adapt. Wi-Fi</label>
+                <label class="check-item"><input type="checkbox" class="chk" value="Adaptador de Áudio"> Adapt. Áudio</label>
+                <label class="check-item"><input type="checkbox" class="chk" value="Placa de Vídeo"> Placa de Vídeo</label>
+                <label class="check-item"><input type="checkbox" class="chk" value="Cabo de Força"> Cabo de Força</label>
+                <label class="check-item"><input type="checkbox" class="chk" value="Bateria"> Bateria</label>
+                <label class="check-item"><input type="checkbox" class="chk" value="Mouse"> Mouse</label>
+                <label class="check-item"><input type="checkbox" class="chk" value="Case/Bolsa"> Case/Bolsa</label>
             </div>
         </div>
 
         <div class="grid">
-            <div>
-                <label>1. Defeito Relatado</label>
-                <textarea id="c-defeito" rows="3" placeholder="O que o cliente diz que está acontecendo..."></textarea>
-            </div>
-            <div>
-                <label>2. Serviço a Realizar</label>
-                <textarea id="c-servico" rows="3" placeholder="O que será feito tecnicamente..."></textarea>
-            </div>
+            <div><label>1. Defeito Relatado</label><textarea id="f-defeito" rows="3" placeholder="O que o cliente relatou..."></textarea></div>
+            <div><label>2. Serviço a Realizar</label><textarea id="f-servico" rows="3" placeholder="Procedimentos técnicos..."></textarea></div>
         </div>
 
         <div class="grid">
-            <div><label>Mão de Obra (R$)</label><input type="number" id="v-obra" value="0"></div>
-            <div><label>Peças (R$)</label><input type="number" id="v-pecas" value="0"></div>
+            <div><label>Valor Mão de Obra (R$)</label><input type="number" id="v-obra" value="0"></div>
+            <div><label>Valor Peças (R$)</label><input type="number" id="v-pecas" value="0"></div>
         </div>
 
         <div class="btn-group">
-            <button class="btn-save" onclick="salvarNoFirestore()">SALVAR OS</button>
-            <button class="btn-auth" onclick="gerarPDFManual('autorizacao')">GERAR AUTORIZAÇÃO</button>
-            <button class="btn-wa" onclick="enviarWhatsAppManual()">ENVIAR WHATSAPP</button>
+            <button class="btn-save" onclick="salvarServico()">SALVAR NO FIRESTORE</button>
+            <button class="btn-wa" onclick="enviarWhatsApp()">ENVIAR WHATSAPP (PDF)</button>
+            <button class="btn-pdf" onclick="gerarPDF()">BAIXAR CÓPIA PDF</button>
         </div>
     </div>
 
     <div id="tab-historico" class="tab-content hidden">
-        <label>Buscar por Nome do Cliente</label>
-        <input type="text" id="busca-cli" placeholder="Digite para pesquisar histórico..." onkeyup="filtrarFirestore()">
-        <div id="lista-historico" style="margin-top: 20px;"></div>
+        <label>Pesquisar por Nome do Cliente</label>
+        <input type="text" id="busca-nome" placeholder="Digite para buscar (Ex: Mario Jorge)..." onkeyup="buscarNoBanco()">
+        <div id="lista-resultados" style="margin-top: 20px;"></div>
     </div>
 
     <div id="tab-backup" class="tab-content hidden">
-        <h3>Backup de Segurança</h3>
-        <p>Exportar todos os dados da <strong>Kleber Informática</strong> para um arquivo local.</p>
-        <button class="btn-backup" onclick="exportarBackupJSON()">EXPORTAR JSON</button>
+        <h3>Proteção de Dados - Kleber Informática</h3>
+        <p>Gere um arquivo JSON com todos os dados da coleção <strong>servicos</strong> para armazenamento local.</p>
+        <button class="btn-save" style="background: #8e44ad;" onclick="exportarBackup()">EXPORTAR BACKUP COMPLETO</button>
     </div>
 </div>
 
@@ -139,7 +118,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
-    // INSIRA SUAS CHAVES DO FIREBASE ABAIXO PARA O SISTEMA FUNCIONAR
+    // Credenciais Integradas - Kleber Informática
     const firebaseConfig = {
         apiKey: "AIzaSyDXkyJBXMgh0Vi6dwOCr7oHthyVaq3hcPE",
         authDomain: "sistema-kleber-informatica.firebaseapp.com",
@@ -152,116 +131,127 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Trocar Abas
+    // Navegação entre abas
     window.switchTab = (tab) => {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         document.getElementById(`tab-${tab}`).classList.remove('hidden');
-        event.currentTarget.classList.add('active');
+        if(event) event.currentTarget.classList.add('active');
     };
 
-    // Salvar no Firebase
-    window.salvarNoFirestore = async () => {
-        const checks = Array.from(document.querySelectorAll('.os-chk:checked')).map(c => c.value);
+    // Salvar novo registro (Usa os campos exatos do seu banco: servicos)
+    window.salvarServico = async () => {
         const obra = parseFloat(document.getElementById('v-obra').value) || 0;
         const pecas = parseFloat(document.getElementById('v-pecas').value) || 0;
+        const nomeCli = document.getElementById('f-cliente').value.toUpperCase();
+        
+        if(!nomeCli) return alert("Por favor, informe o nome do cliente.");
 
         const dados = {
-            cliente: document.getElementById('c-nome').value,
-            telefone: document.getElementById('c-tel').value,
-            aparelho: document.getElementById('c-aparelho').value,
-            serial: document.getElementById('c-serial').value,
-            checklist: checks,
-            defeito: document.getElementById('c-defeito').value,
-            servico: document.getElementById('c-servico').value,
+            cliente: nomeCli,
+            whatsapp: document.getElementById('f-whatsapp').value,
+            equip: document.getElementById('f-equip').value.toUpperCase(),
+            serie: document.getElementById('f-serie').value,
+            defeito: document.getElementById('f-defeito').value,
+            servico_realizar: document.getElementById('f-servico').value,
+            checklist: Array.from(document.querySelectorAll('.chk:checked')).map(c => c.value),
             total: obra + pecas,
-            data: new Date().toLocaleDateString('pt-BR'),
+            data: new Date().toLocaleString('pt-BR'),
             timestamp: new Date()
         };
 
-        if(!dados.cliente) return alert("Preencha o nome do cliente!");
-
         try {
-            await addDoc(collection(db, "ordens_servico"), dados);
-            alert("✅ OS Salva com sucesso!");
-        } catch (e) { alert("Erro ao salvar: " + e); }
+            await addDoc(collection(db, "servicos"), dados);
+            alert("✅ Ordem de Serviço salva com sucesso no Firestore!");
+            location.reload();
+        } catch (e) { alert("Erro ao conectar com Firebase: " + e); }
     };
 
-    // Histórico de Revisão
-    window.filtrarFirestore = async () => {
-        const termo = document.getElementById('busca-cli').value;
-        if(termo.length < 3) return;
+    // Busca de Histórico (Mapeado para campos antigos e novos)
+    window.buscarNoBanco = async () => {
+        const termo = document.getElementById('busca-nome').value.toUpperCase();
+        if(termo.length < 2) return;
 
-        const q = query(collection(db, "ordens_servico"), where("cliente", ">=", termo), where("cliente", "<=", termo + '\uf8ff'));
+        const q = query(collection(db, "servicos"), where("cliente", ">=", termo), where("cliente", "<=", termo + '\uf8ff'));
         const snap = await getDocs(q);
-        const lista = document.getElementById('lista-historico');
+        const lista = document.getElementById('lista-resultados');
         lista.innerHTML = "";
+
+        if (snap.empty) {
+            lista.innerHTML = "<p style='color:#999;'>Nenhum registro encontrado.</p>";
+            return;
+        }
 
         snap.forEach(doc => {
             const d = doc.data();
             lista.innerHTML += `
                 <div class="os-card">
-                    <strong>${d.data} - ${d.cliente}</strong><br>
-                    <span>Aparelho: ${d.aparelho}</span><br>
-                    <small>Defeito: ${d.defeito}</small><br>
-                    <small>Serviço: ${d.servico}</small><br>
-                    <strong>Total: R$ ${d.total.toFixed(2)}</strong>
+                    <strong>DATA: ${d.data || 'Sem data'} | CLIENTE: ${d.cliente}</strong><br>
+                    <span>EQUIPAMENTO: ${d.equip || d.aparelho || 'N/A'}</span><br>
+                    <small>DEFEITO: ${d.defeito || 'N/A'}</small><br>
+                    <small>SERVIÇO: ${d.servico_realizar || 'N/A'}</small><br>
+                    <div style="margin-top:8px; color:var(--success); font-weight:bold;">VALOR TOTAL: R$ ${d.total ? d.total.toFixed(2) : '0,00'}</div>
                 </div>`;
         });
     };
 
-    // PDF e WhatsApp (Manual Assistido)
-    window.gerarPDFManual = (tipo) => {
+    // Geração de PDF e WhatsApp Nativo
+    window.gerarPDF = (isBlob = false) => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        const nome = document.getElementById('c-nome').value || "Cliente";
-        
-        doc.setFontSize(16);
-        doc.text("KLEBER INFORMÁTICA - ORÇAMENTO", 105, 20, { align: 'center' });
-        doc.setFontSize(11);
-        doc.text(`Cliente: ${nome}`, 20, 40);
-        doc.text(`Aparelho: ${document.getElementById('c-aparelho').value}`, 20, 50);
-        doc.text(`Defeito: ${document.getElementById('c-defeito').value}`, 20, 60);
-        doc.text(`Serviço: ${document.getElementById('c-servico').value}`, 20, 70);
-        doc.text(`Checklist: ${Array.from(document.querySelectorAll('.os-chk:checked')).map(c => c.value).join(', ')}`, 20, 80);
-        
+        const nome = document.getElementById('f-cliente').value || "Cliente";
         const total = parseFloat(document.getElementById('v-obra').value) + parseFloat(document.getElementById('v-pecas').value);
+        
+        doc.setFontSize(18);
+        doc.text("KLEBER INFORMÁTICA - ORÇAMENTO", 105, 20, { align: 'center' });
+        doc.setFontSize(12);
+        doc.text(`CLIENTE: ${nome}`, 20, 40);
+        doc.text(`EQUIPAMENTO: ${document.getElementById('f-equip').value}`, 20, 50);
+        doc.text(`DEFEITO: ${document.getElementById('f-defeito').value}`, 20, 60);
+        doc.text(`SERVIÇO: ${document.getElementById('f-servico').value}`, 20, 80);
+        doc.text(`CHECKLIST: ${Array.from(document.querySelectorAll('.chk:checked')).map(c => c.value).join(', ')}`, 20, 100);
+        
         doc.setFontSize(14);
-        doc.text(`VALOR TOTAL: R$ ${total.toFixed(2)}`, 20, 100);
+        doc.text(`VALOR TOTAL: R$ ${total.toFixed(2)}`, 20, 120);
+        doc.setFontSize(10);
+        doc.text(`Gerado em: ${new Date().toLocaleString()}`, 20, 280);
 
-        if(tipo === 'blob') return doc.output('blob');
-        doc.save(`OS_${nome}.pdf`);
+        if(isBlob) return doc.output('blob');
+        doc.save(`OS_KleberInfo_${nome}.pdf`);
     };
 
-    window.enviarWhatsAppManual = async () => {
-        const nome = document.getElementById('c-nome').value;
-        const aparelho = document.getElementById('c-aparelho').value;
+    window.enviarWhatsApp = async () => {
+        const nome = document.getElementById('f-cliente').value;
+        const equip = document.getElementById('f-equip').value;
         const hora = new Date().getHours();
         const saudacao = (hora >= 5 && hora < 12) ? "Bom dia" : (hora >= 12 && hora < 18) ? "Boa tarde" : "Boa noite";
         
-        const texto = `${saudacao}, ${nome}! Tudo bem?\n\nInforme: segue o orçamento do serviço do determinado aparelho (${aparelho}).`;
+        const textoMsg = `${saudacao}, ${nome}! Tudo bem?\n\nInforme: segue o orçamento do serviço do determinado aparelho (${equip}).`;
         
-        const pdfBlob = window.gerarPDFManual('blob');
+        const pdfBlob = window.gerarPDF(true);
         const file = new File([pdfBlob], `Orcamento_${nome}.pdf`, { type: 'application/pdf' });
 
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: 'Orçamento', text: texto });
+            try {
+                await navigator.share({ files: [file], title: 'Orçamento - Kleber Info', text: textoMsg });
+            } catch (err) { console.log("Compartilhamento cancelado."); }
         } else {
-            const tel = document.getElementById('c-tel').value.replace(/\D/g, '');
-            window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(texto)}`, '_blank');
+            const tel = document.getElementById('f-whatsapp').value.replace(/\D/g, '');
+            window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(textoMsg)}`, '_blank');
         }
     };
 
-    window.exportarBackupJSON = async () => {
-        const snap = await getDocs(collection(db, "ordens_servico"));
-        const b = [];
-        snap.forEach(doc => b.push(doc.data()));
-        const blob = new Blob([JSON.stringify(b, null, 2)], { type: "application/json" });
+    window.exportarBackup = async () => {
+        const snap = await getDocs(collection(db, "servicos"));
+        const data = [];
+        snap.forEach(doc => data.push({id: doc.id, ...doc.data()}));
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `backup_kleber_${new Date().toISOString().slice(0,10)}.json`;
+        a.download = `backup_kleber_info_${new Date().toISOString().slice(0,10)}.json`;
         a.click();
     };
 </script>
+
 </body>
 </html>
