@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kleber Informática - Gestão Profissional v4.0</title>
+    <title>Kleber Informática - Gestão Profissional</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -13,18 +13,22 @@
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--light); margin: 0; padding: 15px; color: #333; }
         .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
-        header { border-bottom: 3px solid var(--primary); margin-bottom: 25px; padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        /* Cabeçalho com Logo */
+        header { border-bottom: 3px solid var(--primary); margin-bottom: 25px; padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        .brand { display: flex; align-items: center; gap: 15px; }
+        .logo-img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid #ddd; }
         h1 { margin: 0; font-size: 22px; color: var(--primary); }
 
         .tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
         .tab-btn { padding: 12px 20px; border: none; background: #e0e0e0; border-radius: 8px; cursor: pointer; font-weight: bold; white-space: nowrap; transition: 0.3s; }
         .tab-btn.active { background: var(--primary); color: white; }
 
+        .section-title { font-size: 14px; color: var(--primary); border-bottom: 1px solid #eee; padding-bottom: 5px; margin: 20px 0 15px 0; text-transform: uppercase; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         label { display: block; font-size: 11px; font-weight: 700; margin-bottom: 5px; color: #555; text-transform: uppercase; }
         input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 15px; background: #fff; }
         
-        .checklist-container { background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 20px; }
+        .checklist-container { background: #f9f9f9; padding: 15px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 15px; }
         .checklist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; }
         .check-item { display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; padding: 5px; }
         .check-item input { width: auto; transform: scale(1.2); }
@@ -38,7 +42,6 @@
 
         .os-card { background: #fff; border: 1px solid #eee; border-left: 6px solid var(--primary); padding: 18px; border-radius: 10px; margin-bottom: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); cursor: pointer; transition: 0.2s; }
         .os-card:hover { transform: translateY(-3px); box-shadow: 0 5px 12px rgba(0,0,0,0.1); border-color: var(--accent); }
-        
         .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 10px; color: white; margin-top: 5px; font-weight: bold; }
         .status-aberto { background: var(--warning); }
         .status-finalizado { background: var(--success); }
@@ -51,9 +54,12 @@
 
 <div class="container">
     <header>
-        <div>
-            <h1>Kleber Informática</h1>
-            <small id="modo-label" style="color: var(--accent); font-weight: bold;">MODO: NOVA ORDEM DE SERVIÇO</small>
+        <div class="brand">
+            <img src="https://via.placeholder.com/150/2c3e50/ffffff?text=Logo+Aqui" alt="Logo Kleber Informática" class="logo-img" id="logo-img">
+            <div>
+                <h1>Kleber Informática</h1>
+                <small id="modo-label" style="color: var(--accent); font-weight: bold;">MODO: NOVA ORDEM DE SERVIÇO</small>
+            </div>
         </div>
         <div style="text-align: right;">
             <div id="db-status" style="color: var(--success); font-weight: bold; font-size: 12px;">● FIRESTORE ONLINE</div>
@@ -67,7 +73,8 @@
     </div>
 
     <div id="tab-nova" class="tab-content">
-        <input type="hidden" id="f-id"> <div class="grid">
+        <input type="hidden" id="f-id"> <h3 class="section-title">1. Dados do Cliente e Status</h3>
+        <div class="grid">
             <div><label>Status do Serviço</label>
                 <select id="f-status">
                     <option value="EM ABERTO">🟠 EM ABERTO / ORÇAMENTO</option>
@@ -75,16 +82,18 @@
                     <option value="ENTREGUE">🔵 ENTREGUE AO CLIENTE</option>
                 </select>
             </div>
+            <div><label>Nome do Cliente</label><input type="text" id="f-cliente" placeholder="Nome Completo"></div>
             <div><label>WhatsApp</label><input type="tel" id="f-whatsapp" placeholder="Ex: 919XXXXXXXX"></div>
         </div>
 
+        <h3 class="section-title">2. Dados do Equipamento</h3>
         <div class="grid">
-            <div><label>Cliente</label><input type="text" id="f-cliente" placeholder="Nome do Cliente"></div>
             <div><label>Equipamento / Aparelho</label><input type="text" id="f-equip" placeholder="Ex: Notebook Acer Nitro 5"></div>
+            <div><label>Nº de Série / Service Tag</label><input type="text" id="f-serie" placeholder="S/N"></div>
         </div>
 
+        <h3 class="section-title">3. Checklist de Entrada</h3>
         <div class="checklist-container">
-            <label style="margin-bottom: 12px; display: block;">Checklist de Entrada e Acessórios</label>
             <div class="checklist-grid">
                 <label class="check-item"><input type="checkbox" class="chk" value="Carregador"> Carregador</label>
                 <label class="check-item"><input type="checkbox" class="chk" value="Teclado"> Teclado</label>
@@ -96,17 +105,23 @@
                 <label class="check-item"><input type="checkbox" class="chk" value="Cabo de Força"> Cabo de Força</label>
                 <label class="check-item"><input type="checkbox" class="chk" value="Bateria"> Bateria</label>
                 <label class="check-item"><input type="checkbox" class="chk" value="Mouse"> Mouse</label>
+                <label class="check-item"><input type="checkbox" class="chk" value="Case/Bolsa"> Case/Bolsa</label>
             </div>
         </div>
 
-        <div class="grid">
-            <div><label>1. Defeito Relatado</label><textarea id="f-defeito" rows="3"></textarea></div>
-            <div><label>2. Serviço a Realizar / Feito</label><textarea id="f-servico" rows="3"></textarea></div>
-        </div>
+        <h3 class="section-title">4. Defeito Relatado</h3>
+        <textarea id="f-defeito" rows="3" placeholder="O que o cliente informou sobre o problema..."></textarea>
 
+        <h3 class="section-title">5. Serviço a Realizar / Realizado</h3>
+        <textarea id="f-servico" rows="3" placeholder="Descrição dos procedimentos técnicos..."></textarea>
+
+        <h3 class="section-title">6. Valores do Orçamento</h3>
         <div class="grid">
-            <div><label>Mão de Obra (R$)</label><input type="number" id="v-obra" value="0"></div>
-            <div><label>Peças (R$)</label><input type="number" id="v-pecas" value="0"></div>
+            <div><label>Mão de Obra (R$)</label><input type="number" id="v-obra" value="0" oninput="calcularTotal()"></div>
+            <div><label>Peças (R$)</label><input type="number" id="v-pecas" value="0" oninput="calcularTotal()"></div>
+        </div>
+        <div style="text-align: right; font-size: 18px; font-weight: bold; color: var(--primary);">
+            TOTAL: R$ <span id="lbl-total">0.00</span>
         </div>
 
         <div class="btn-group">
@@ -125,13 +140,13 @@
     </div>
 
     <div id="tab-backup" class="tab-content hidden">
-        <button class="btn-save" style="background: #8e44ad;" onclick="exportarBackup()">EXPORTAR TUDO (JSON)</button>
+        <button class="btn-save" style="background: #8e44ad;" onclick="exportarBackup()">EXPORTAR DADOS (JSON)</button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, where, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDXkyJBXMgh0Vi6dwOCr7oHthyVaq3hcPE",
@@ -152,12 +167,18 @@
         if(event) event.currentTarget.classList.add('active');
     };
 
-    // LIMPAR FORMULÁRIO
+    window.calcularTotal = () => {
+        const obra = parseFloat(document.getElementById('v-obra').value) || 0;
+        const pecas = parseFloat(document.getElementById('v-pecas').value) || 0;
+        document.getElementById('lbl-total').innerText = (obra + pecas).toFixed(2);
+    };
+
     window.limparFormulario = () => {
         document.getElementById('f-id').value = "";
         document.getElementById('f-cliente').value = "";
         document.getElementById('f-whatsapp').value = "";
         document.getElementById('f-equip').value = "";
+        document.getElementById('f-serie').value = "";
         document.getElementById('f-defeito').value = "";
         document.getElementById('f-servico').value = "";
         document.getElementById('v-obra').value = "0";
@@ -166,10 +187,10 @@
         document.querySelectorAll('.chk').forEach(c => c.checked = false);
         document.getElementById('modo-label').innerText = "MODO: NOVA ORDEM DE SERVIÇO";
         document.getElementById('btn-principal').innerText = "SALVAR NO BANCO";
+        calcularTotal();
         alert("Pronto para um novo serviço!");
     };
 
-    // SALVAR OU ATUALIZAR
     window.salvarServico = async () => {
         const idExistente = document.getElementById('f-id').value;
         const obra = parseFloat(document.getElementById('v-obra').value) || 0;
@@ -179,21 +200,24 @@
             cliente: document.getElementById('f-cliente').value.toUpperCase(),
             whatsapp: document.getElementById('f-whatsapp').value,
             equip: document.getElementById('f-equip').value.toUpperCase(),
+            serie: document.getElementById('f-serie').value,
             defeito: document.getElementById('f-defeito').value,
             servico_realizar: document.getElementById('f-servico').value,
             checklist: Array.from(document.querySelectorAll('.chk:checked')).map(c => c.value),
+            valor_obra: obra,     // SALVANDO VALOR INDIVIDUAL
+            valor_pecas: pecas,   // SALVANDO VALOR INDIVIDUAL
             total: obra + pecas,
             status: document.getElementById('f-status').value,
             ultima_alteracao: new Date().toLocaleString('pt-BR')
         };
 
+        if(!dados.cliente) return alert("Por favor, preencha o nome do cliente.");
+
         try {
             if (idExistente) {
-                // ATUALIZAR EXISTENTE
                 await updateDoc(doc(db, "servicos", idExistente), dados);
-                alert("✅ OS do " + dados.cliente + " atualizada com sucesso!");
+                alert("✅ OS atualizada com sucesso!");
             } else {
-                // CRIAR NOVA
                 dados.data = new Date().toLocaleString('pt-BR');
                 dados.timestamp = new Date();
                 await addDoc(collection(db, "servicos"), dados);
@@ -203,7 +227,6 @@
         } catch (e) { alert("Erro ao salvar: " + e); }
     };
 
-    // BUSCAR E TORNAR CLICÁVEL
     window.buscarNoBanco = async () => {
         const termo = document.getElementById('busca-nome').value.toUpperCase();
         if(termo.length < 2) return;
@@ -218,7 +241,6 @@
             const id = documento.id;
             const badgeClass = d.status === 'FINALIZADO' ? 'status-finalizado' : 'status-aberto';
             
-            // Criamos o card e passamos os dados para a função de carregar
             const card = document.createElement('div');
             card.className = 'os-card';
             card.innerHTML = `
@@ -231,17 +253,21 @@
         });
     };
 
-    // CARREGAR DADOS NO FORMULÁRIO
     window.carregarParaEdicao = (id, d) => {
         document.getElementById('f-id').value = id;
         document.getElementById('f-cliente').value = d.cliente;
         document.getElementById('f-whatsapp').value = d.whatsapp || "";
         document.getElementById('f-equip').value = d.equip || d.aparelho || "";
+        document.getElementById('f-serie').value = d.serie || "";
         document.getElementById('f-defeito').value = d.defeito || "";
         document.getElementById('f-servico').value = d.servico_realizar || "";
         document.getElementById('f-status').value = d.status || "EM ABERTO";
         
-        // Marcar checklist
+        // CARREGANDO VALORES INDIVIDUAIS (Se o OS for antigo e não tiver 'valor_obra', preenche com 0 e ele mostra o total)
+        document.getElementById('v-obra').value = d.valor_obra !== undefined ? d.valor_obra : (d.total || 0);
+        document.getElementById('v-pecas').value = d.valor_pecas !== undefined ? d.valor_pecas : 0;
+        calcularTotal();
+        
         document.querySelectorAll('.chk').forEach(c => {
             c.checked = d.checklist && d.checklist.includes(c.value);
         });
@@ -249,20 +275,32 @@
         document.getElementById('modo-label').innerText = "MODO: EDITANDO OS EXISTENTE";
         document.getElementById('btn-principal').innerText = "ATUALIZAR DADOS";
         
-        switchTab('nova'); // Volta para a aba do formulário
-        alert("Dados do " + d.cliente + " carregados para edição!");
+        switchTab('nova');
+        alert("Dados carregados para edição.");
     };
 
-    // (Funções de PDF, WhatsApp e Backup permanecem iguais para manter a funcionalidade)
     window.gerarPDF = (isBlob = false) => {
         const { jsPDF } = window.jspdf;
         const docPDF = new jsPDF();
         const nome = document.getElementById('f-cliente').value || "Cliente";
-        docPDF.text("KLEBER INFORMATICA - OS", 20, 20);
+        
+        docPDF.setFontSize(18);
+        docPDF.text("KLEBER INFORMATICA - ORDEM DE SERVICO", 20, 20);
+        
+        docPDF.setFontSize(12);
         docPDF.text(`CLIENTE: ${nome}`, 20, 40);
         docPDF.text(`EQUIPAMENTO: ${document.getElementById('f-equip').value}`, 20, 50);
-        docPDF.text(`STATUS: ${document.getElementById('f-status').value}`, 20, 60);
-        docPDF.text(`VALOR TOTAL: R$ ${parseFloat(document.getElementById('v-obra').value) + parseFloat(document.getElementById('v-pecas').value)}`, 20, 70);
+        docPDF.text(`DEFEITO: ${document.getElementById('f-defeito').value}`, 20, 60);
+        docPDF.text(`SERVICO: ${document.getElementById('f-servico').value}`, 20, 70);
+        docPDF.text(`STATUS: ${document.getElementById('f-status').value}`, 20, 80);
+        
+        const obra = parseFloat(document.getElementById('v-obra').value) || 0;
+        const pecas = parseFloat(document.getElementById('v-pecas').value) || 0;
+        docPDF.text(`MAO DE OBRA: R$ ${obra.toFixed(2)}`, 20, 100);
+        docPDF.text(`PECAS: R$ ${pecas.toFixed(2)}`, 20, 110);
+        docPDF.setFontSize(14);
+        docPDF.text(`VALOR TOTAL: R$ ${(obra + pecas).toFixed(2)}`, 20, 130);
+
         if(isBlob) return docPDF.output('blob');
         docPDF.save(`OS_${nome}.pdf`);
     };
@@ -272,9 +310,11 @@
         const equip = document.getElementById('f-equip').value;
         const hora = new Date().getHours();
         const saudacao = (hora >= 5 && hora < 12) ? "Bom dia" : (hora >= 12 && hora < 18) ? "Boa tarde" : "Boa noite";
-        const msg = `${saudacao}, ${nome}! Segue o orcamento do aparelho (${equip}).`;
+        const msg = `${saudacao}, ${nome}! Segue o orçamento do aparelho (${equip}).`;
+        
         const pdfBlob = window.gerarPDF(true);
         const file = new File([pdfBlob], `Orcamento_${nome}.pdf`, { type: 'application/pdf' });
+        
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
             await navigator.share({ files: [file], title: 'Orcamento', text: msg });
         } else {
@@ -290,7 +330,7 @@
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `backup_completo.json`;
+        a.download = `backup_kleber.json`;
         a.click();
     };
 </script>
