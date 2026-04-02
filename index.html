@@ -3,44 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kleber Informática - Sistema de OS</title>
+    <title>Kleber Informática - Gestão de OS</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --light: #ecf0f1; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --light: #ecf0f1; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 15px; color: #333; }
         .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
         
         header { border-bottom: 3px solid var(--primary); margin-bottom: 25px; padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        h1 { margin: 0; color: var(--primary); font-size: 24px; }
+        h1 { margin: 0; font-size: 22px; color: var(--primary); }
 
-        .tabs { display: flex; gap: 10px; margin-bottom: 25px; }
-        .tab-btn { padding: 12px 25px; border: none; background: var(--light); border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { padding: 10px 18px; border: none; background: var(--light); border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
         .tab-btn.active { background: var(--primary); color: white; }
 
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px; }
-        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 5px; color: #555; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 4px; color: #555; text-transform: uppercase; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px; background: #fff; }
+        
+        /* Checklist Estilizado */
+        .checklist-container { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; margin-bottom: 20px; }
+        .checklist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; }
+        .check-item { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; padding: 5px; }
+        .check-item input { width: auto; cursor: pointer; }
 
-        .checklist-container { background: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #eee; margin: 20px 0; }
-        .checklist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-        .check-item { display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer; }
-        .check-item input { width: auto; }
-
-        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 25px; }
-        button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+        button { padding: 12px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; flex: 1; min-width: 150px; }
         .btn-save { background: var(--success); color: white; }
         .btn-auth { background: var(--accent); color: white; }
         .btn-wa { background: #25D366; color: white; }
         .btn-backup { background: #8e44ad; color: white; }
 
-        .history-list { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
-        .os-card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
-        
+        .os-card { background: #fff; border-left: 5px solid var(--accent); padding: 15px; border-radius: 8px; margin-bottom: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-top: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee; }
         .hidden { display: none; }
-        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } button { width: 100%; } }
     </style>
 </head>
 <body>
@@ -49,85 +48,90 @@
     <header>
         <div>
             <h1>Kleber Informática</h1>
-            <span style="color: #666;">Sistema de Gestão On-line</span>
+            <small>Sistema Online de Manutenção</small>
         </div>
-        <div id="status-fb" style="font-size: 12px; color: var(--success);">● Firestore Conectado</div>
+        <div id="status" style="font-size: 11px; font-weight: bold; color: var(--success);">FIREBASE ATIVO</div>
     </header>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('nova')">1. Nova OS / Orçamento</button>
-        <button class="tab-btn" onclick="switchTab('historico')">2. Histórico de Revisão</button>
-        <button class="tab-btn" onclick="switchTab('config')">3. Backup e Sistema</button>
+        <button class="tab-btn active" onclick="switchTab('nova')">NOVA OS</button>
+        <button class="tab-btn" onclick="switchTab('historico')">REVISÃO / HISTÓRICO</button>
+        <button class="tab-btn" onclick="switchTab('backup')">BACKUP</button>
     </div>
 
     <div id="tab-nova" class="tab-content">
         <div class="grid">
             <div>
                 <label>Nome do Cliente</label>
-                <input type="text" id="cust-name" placeholder="Ex: João Silva">
+                <input type="text" id="c-nome" placeholder="Nome Completo">
             </div>
             <div>
-                <label>WhatsApp (com DDD)</label>
-                <input type="tel" id="cust-phone" placeholder="919XXXXXXXX">
+                <label>WhatsApp</label>
+                <input type="tel" id="c-tel" placeholder="DDD + Número">
             </div>
         </div>
 
         <div class="grid">
             <div>
                 <label>Aparelho / Modelo</label>
-                <input type="text" id="device-model" placeholder="Ex: Notebook Acer Aspire 5">
+                <input type="text" id="c-aparelho" placeholder="Ex: Notebook Dell G15">
             </div>
             <div>
-                <label>Número de Série</label>
-                <input type="text" id="device-sn" placeholder="S/N ou Service Tag">
+                <label>Nº de Série / Service Tag</label>
+                <input type="text" id="c-serial">
             </div>
         </div>
 
         <div class="checklist-container">
-            <label>Checklist de Entrada e Estado Físico</label>
+            <label>Checklist de Entrada / Periféricos</label>
             <div class="checklist-grid">
-                <label class="check-item"><input type="checkbox" class="os-check" value="Carregador"> Carregador</label>
-                <label class="check-item"><input type="checkbox" class="os-check" value="Cabo de Força"> Cabo de Força</label>
-                <label class="check-item"><input type="checkbox" class="os-check" value="Bateria"> Bateria</label>
-                <label class="check-item"><input type="checkbox" class="os-check" value="Mouse"> Mouse</label>
-                <label class="check-item"><input type="checkbox" class="os-check" value="Bolsa/Case"> Bolsa/Case</label>
-                <label class="check-item"><input type="checkbox" class="os-check" value="Tela Trincada"> Tela Trincada</label>
-                <label class="check-item"><input type="checkbox" class="os-check" value="Riscos na Carcaça"> Riscos Carcaça</label>
-                <label class="check-item"><input type="checkbox" class="os-check" value="Parafusos Faltando"> Faltando Parafuso</label>
+                <label class="check-item"><input type="checkbox" class="os-chk" value="Carregador"> Carregador</label>
+                <label class="check-item"><input type="checkbox" class="os-chk" value="Teclado"> Teclado</label>
+                <label class="check-item"><input type="checkbox" class="os-chk" value="Monitor"> Monitor</label>
+                <label class="check-item"><input type="checkbox" class="os-chk" value="Adapt. Bluetooth"> Adapt. Bluetooth</label>
+                <label class="check-item"><input type="checkbox" class="os-chk" value="Adapt. Wi-Fi"> Adapt. Wi-Fi</label>
+                <label class="check-item"><input type="checkbox" class="os-chk" value="Adapt. Áudio"> Adapt. Áudio</label>
+                <label class="check-item"><input type="checkbox" class="os-chk" value="Placa de Vídeo"> Placa de Vídeo</label>
+                <label class="check-item"><input type="checkbox" class="os-chk" value="Cabo de Força"> Cabo de Força</label>
+                <label class="check-item"><input type="checkbox" class="os-chk" value="Bateria"> Bateria</label>
+                <label class="check-item"><input type="checkbox" class="os-chk" value="Mouse"> Mouse</label>
+                <label class="check-item"><input type="checkbox" class="os-chk" value="Case/Bolsa"> Case/Bolsa</label>
             </div>
         </div>
 
-        <label>Defeito Relatado / Serviço a Realizar</label>
-        <textarea id="service-desc" rows="3" placeholder="Descreva o problema detalhadamente..."></textarea>
+        <div class="grid">
+            <div>
+                <label>1. Defeito Relatado</label>
+                <textarea id="c-defeito" rows="3" placeholder="O que o cliente diz que está acontecendo..."></textarea>
+            </div>
+            <div>
+                <label>2. Serviço a Realizar</label>
+                <textarea id="c-servico" rows="3" placeholder="O que será feito tecnicamente..."></textarea>
+            </div>
+        </div>
 
-        <div class="grid" style="margin-top: 15px;">
-            <div>
-                <label>Mão de Obra (R$)</label>
-                <input type="number" id="price-labor" value="0">
-            </div>
-            <div>
-                <label>Peças (R$)</label>
-                <input type="number" id="price-parts" value="0">
-            </div>
+        <div class="grid">
+            <div><label>Mão de Obra (R$)</label><input type="number" id="v-obra" value="0"></div>
+            <div><label>Peças (R$)</label><input type="number" id="v-pecas" value="0"></div>
         </div>
 
         <div class="btn-group">
-            <button class="btn-save" onclick="salvarFirestore()">Salvar no Banco de Dados</button>
-            <button class="btn-auth" onclick="prepararPDF('autorizacao')">Gerar Autorização</button>
-            <button class="btn-wa" onclick="prepararWhatsApp()">Enviar Orçamento WhatsApp</button>
+            <button class="btn-save" onclick="salvarNoFirestore()">SALVAR OS</button>
+            <button class="btn-auth" onclick="gerarPDFManual('autorizacao')">GERAR AUTORIZAÇÃO</button>
+            <button class="btn-wa" onclick="enviarWhatsAppManual()">ENVIAR WHATSAPP</button>
         </div>
     </div>
 
     <div id="tab-historico" class="tab-content hidden">
-        <label>Buscar Histórico do Cliente</label>
-        <input type="text" id="search-name" placeholder="Digite o nome para buscar revisões..." onkeyup="buscarRevisoes()">
-        <div id="history-results" class="history-list"></div>
+        <label>Buscar por Nome do Cliente</label>
+        <input type="text" id="busca-cli" placeholder="Digite para pesquisar histórico..." onkeyup="filtrarFirestore()">
+        <div id="lista-historico" style="margin-top: 20px;"></div>
     </div>
 
-    <div id="tab-config" class="tab-content hidden">
-        <h3>Segurança dos Dados - Kleber Informática</h3>
-        <p>Clique abaixo para baixar uma cópia completa de todas as OS do Firestore em formato JSON.</p>
-        <button class="btn-backup" onclick="exportarBackupJSON()">Exportar Backup Completo</button>
+    <div id="tab-backup" class="tab-content hidden">
+        <h3>Backup de Segurança</h3>
+        <p>Exportar todos os dados da <strong>Kleber Informática</strong> para um arquivo local.</p>
+        <button class="btn-backup" onclick="exportarBackupJSON()">EXPORTAR JSON</button>
     </div>
 </div>
 
@@ -135,6 +139,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
 
+    // INSIRA SUAS CHAVES DO FIREBASE ABAIXO PARA O SISTEMA FUNCIONAR
     const firebaseConfig = {
         apiKey: "SUA_API_KEY",
         authDomain: "SEU_PROJETO.firebaseapp.com",
@@ -147,7 +152,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 1. ALTERNAR ABAS
+    // Trocar Abas
     window.switchTab = (tab) => {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -155,92 +160,108 @@
         event.currentTarget.classList.add('active');
     };
 
-    // 2. SALVAR NO FIRESTORE
-    window.salvarFirestore = async () => {
-        const checks = Array.from(document.querySelectorAll('.os-check:checked')).map(c => c.value);
+    // Salvar no Firebase
+    window.salvarNoFirestore = async () => {
+        const checks = Array.from(document.querySelectorAll('.os-chk:checked')).map(c => c.value);
+        const obra = parseFloat(document.getElementById('v-obra').value) || 0;
+        const pecas = parseFloat(document.getElementById('v-pecas').value) || 0;
+
         const dados = {
-            cliente: document.getElementById('cust-name').value,
-            telefone: document.getElementById('cust-phone').value,
-            aparelho: document.getElementById('device-model').value,
-            serial: document.getElementById('device-sn').value,
+            cliente: document.getElementById('c-nome').value,
+            telefone: document.getElementById('c-tel').value,
+            aparelho: document.getElementById('c-aparelho').value,
+            serial: document.getElementById('c-serial').value,
             checklist: checks,
-            defeito: document.getElementById('service-desc').value,
-            maoObra: parseFloat(document.getElementById('price-labor').value),
-            pecas: parseFloat(document.getElementById('price-parts').value),
-            total: parseFloat(document.getElementById('price-labor').value) + parseFloat(document.getElementById('price-parts').value),
+            defeito: document.getElementById('c-defeito').value,
+            servico: document.getElementById('c-servico').value,
+            total: obra + pecas,
             data: new Date().toLocaleDateString('pt-BR'),
             timestamp: new Date()
         };
 
+        if(!dados.cliente) return alert("Preencha o nome do cliente!");
+
         try {
             await addDoc(collection(db, "ordens_servico"), dados);
-            alert("Ordem de Serviço salva com sucesso no Firebase!");
+            alert("✅ OS Salva com sucesso!");
         } catch (e) { alert("Erro ao salvar: " + e); }
     };
 
-    // 3. HISTÓRICO DE REVISÃO
-    window.buscarRevisoes = async () => {
-        const termo = document.getElementById('search-name').value;
+    // Histórico de Revisão
+    window.filtrarFirestore = async () => {
+        const termo = document.getElementById('busca-cli').value;
         if(termo.length < 3) return;
 
         const q = query(collection(db, "ordens_servico"), where("cliente", ">=", termo), where("cliente", "<=", termo + '\uf8ff'));
-        const querySnapshot = await getDocs(q);
-        const container = document.getElementById('history-results');
-        container.innerHTML = "";
+        const snap = await getDocs(q);
+        const lista = document.getElementById('lista-historico');
+        lista.innerHTML = "";
 
-        querySnapshot.forEach((doc) => {
+        snap.forEach(doc => {
             const d = doc.data();
-            container.innerHTML += `
+            lista.innerHTML += `
                 <div class="os-card">
-                    <strong>Data: ${d.data}</strong> - ${d.aparelho}<br>
+                    <strong>${d.data} - ${d.cliente}</strong><br>
+                    <span>Aparelho: ${d.aparelho}</span><br>
                     <small>Defeito: ${d.defeito}</small><br>
-                    <small>Checklist: ${d.checklist.join(', ')}</small>
+                    <small>Serviço: ${d.servico}</small><br>
+                    <strong>Total: R$ ${d.total.toFixed(2)}</strong>
                 </div>`;
         });
     };
 
-    // 4. LÓGICA DE WHATSAPP E SAUDAÇÃO
-    window.prepararWhatsApp = async () => {
-        const nome = document.getElementById('cust-name').value;
-        const aparelho = document.getElementById('device-model').value;
-        
-        const hora = new Date().getHours();
-        let saudacao = (hora >= 5 && hora < 12) ? "Bom dia" : (hora >= 12 && hora < 18) ? "Boa tarde" : "Boa noite";
-        
-        const mensagemTexto = `${saudacao}, ${nome}! Tudo bem?\n\nInforme: segue o orçamento do serviço do determinado aparelho (${aparelho}).`;
-        
-        // Gera o PDF via Blob para compartilhamento manual assistido
+    // PDF e WhatsApp (Manual Assistido)
+    window.gerarPDFManual = (tipo) => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.text("ORÇAMENTO - KLEBER INFORMÁTICA", 20, 20);
-        doc.text(`Cliente: ${nome}`, 20, 30);
-        doc.text(`Aparelho: ${aparelho}`, 20, 40);
-        doc.text(`Valor Total: R$ ${parseFloat(document.getElementById('price-labor').value) + parseFloat(document.getElementById('price-parts').value)}`, 20, 50);
+        const nome = document.getElementById('c-nome').value || "Cliente";
         
-        const pdfBlob = doc.output('blob');
+        doc.setFontSize(16);
+        doc.text("KLEBER INFORMÁTICA - ORÇAMENTO", 105, 20, { align: 'center' });
+        doc.setFontSize(11);
+        doc.text(`Cliente: ${nome}`, 20, 40);
+        doc.text(`Aparelho: ${document.getElementById('c-aparelho').value}`, 20, 50);
+        doc.text(`Defeito: ${document.getElementById('c-defeito').value}`, 20, 60);
+        doc.text(`Serviço: ${document.getElementById('c-servico').value}`, 20, 70);
+        doc.text(`Checklist: ${Array.from(document.querySelectorAll('.os-chk:checked')).map(c => c.value).join(', ')}`, 20, 80);
+        
+        const total = parseFloat(document.getElementById('v-obra').value) + parseFloat(document.getElementById('v-pecas').value);
+        doc.setFontSize(14);
+        doc.text(`VALOR TOTAL: R$ ${total.toFixed(2)}`, 20, 100);
+
+        if(tipo === 'blob') return doc.output('blob');
+        doc.save(`OS_${nome}.pdf`);
+    };
+
+    window.enviarWhatsAppManual = async () => {
+        const nome = document.getElementById('c-nome').value;
+        const aparelho = document.getElementById('c-aparelho').value;
+        const hora = new Date().getHours();
+        const saudacao = (hora >= 5 && hora < 12) ? "Bom dia" : (hora >= 12 && hora < 18) ? "Boa tarde" : "Boa noite";
+        
+        const texto = `${saudacao}, ${nome}! Tudo bem?\n\nInforme: segue o orçamento do serviço do determinado aparelho (${aparelho}).`;
+        
+        const pdfBlob = window.gerarPDFManual('blob');
         const file = new File([pdfBlob], `Orcamento_${nome}.pdf`, { type: 'application/pdf' });
 
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: 'Orçamento', text: mensagemTexto });
+            await navigator.share({ files: [file], title: 'Orçamento', text: texto });
         } else {
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(mensagemTexto)}`, '_blank');
+            const tel = document.getElementById('c-tel').value.replace(/\D/g, '');
+            window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(texto)}`, '_blank');
         }
     };
 
-    // 5. BACKUP JSON
     window.exportarBackupJSON = async () => {
-        const querySnapshot = await getDocs(collection(db, "ordens_servico"));
-        const backup = [];
-        querySnapshot.forEach(doc => backup.push(doc.data()));
-        
-        const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
+        const snap = await getDocs(collection(db, "ordens_servico"));
+        const b = [];
+        snap.forEach(doc => b.push(doc.data()));
+        const blob = new Blob([JSON.stringify(b, null, 2)], { type: "application/json" });
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `backup_kleber_info_${new Date().toISOString().split('T')[0]}.json`;
+        a.href = URL.createObjectURL(blob);
+        a.download = `backup_kleber_${new Date().toISOString().slice(0,10)}.json`;
         a.click();
     };
 </script>
-
 </body>
 </html>
