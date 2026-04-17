@@ -12,6 +12,7 @@
             --whatsapp: #25d366;
             --pdf: #e74c3c;
             --search: #34495e;
+            --new: #95a5a6;
         }
 
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -25,7 +26,7 @@
             align-items: center;
         }
 
-        /* Barra de Controles */
+        /* Barra de Controles - Ajustada para 6 botões */
         .controls {
             width: 100%;
             max-width: 850px;
@@ -34,8 +35,8 @@
             border-radius: 8px;
             margin-bottom: 20px;
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             position: sticky;
             top: 10px;
@@ -43,21 +44,22 @@
         }
 
         button {
-            padding: 12px 2px;
+            padding: 10px 2px;
             border: none;
             border-radius: 5px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 5px;
+            gap: 4px;
             transition: 0.3s;
         }
+        .btn-new { background: var(--new); color: white; }
         .btn-save { background: #27ae60; color: white; }
-        .btn-view { background: #2980b9; color: white; }
         .btn-search { background: var(--search); color: white; }
+        .btn-view { background: #2980b9; color: white; }
         .btn-wa { background: var(--whatsapp); color: white; }
         .btn-pdf { background: var(--pdf); color: white; }
         button:hover { opacity: 0.8; }
@@ -164,7 +166,6 @@
             align-items: center;
         }
         .history-item:hover { background: #f0f0f0; }
-        .history-item strong { color: var(--primary); }
 
         /* Financeiro */
         .financeiro-box {
@@ -201,12 +202,11 @@
             body { background: white; padding: 0; }
             .controls { display: none; }
             .document-a4 { box-shadow: none; padding: 0; width: 100%; max-width: 100%; }
-            .section-title { -webkit-print-color-adjust: exact; background-color: var(--primary) !important; color: white !important; }
         }
 
         /* RESPONSIVO IPHONE 17 PRO MAX */
         @media (max-width: 768px) {
-            .controls { grid-template-columns: repeat(3, 1fr); position: static; height: auto; }
+            .controls { grid-template-columns: repeat(3, 1fr); position: static; }
             .grid-form, .grid-form.col-3 { grid-template-columns: 1fr; }
             .header { flex-direction: column; align-items: center; text-align: center; gap: 10px; }
             .os-number { text-align: center; }
@@ -220,6 +220,7 @@
 <body>
 
     <div class="controls">
+        <button class="btn-new" onclick="novaOS()">📄 Novo</button>
         <button class="btn-save" onclick="salvarOS()">💾 Salvar</button>
         <button class="btn-search" onclick="abrirBusca()">🔍 Buscar</button>
         <button class="btn-view" id="btnViewToggle" onclick="toggleViewMode()">👁️ Visão</button>
@@ -243,7 +244,7 @@
 
             <div class="os-number">
                 <label>Nº DA OS</label>
-                <input type="text" id="osNum" value="0003">
+                <input type="text" id="osNum" value="0001">
             </div>
         </div>
 
@@ -310,7 +311,7 @@
 
     <div class="modal" id="modalBusca" onclick="this.style.display='none'">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 style="margin-top:0">Histórico de OS</h3>
+            <h3 style="margin-top:0">Histórico de Ordens de Serviço</h3>
             <div id="listaOS"></div>
             <button onclick="document.getElementById('modalBusca').style.display='none'" style="margin-top:20px; width:100%; background:#eee">Fechar</button>
         </div>
@@ -320,36 +321,55 @@
         const campos = ['osNum', 'cliNome', 'cliCPF', 'cliRG', 'cliTel', 'cliCEP', 'cliBairro', 'cliEnd', 'eqTipo', 'eqModelo', 'eqSerie', 'chkOutros', 'relatoDefeito', 'laudoTecnico', 'servicosExecutados', 'valMaoObra', 'valPecas', 'garantiaMaoObra', 'garantiaPecas', 'dataAtual'];
         const checks = ['chkFonte', 'chkCapa', 'chkTela', 'chkLigar', 'chkDados', 'chkSenha'];
 
-        // --- SALVAMENTO EM LISTA ---
+        // --- SALVAMENTO COM INTELIGÊNCIA ---
         function salvarOS() {
             let data = {};
             campos.forEach(id => data[id] = document.getElementById(id).value);
             checks.forEach(id => data[id] = document.getElementById(id).checked);
             
             let historico = JSON.parse(localStorage.getItem('kleber_historico') || '[]');
-            
-            // Verifica se a OS já existe para atualizar ou adicionar nova
             let index = historico.findIndex(item => item.osNum === data.osNum);
+
             if(index !== -1) {
+                if(!confirm(`A OS ${data.osNum} já existe no histórico. Deseja atualizar os dados existentes?`)) return;
                 historico[index] = data;
             } else {
                 historico.push(data);
             }
             
             localStorage.setItem('kleber_historico', JSON.stringify(historico));
-            alert(`OS ${data.osNum} salva no histórico!`);
+            alert(`OS ${data.osNum} salva com sucesso!`);
+            
+            // Sugere a próxima numeração
+            let proxNum = (parseInt(data.osNum) + 1).toString().padStart(4, '0');
+            if(confirm(`Deseja limpar a tela e preparar a OS ${proxNum}?`)){
+                novaOS();
+                document.getElementById('osNum').value = proxNum;
+            }
         }
 
-        // --- BUSCA E CARREGAMENTO ---
+        function novaOS() {
+            campos.forEach(id => {
+                if(id !== 'osNum') document.getElementById(id).value = '';
+            });
+            checks.forEach(id => document.getElementById(id).checked = false);
+            document.getElementById('valTotal').value = 'R$ 0,00';
+            document.getElementById('dataAtual').value = new Date().toLocaleDateString('pt-BR');
+            document.getElementById('valMaoObra').value = '0.00';
+            document.getElementById('valPecas').value = '0.00';
+            alert("Tela limpa para nova OS.");
+        }
+
+        // --- BUSCA ---
         function abrirBusca() {
             let historico = JSON.parse(localStorage.getItem('kleber_historico') || '[]');
             let container = document.getElementById('listaOS');
-            container.innerHTML = historico.length ? '' : '<p>Nenhuma OS encontrada.</p>';
+            container.innerHTML = historico.length ? '' : '<p>Nenhuma OS encontrada no histórico.</p>';
             
             historico.sort((a,b) => b.osNum - a.osNum).forEach(os => {
                 let item = document.createElement('div');
                 item.className = 'history-item';
-                item.innerHTML = `<div><strong>OS ${os.osNum}</strong> - ${os.cliNome}</div> <small>${os.dataAtual}</small>`;
+                item.innerHTML = `<div><strong>OS ${os.osNum}</strong> - ${os.cliNome || 'Sem Nome'}</div> <small>${os.dataAtual}</small>`;
                 item.onclick = () => carregarOS(os);
                 container.appendChild(item);
             });
@@ -363,7 +383,7 @@
             document.getElementById('modalBusca').style.display = 'none';
         }
 
-        // --- FUNÇÕES DE AUXÍLIO ---
+        // --- UTILITÁRIOS ---
         function carregarLogo(event) {
             const reader = new FileReader();
             reader.onload = function(){
