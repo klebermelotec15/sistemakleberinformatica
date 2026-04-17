@@ -11,6 +11,7 @@
             --bg-light: #f9f9f9;
             --whatsapp: #25d366;
             --pdf: #e74c3c;
+            --search: #34495e;
         }
 
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -24,7 +25,7 @@
             align-items: center;
         }
 
-        /* Controles flutuantes */
+        /* Barra de Controles */
         .controls {
             width: 100%;
             max-width: 850px;
@@ -33,7 +34,7 @@
             border-radius: 8px;
             margin-bottom: 20px;
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             position: sticky;
@@ -42,12 +43,12 @@
         }
 
         button {
-            padding: 12px 5px;
+            padding: 12px 2px;
             border: none;
             border-radius: 5px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -56,6 +57,7 @@
         }
         .btn-save { background: #27ae60; color: white; }
         .btn-view { background: #2980b9; color: white; }
+        .btn-search { background: var(--search); color: white; }
         .btn-wa { background: var(--whatsapp); color: white; }
         .btn-pdf { background: var(--pdf); color: white; }
         button:hover { opacity: 0.8; }
@@ -134,6 +136,36 @@
         .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #fdfdfd; padding: 10px; border: 1px solid #eee; }
         .checkbox-item { display: flex; align-items: center; gap: 5px; font-size: 12px; cursor: pointer; }
         
+        /* Modal de Busca */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .history-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .history-item:hover { background: #f0f0f0; }
+        .history-item strong { color: var(--primary); }
+
         /* Financeiro */
         .financeiro-box {
             background: #fcfcfc;
@@ -163,39 +195,36 @@
         }
         body.view-mode .logo-upload { border: none; }
         body.view-mode .logo-text, body.view-mode input[type="checkbox"] { display: none; }
-        body.view-mode .checkbox-item:not(.checked) { display: none; } /* Oculta itens não marcados na visualização */
+        body.view-mode .checkbox-item:not(.checked) { display: none; }
 
-        /* MODO IMPRESSÃO */
         @media print {
             body { background: white; padding: 0; }
             .controls { display: none; }
             .document-a4 { box-shadow: none; padding: 0; width: 100%; max-width: 100%; }
             .section-title { -webkit-print-color-adjust: exact; background-color: var(--primary) !important; color: white !important; }
-            input, textarea { border: none !important; }
-            .logo-upload { border: none; }
-            .logo-text { display: none; }
         }
 
         /* RESPONSIVO IPHONE 17 PRO MAX */
         @media (max-width: 768px) {
-            .controls { grid-template-columns: 1fr 1fr; position: static; }
+            .controls { grid-template-columns: repeat(3, 1fr); position: static; height: auto; }
             .grid-form, .grid-form.col-3 { grid-template-columns: 1fr; }
             .header { flex-direction: column; align-items: center; text-align: center; gap: 10px; }
             .os-number { text-align: center; }
             .os-number input { text-align: center; }
             .checklist-grid { grid-template-columns: 1fr 1fr; }
             .document-a4 { padding: 20px; }
-            input, textarea { font-size: 16px !important; } /* Melhor para toque no iOS */
+            input, textarea { font-size: 16px !important; }
         }
     </style>
 </head>
 <body>
 
     <div class="controls">
-        <button class="btn-save" onclick="salvarDados()">💾 Salvar</button>
-        <button class="btn-view" id="btnViewToggle" onclick="toggleViewMode()">👁️ Visualizar</button>
+        <button class="btn-save" onclick="salvarOS()">💾 Salvar</button>
+        <button class="btn-search" onclick="abrirBusca()">🔍 Buscar</button>
+        <button class="btn-view" id="btnViewToggle" onclick="toggleViewMode()">👁️ Visão</button>
         <button class="btn-wa" onclick="enviarWhatsApp()">📱 WhatsApp</button>
-        <button class="btn-pdf" onclick="gerarPDF()">📄 PDF / Imprimir</button>
+        <button class="btn-pdf" onclick="gerarPDF()">📄 PDF</button>
     </div>
 
     <div class="document-a4" id="osDocument">
@@ -255,18 +284,9 @@
 
         <div class="section-title">3. Detalhes Técnicos do Atendimento</div>
         <div class="grid-form col-1">
-            <div class="input-group">
-                <label>3.1. Defeito Relatado</label>
-                <textarea id="relatoDefeito"></textarea>
-            </div>
-            <div class="input-group">
-                <label>3.2. Laudo Técnico (Diagnóstico)</label>
-                <textarea id="laudoTecnico"></textarea>
-            </div>
-            <div class="input-group">
-                <label>3.3. Serviços Executados / Peças</label>
-                <textarea id="servicosExecutados"></textarea>
-            </div>
+            <div class="input-group"><label>3.1. Defeito Relatado</label><textarea id="relatoDefeito"></textarea></div>
+            <div class="input-group"><label>3.2. Laudo Técnico (Diagnóstico)</label><textarea id="laudoTecnico"></textarea></div>
+            <div class="input-group"><label>3.3. Serviços Executados / Peças</label><textarea id="servicosExecutados"></textarea></div>
         </div>
 
         <div class="section-title">4. Fechamento Financeiro & Garantia</div>
@@ -288,8 +308,62 @@
         </div>
     </div>
 
+    <div class="modal" id="modalBusca" onclick="this.style.display='none'">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 style="margin-top:0">Histórico de OS</h3>
+            <div id="listaOS"></div>
+            <button onclick="document.getElementById('modalBusca').style.display='none'" style="margin-top:20px; width:100%; background:#eee">Fechar</button>
+        </div>
+    </div>
+
     <script>
-        // --- LOGO ---
+        const campos = ['osNum', 'cliNome', 'cliCPF', 'cliRG', 'cliTel', 'cliCEP', 'cliBairro', 'cliEnd', 'eqTipo', 'eqModelo', 'eqSerie', 'chkOutros', 'relatoDefeito', 'laudoTecnico', 'servicosExecutados', 'valMaoObra', 'valPecas', 'garantiaMaoObra', 'garantiaPecas', 'dataAtual'];
+        const checks = ['chkFonte', 'chkCapa', 'chkTela', 'chkLigar', 'chkDados', 'chkSenha'];
+
+        // --- SALVAMENTO EM LISTA ---
+        function salvarOS() {
+            let data = {};
+            campos.forEach(id => data[id] = document.getElementById(id).value);
+            checks.forEach(id => data[id] = document.getElementById(id).checked);
+            
+            let historico = JSON.parse(localStorage.getItem('kleber_historico') || '[]');
+            
+            // Verifica se a OS já existe para atualizar ou adicionar nova
+            let index = historico.findIndex(item => item.osNum === data.osNum);
+            if(index !== -1) {
+                historico[index] = data;
+            } else {
+                historico.push(data);
+            }
+            
+            localStorage.setItem('kleber_historico', JSON.stringify(historico));
+            alert(`OS ${data.osNum} salva no histórico!`);
+        }
+
+        // --- BUSCA E CARREGAMENTO ---
+        function abrirBusca() {
+            let historico = JSON.parse(localStorage.getItem('kleber_historico') || '[]');
+            let container = document.getElementById('listaOS');
+            container.innerHTML = historico.length ? '' : '<p>Nenhuma OS encontrada.</p>';
+            
+            historico.sort((a,b) => b.osNum - a.osNum).forEach(os => {
+                let item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `<div><strong>OS ${os.osNum}</strong> - ${os.cliNome}</div> <small>${os.dataAtual}</small>`;
+                item.onclick = () => carregarOS(os);
+                container.appendChild(item);
+            });
+            document.getElementById('modalBusca').style.display = 'flex';
+        }
+
+        function carregarOS(os) {
+            campos.forEach(id => { if(os[id] !== undefined) document.getElementById(id).value = os[id]; });
+            checks.forEach(id => { if(os[id] !== undefined) document.getElementById(id).checked = os[id]; });
+            calcularTotal();
+            document.getElementById('modalBusca').style.display = 'none';
+        }
+
+        // --- FUNÇÕES DE AUXÍLIO ---
         function carregarLogo(event) {
             const reader = new FileReader();
             reader.onload = function(){
@@ -300,7 +374,6 @@
             if(event.target.files[0]) reader.readAsDataURL(event.target.files[0]);
         }
 
-        // --- CEP ---
         function buscarCEP(cep) {
             let c = cep.replace(/\D/g, '');
             if (c.length === 8) {
@@ -313,64 +386,30 @@
             }
         }
 
-        // --- CALCULOS ---
         function calcularTotal() {
             let m = parseFloat(document.getElementById('valMaoObra').value) || 0;
             let p = parseFloat(document.getElementById('valPecas').value) || 0;
             document.getElementById('valTotal').value = (m + p).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
         }
 
-        // --- WHATSAPP ---
         function enviarWhatsApp() {
             const tel = document.getElementById('cliTel').value.replace(/\D/g, '');
-            const nome = document.getElementById('cliNome').value;
-            const os = document.getElementById('osNum').value;
-            const total = document.getElementById('valTotal').value;
-
-            if(!tel) return alert("Digite o telefone do cliente!");
-
-            const msg = encodeURIComponent(`Olá ${nome}! Aqui é da Kleber Informática.\n\nA sua Ordem de Serviço nº ${os} está pronta.\nValor Total: ${total}.\n\nQualquer dúvida estamos à disposição!`);
+            const msg = encodeURIComponent(`Olá ${document.getElementById('cliNome').value}! Ordem de Serviço nº ${document.getElementById('osNum').value} está pronta.\nValor Total: ${document.getElementById('valTotal').value}.`);
             window.open(`https://wa.me/55${tel}?text=${msg}`, '_blank');
         }
 
-        // --- PDF ---
         function gerarPDF() {
             if(!document.body.classList.contains('view-mode')) toggleViewMode();
             setTimeout(() => { window.print(); }, 500);
         }
 
-        // --- VIEW MODE ---
         function toggleViewMode() {
             document.body.classList.toggle('view-mode');
-            const btn = document.getElementById('btnViewToggle');
-            btn.innerHTML = document.body.classList.contains('view-mode') ? "✏️ Editar OS" : "👁️ Visualizar";
-            
-            // Marcar classes para esconder no view-mode
-            document.querySelectorAll('.chk').forEach(c => {
-                c.parentElement.classList.toggle('checked', c.checked);
-            });
-        }
-
-        // --- PERSISTENCIA ---
-        const campos = ['osNum', 'cliNome', 'cliCPF', 'cliRG', 'cliTel', 'cliCEP', 'cliBairro', 'cliEnd', 'eqTipo', 'eqModelo', 'eqSerie', 'chkOutros', 'relatoDefeito', 'laudoTecnico', 'servicosExecutados', 'valMaoObra', 'valPecas', 'garantiaMaoObra', 'garantiaPecas', 'dataAtual'];
-        const checks = ['chkFonte', 'chkCapa', 'chkTela', 'chkLigar', 'chkDados', 'chkSenha'];
-
-        function salvarDados() {
-            let data = {};
-            campos.forEach(id => data[id] = document.getElementById(id).value);
-            checks.forEach(id => data[id] = document.getElementById(id).checked);
-            localStorage.setItem('kleber_os_last', JSON.stringify(data));
-            alert("OS salva com sucesso!");
+            document.getElementById('btnViewToggle').innerHTML = document.body.classList.contains('view-mode') ? "✏️ Editar" : "👁️ Visão";
+            document.querySelectorAll('.chk').forEach(c => c.parentElement.classList.toggle('checked', c.checked));
         }
 
         window.onload = () => {
-            let last = localStorage.getItem('kleber_os_last');
-            if(last) {
-                let d = JSON.parse(last);
-                campos.forEach(id => { if(d[id]) document.getElementById(id).value = d[id]; });
-                checks.forEach(id => { if(d[id]) document.getElementById(id).checked = d[id]; });
-                calcularTotal();
-            }
             let logo = localStorage.getItem('kleber_logo');
             if(logo) {
                 document.getElementById('logoContainer').style.backgroundImage = `url(${logo})`;
