@@ -9,6 +9,8 @@
             --primary: #2c3e50;
             --border: #bdc3c7;
             --bg-light: #f9f9f9;
+            --whatsapp: #25d366;
+            --pdf: #e74c3c;
         }
 
         * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -22,31 +24,41 @@
             align-items: center;
         }
 
-        /* Controles flutuantes que não saem na impressão */
+        /* Controles flutuantes */
         .controls {
             width: 100%;
-            max-width: 800px;
+            max-width: 850px;
             background: white;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
             gap: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 10px;
+            z-index: 1000;
         }
 
         button {
-            flex: 1;
-            padding: 12px;
+            padding: 12px 5px;
             border: none;
             border-radius: 5px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: 0.3s;
         }
         .btn-save { background: #27ae60; color: white; }
         .btn-view { background: #2980b9; color: white; }
-        .btn-print { background: #8e44ad; color: white; }
+        .btn-wa { background: var(--whatsapp); color: white; }
+        .btn-pdf { background: var(--pdf); color: white; }
+        button:hover { opacity: 0.8; }
 
         /* A Folha da OS */
         .document-a4 {
@@ -55,6 +67,7 @@
             max-width: 800px;
             padding: 40px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            position: relative;
         }
 
         /* Cabeçalho */
@@ -75,356 +88,296 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            position: relative;
             background-size: contain;
-            background-repeat: no-origin;
+            background-repeat: no-repeat;
             background-position: center;
         }
         .logo-upload input { display: none; }
-        .logo-text { color: #7f8c8d; font-size: 12px; text-align: center; }
+        .logo-text { color: #7f8c8d; font-size: 10px; text-align: center; }
 
-        .company-info { text-align: center; flex: 1; padding: 0 20px; }
-        .company-info h2 { margin: 0 0 5px 0; color: var(--primary); }
-        .company-info p { margin: 2px 0; font-size: 11px; color: #333; }
+        .company-info { text-align: center; flex: 1; padding: 0 10px; }
+        .company-info h2 { margin: 0 0 5px 0; color: var(--primary); font-size: 20px; }
+        .company-info p { margin: 2px 0; font-size: 11px; color: #333; line-height: 1.2; }
 
         .os-number { text-align: right; }
-        .os-number label { font-size: 12px; font-weight: bold; display: block; color: var(--primary); }
-        .os-number input { font-size: 24px; font-weight: bold; width: 100px; color: red; border: none; outline: none; text-align: right; }
+        .os-number label { font-size: 11px; font-weight: bold; display: block; color: var(--primary); }
+        .os-number input { font-size: 24px; font-weight: bold; width: 100px; color: #c0392b; border: none; outline: none; text-align: right; background: transparent; }
 
         /* Seções */
         .section-title {
             background: var(--primary);
             color: white;
             padding: 5px 10px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
-            margin: 20px 0 10px 0;
+            margin: 15px 0 10px 0;
+            text-transform: uppercase;
         }
 
-        .grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         .grid-form.col-3 { grid-template-columns: 1fr 1fr 1fr; }
         .grid-form.col-1 { grid-template-columns: 1fr; }
 
         .input-group { display: flex; flex-direction: column; }
-        .input-group label { font-size: 11px; font-weight: bold; color: #555; margin-bottom: 3px; }
+        .input-group label { font-size: 10px; font-weight: bold; color: #555; margin-bottom: 2px; }
         .input-group input, .input-group textarea {
             padding: 8px;
             border: 1px solid var(--border);
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 13px;
             width: 100%;
+            background: #fff;
         }
-        .input-group textarea { resize: vertical; min-height: 60px; }
+        .input-group textarea { resize: none; min-height: 50px; }
 
         /* Checklist */
-        .checklist-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .checkbox-item { display: flex; align-items: center; gap: 5px; font-size: 13px; }
+        .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #fdfdfd; padding: 10px; border: 1px solid #eee; }
+        .checkbox-item { display: flex; align-items: center; gap: 5px; font-size: 12px; cursor: pointer; }
         
         /* Financeiro */
         .financeiro-box {
-            background: var(--bg-light);
+            background: #fcfcfc;
             padding: 15px;
             border: 1px solid var(--border);
             border-radius: 5px;
+            margin-top: 10px;
         }
         .total-highlight {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
             color: #27ae60;
+            border: none !important;
+            text-align: right;
         }
 
         /* Assinaturas */
-        .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 50px; text-align: center; }
-        .sig-line { border-top: 1px solid #000; padding-top: 5px; font-size: 12px; }
+        .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 40px; text-align: center; }
+        .sig-line { border-top: 1px solid #000; padding-top: 5px; font-size: 11px; font-weight: bold; }
 
-        /* MODO VISUALIZAÇÃO (Remove bordas de inputs para parecer documento final) */
+        /* MODO VISUALIZAÇÃO */
         body.view-mode .controls .btn-view { background: #f39c12; }
         body.view-mode input, body.view-mode textarea {
-            border: none;
-            background: transparent;
-            padding: 0;
-            appearance: none;
-            -webkit-appearance: none;
+            border: none !important;
+            background: transparent !important;
+            padding: 2px 0;
         }
-        body.view-mode textarea { resize: none; overflow: hidden; }
         body.view-mode .logo-upload { border: none; }
-        body.view-mode .logo-text { display: none; }
+        body.view-mode .logo-text, body.view-mode input[type="checkbox"] { display: none; }
+        body.view-mode .checkbox-item:not(.checked) { display: none; } /* Oculta itens não marcados na visualização */
 
-        /* MODO IMPRESSÃO / PDF */
+        /* MODO IMPRESSÃO */
         @media print {
             body { background: white; padding: 0; }
             .controls { display: none; }
             .document-a4 { box-shadow: none; padding: 0; width: 100%; max-width: 100%; }
-            input, textarea { border: none !important; background: transparent !important; resize: none; }
+            .section-title { -webkit-print-color-adjust: exact; background-color: var(--primary) !important; color: white !important; }
+            input, textarea { border: none !important; }
             .logo-upload { border: none; }
             .logo-text { display: none; }
         }
 
-        /* RESPONSIVO PARA IPHONE / MOBILE */
+        /* RESPONSIVO IPHONE 17 PRO MAX */
         @media (max-width: 768px) {
+            .controls { grid-template-columns: 1fr 1fr; position: static; }
             .grid-form, .grid-form.col-3 { grid-template-columns: 1fr; }
-            .header { flex-direction: column; align-items: center; text-align: center; gap: 15px; }
+            .header { flex-direction: column; align-items: center; text-align: center; gap: 10px; }
             .os-number { text-align: center; }
             .os-number input { text-align: center; }
             .checklist-grid { grid-template-columns: 1fr 1fr; }
-            .document-a4 { padding: 15px; }
-            .controls { flex-direction: column; }
-            input, textarea { font-size: 16px; } /* Evita zoom automático no iOS */
+            .document-a4 { padding: 20px; }
+            input, textarea { font-size: 16px !important; } /* Melhor para toque no iOS */
         }
     </style>
 </head>
 <body>
 
     <div class="controls">
-        <button class="btn-save" onclick="salvarDados()">💾 Salvar Dados (Local)</button>
-        <button class="btn-view" id="btnViewToggle" onclick="toggleViewMode()">👁️ Visualizar / PDF</button>
-        <button class="btn-print" onclick="window.print()">🖨️ Imprimir OS</button>
+        <button class="btn-save" onclick="salvarDados()">💾 Salvar</button>
+        <button class="btn-view" id="btnViewToggle" onclick="toggleViewMode()">👁️ Visualizar</button>
+        <button class="btn-wa" onclick="enviarWhatsApp()">📱 WhatsApp</button>
+        <button class="btn-pdf" onclick="gerarPDF()">📄 PDF / Imprimir</button>
     </div>
 
     <div class="document-a4" id="osDocument">
         <div class="header">
             <div class="logo-upload" id="logoContainer" onclick="document.getElementById('logoInput').click()">
-                <span class="logo-text" id="logoText">Clique para<br>adicionar Logo</span>
+                <span class="logo-text" id="logoText">Logo da<br>Kleber Informática</span>
                 <input type="file" id="logoInput" accept="image/*" onchange="carregarLogo(event)">
             </div>
 
             <div class="company-info">
                 <h2>KLEBER INFORMÁTICA</h2>
                 <p>Avenida Dalva 228, esquina com a Psg: Oliveira</p>
-                <p>Próximo o Delícias Dú Pará, em frente ao antigo Clube dos Médicos</p>
-                <p>Bairro Marambaia - CEP 666.15.850</p>
-                <p><strong>Telefone:</strong> 91 98051-0776</p>
+                <p>Marambaia - CEP 666.15.850 - Belém/PA</p>
+                <p><strong>Telefone:</strong> (91) 98051-0776</p>
             </div>
 
             <div class="os-number">
-                <label>Nº DA ORDEM DE SERVIÇO</label>
+                <label>Nº DA OS</label>
                 <input type="text" id="osNum" value="0003">
             </div>
         </div>
 
-        <div class="section-title">1. DADOS DO CLIENTE</div>
+        <div class="section-title">1. Informações do Cliente</div>
         <div class="grid-form col-3">
-            <div class="input-group">
-                <label>Nome do Cliente</label>
-                <input type="text" id="cliNome">
-            </div>
-            <div class="input-group">
-                <label>CPF</label>
-                <input type="text" id="cliCPF">
-            </div>
-            <div class="input-group">
-                <label>RG</label>
-                <input type="text" id="cliRG">
-            </div>
+            <div class="input-group"><label>Nome</label><input type="text" id="cliNome"></div>
+            <div class="input-group"><label>CPF</label><input type="text" id="cliCPF"></div>
+            <div class="input-group"><label>RG</label><input type="text" id="cliRG"></div>
         </div>
         <div class="grid-form col-3">
-            <div class="input-group">
-                <label>Telefone / WhatsApp</label>
-                <input type="text" id="cliTel">
-            </div>
-            <div class="input-group">
-                <label>CEP (Busca Automática)</label>
-                <input type="text" id="cliCEP" maxlength="9" onblur="buscarCEP(this.value)">
-            </div>
-            <div class="input-group">
-                <label>Bairro</label>
-                <input type="text" id="cliBairro">
-            </div>
+            <div class="input-group"><label>WhatsApp</label><input type="text" id="cliTel" placeholder="Ex: 91980510776"></div>
+            <div class="input-group"><label>CEP</label><input type="text" id="cliCEP" maxlength="9" onblur="buscarCEP(this.value)"></div>
+            <div class="input-group"><label>Bairro</label><input type="text" id="cliBairro"></div>
         </div>
         <div class="grid-form col-1">
-            <div class="input-group">
-                <label>Endereço Completo</label>
-                <input type="text" id="cliEnd">
-            </div>
+            <div class="input-group"><label>Endereço</label><input type="text" id="cliEnd"></div>
         </div>
 
-        <div class="section-title">2. DADOS DO EQUIPAMENTO</div>
+        <div class="section-title">2. Dados do Equipamento & Checklist</div>
         <div class="grid-form col-3">
-            <div class="input-group">
-                <label>Tipo (Ex: Notebook, Celular)</label>
-                <input type="text" id="eqTipo">
-            </div>
-            <div class="input-group">
-                <label>Marca / Modelo</label>
-                <input type="text" id="eqModelo">
-            </div>
-            <div class="input-group">
-                <label>Nº de Série</label>
-                <input type="text" id="eqSerie">
-            </div>
+            <div class="input-group"><label>Equipamento</label><input type="text" id="eqTipo"></div>
+            <div class="input-group"><label>Marca/Modelo</label><input type="text" id="eqModelo"></div>
+            <div class="input-group"><label>Nº de Série</label><input type="text" id="eqSerie"></div>
         </div>
         
-        <div class="input-group" style="margin-bottom: 15px;">
-            <label>Checklist de Entrada (Acessórios/Estado):</label>
-            <div class="checklist-grid">
-                <label class="checkbox-item"><input type="checkbox" id="chkFonte"> Fonte/Carregador</label>
-                <label class="checkbox-item"><input type="checkbox" id="chkCabo"> Cabo de Dados</label>
-                <label class="checkbox-item"><input type="checkbox" id="chkCapa"> Capa Protetora</label>
-                <label class="checkbox-item"><input type="checkbox" id="chkTela"> Tela Trincada</label>
-                <label class="checkbox-item"><input type="checkbox" id="chkBateria"> Bateria Estufada</label>
-                <label class="checkbox-item"><input type="checkbox" id="chkLigar"> Aparelho Liga</label>
-            </div>
-            <input type="text" id="chkOutros" placeholder="Outras observações do equipamento..." style="margin-top: 10px;">
+        <div class="checklist-grid">
+            <label class="checkbox-item"><input type="checkbox" class="chk" id="chkFonte"> Fonte/Cabo</label>
+            <label class="checkbox-item"><input type="checkbox" class="chk" id="chkCapa"> Capa/Case</label>
+            <label class="checkbox-item"><input type="checkbox" class="chk" id="chkTela"> Tela OK</label>
+            <label class="checkbox-item"><input type="checkbox" class="chk" id="chkLigar"> Liga</label>
+            <label class="checkbox-item"><input type="checkbox" class="chk" id="chkDados"> Backup OK</label>
+            <label class="checkbox-item"><input type="checkbox" class="chk" id="chkSenha"> Com Senha</label>
+        </div>
+        <div class="input-group" style="margin-top: 5px;">
+            <label>Outros acessórios / Estado físico:</label>
+            <input type="text" id="chkOutros">
         </div>
 
-        <div class="section-title">3. HISTÓRICO DE ATENDIMENTO</div>
+        <div class="section-title">3. Detalhes Técnicos do Atendimento</div>
         <div class="grid-form col-1">
             <div class="input-group">
-                <label>3.1. Defeito Relatado pelo Cliente</label>
-                <textarea id="relatoDefeito" rows="2"></textarea>
+                <label>3.1. Defeito Relatado</label>
+                <textarea id="relatoDefeito"></textarea>
             </div>
             <div class="input-group">
-                <label>3.2. Laudo Técnico (Análise da Kleber Informática)</label>
-                <textarea id="laudoTecnico" rows="3"></textarea>
+                <label>3.2. Laudo Técnico (Diagnóstico)</label>
+                <textarea id="laudoTecnico"></textarea>
             </div>
             <div class="input-group">
-                <label>3.3. Serviços Executados / Peças Utilizadas</label>
-                <textarea id="servicosExecutados" rows="3"></textarea>
+                <label>3.3. Serviços Executados / Peças</label>
+                <textarea id="servicosExecutados"></textarea>
             </div>
         </div>
 
-        <div class="section-title">4. VALORES E GARANTIA</div>
+        <div class="section-title">4. Fechamento Financeiro & Garantia</div>
         <div class="financeiro-box">
             <div class="grid-form col-3">
-                <div class="input-group">
-                    <label>Valor Mão de Obra (R$)</label>
-                    <input type="number" id="valMaoObra" value="0.00" oninput="calcularTotal()">
-                </div>
-                <div class="input-group">
-                    <label>Valor Peças (R$)</label>
-                    <input type="number" id="valPecas" value="0.00" oninput="calcularTotal()">
-                </div>
-                <div class="input-group">
-                    <label>Valor TOTAL (R$)</label>
-                    <input type="text" id="valTotal" class="total-highlight" value="R$ 0,00" readonly>
-                </div>
+                <div class="input-group"><label>Mão de Obra (R$)</label><input type="number" id="valMaoObra" value="0.00" oninput="calcularTotal()"></div>
+                <div class="input-group"><label>Peças (R$)</label><input type="number" id="valPecas" value="0.00" oninput="calcularTotal()"></div>
+                <div class="input-group"><label>TOTAL</label><input type="text" id="valTotal" class="total-highlight" value="R$ 0,00" readonly></div>
             </div>
-            <div class="grid-form" style="margin-top: 15px;">
-                <div class="input-group">
-                    <label>Garantia de Mão de Obra</label>
-                    <input type="text" id="garantiaMaoObra" placeholder="Ex: 90 dias">
-                </div>
-                <div class="input-group">
-                    <label>Garantia de Peças</label>
-                    <input type="text" id="garantiaPecas" placeholder="Ex: 1 ano pelo fabricante">
-                </div>
+            <div class="grid-form" style="margin-top: 10px;">
+                <div class="input-group"><label>Garantia Mão de Obra</label><input type="text" id="garantiaMaoObra" value="90 Dias"></div>
+                <div class="input-group"><label>Garantia Peças</label><input type="text" id="garantiaPecas"></div>
             </div>
         </div>
 
         <div class="signatures">
-            <div>
-                <p>Belém, <input type="text" id="dataAtual" style="width: 120px; text-align: center; border:none; border-bottom: 1px solid #000; outline: none;"></p>
-                <div class="sig-line">Kleber Informática</div>
-            </div>
-            <div style="margin-top: 36px;">
-                <div class="sig-line">Assinatura do Cliente</div>
-            </div>
+            <div><p>Belém, <input type="text" id="dataAtual" style="width:100px; border:none; border-bottom:1px solid #000; outline:none; text-align:center;"></p><div class="sig-line">Kleber Informática</div></div>
+            <div style="margin-top:35px;"><div class="sig-line">Assinatura do Cliente</div></div>
         </div>
-
     </div>
 
     <script>
-        // Função 1: Upload de Logo via LocalStorage para persistir
+        // --- LOGO ---
         function carregarLogo(event) {
             const reader = new FileReader();
             reader.onload = function(){
-                const imgData = reader.result;
-                document.getElementById('logoContainer').style.backgroundImage = `url(${imgData})`;
+                document.getElementById('logoContainer').style.backgroundImage = `url(${reader.result})`;
                 document.getElementById('logoText').style.display = 'none';
-                localStorage.setItem('kleber_os_logo', imgData);
+                localStorage.setItem('kleber_logo', reader.result);
             }
-            if(event.target.files[0]) {
-                reader.readAsDataURL(event.target.files[0]);
-            }
+            if(event.target.files[0]) reader.readAsDataURL(event.target.files[0]);
         }
 
-        // Função 2: API ViaCEP
+        // --- CEP ---
         function buscarCEP(cep) {
-            let cepLimpo = cep.replace(/\D/g, '');
-            if (cepLimpo.length === 8) {
-                fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`)
-                .then(res => res.json())
-                .then(dados => {
-                    if (!dados.erro) {
-                        document.getElementById('cliEnd').value = `${dados.logradouro}, Nº - ${dados.complemento}`;
-                        document.getElementById('cliBairro').value = `${dados.bairro}, ${dados.localidade} - ${dados.uf}`;
+            let c = cep.replace(/\D/g, '');
+            if (c.length === 8) {
+                fetch(`https://viacep.com.br/ws/${c}/json/`).then(r => r.json()).then(d => {
+                    if (!d.erro) {
+                        document.getElementById('cliEnd').value = d.logradouro;
+                        document.getElementById('cliBairro').value = `${d.bairro}, ${d.localidade}/${d.uf}`;
                     }
-                })
-                .catch(err => console.error("Erro ao buscar CEP", err));
+                });
             }
         }
 
-        // Função 3: Calcular Soma Total
+        // --- CALCULOS ---
         function calcularTotal() {
-            let maoObra = parseFloat(document.getElementById('valMaoObra').value) || 0;
-            let pecas = parseFloat(document.getElementById('valPecas').value) || 0;
-            let total = maoObra + pecas;
-            document.getElementById('valTotal').value = total.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+            let m = parseFloat(document.getElementById('valMaoObra').value) || 0;
+            let p = parseFloat(document.getElementById('valPecas').value) || 0;
+            document.getElementById('valTotal').value = (m + p).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
         }
 
-        // Função 4: Alternar Modo de Visualização (Editar / View)
+        // --- WHATSAPP ---
+        function enviarWhatsApp() {
+            const tel = document.getElementById('cliTel').value.replace(/\D/g, '');
+            const nome = document.getElementById('cliNome').value;
+            const os = document.getElementById('osNum').value;
+            const total = document.getElementById('valTotal').value;
+
+            if(!tel) return alert("Digite o telefone do cliente!");
+
+            const msg = encodeURIComponent(`Olá ${nome}! Aqui é da Kleber Informática.\n\nA sua Ordem de Serviço nº ${os} está pronta.\nValor Total: ${total}.\n\nQualquer dúvida estamos à disposição!`);
+            window.open(`https://wa.me/55${tel}?text=${msg}`, '_blank');
+        }
+
+        // --- PDF ---
+        function gerarPDF() {
+            if(!document.body.classList.contains('view-mode')) toggleViewMode();
+            setTimeout(() => { window.print(); }, 500);
+        }
+
+        // --- VIEW MODE ---
         function toggleViewMode() {
             document.body.classList.toggle('view-mode');
-            let btn = document.getElementById('btnViewToggle');
-            if(document.body.classList.contains('view-mode')){
-                btn.innerHTML = "✏️ Voltar para Edição";
-                // Ajusta altura dos textareas para caber o texto ao visualizar
-                document.querySelectorAll('textarea').forEach(el => {
-                    el.style.height = 'auto';
-                    el.style.height = (el.scrollHeight) + 'px';
-                });
-            } else {
-                btn.innerHTML = "👁️ Visualizar / PDF";
-            }
+            const btn = document.getElementById('btnViewToggle');
+            btn.innerHTML = document.body.classList.contains('view-mode') ? "✏️ Editar OS" : "👁️ Visualizar";
+            
+            // Marcar classes para esconder no view-mode
+            document.querySelectorAll('.chk').forEach(c => {
+                c.parentElement.classList.toggle('checked', c.checked);
+            });
         }
 
-        // Função 5: Salvar e Carregar todos os dados (LocalStorage)
-        const inputsParaSalvar = [
-            'osNum', 'cliNome', 'cliCPF', 'cliRG', 'cliTel', 'cliCEP', 'cliBairro', 'cliEnd',
-            'eqTipo', 'eqModelo', 'eqSerie', 'chkOutros', 'relatoDefeito', 'laudoTecnico', 
-            'servicosExecutados', 'valMaoObra', 'valPecas', 'garantiaMaoObra', 'garantiaPecas', 'dataAtual'
-        ];
-        
-        const checkboxesParaSalvar = ['chkFonte', 'chkCabo', 'chkCapa', 'chkTela', 'chkBateria', 'chkLigar'];
+        // --- PERSISTENCIA ---
+        const campos = ['osNum', 'cliNome', 'cliCPF', 'cliRG', 'cliTel', 'cliCEP', 'cliBairro', 'cliEnd', 'eqTipo', 'eqModelo', 'eqSerie', 'chkOutros', 'relatoDefeito', 'laudoTecnico', 'servicosExecutados', 'valMaoObra', 'valPecas', 'garantiaMaoObra', 'garantiaPecas', 'dataAtual'];
+        const checks = ['chkFonte', 'chkCapa', 'chkTela', 'chkLigar', 'chkDados', 'chkSenha'];
 
         function salvarDados() {
-            let osData = {};
-            inputsParaSalvar.forEach(id => { osData[id] = document.getElementById(id).value; });
-            checkboxesParaSalvar.forEach(id => { osData[id] = document.getElementById(id).checked; });
-            
-            localStorage.setItem('kleber_os_data', JSON.stringify(osData));
-            alert("Dados da OS salvos no seu aparelho!");
+            let data = {};
+            campos.forEach(id => data[id] = document.getElementById(id).value);
+            checks.forEach(id => data[id] = document.getElementById(id).checked);
+            localStorage.setItem('kleber_os_last', JSON.stringify(data));
+            alert("OS salva com sucesso!");
         }
 
-        function carregarDadosSalvos() {
-            let savedData = localStorage.getItem('kleber_os_data');
-            if (savedData) {
-                let osData = JSON.parse(savedData);
-                inputsParaSalvar.forEach(id => { 
-                    if(osData[id] !== undefined) document.getElementById(id).value = osData[id]; 
-                });
-                checkboxesParaSalvar.forEach(id => { 
-                    if(osData[id] !== undefined) document.getElementById(id).checked = osData[id]; 
-                });
+        window.onload = () => {
+            let last = localStorage.getItem('kleber_os_last');
+            if(last) {
+                let d = JSON.parse(last);
+                campos.forEach(id => { if(d[id]) document.getElementById(id).value = d[id]; });
+                checks.forEach(id => { if(d[id]) document.getElementById(id).checked = d[id]; });
                 calcularTotal();
             }
-
-            // Carrega logo salva
-            let savedLogo = localStorage.getItem('kleber_os_logo');
-            if (savedLogo) {
-                document.getElementById('logoContainer').style.backgroundImage = `url(${savedLogo})`;
+            let logo = localStorage.getItem('kleber_logo');
+            if(logo) {
+                document.getElementById('logoContainer').style.backgroundImage = `url(${logo})`;
                 document.getElementById('logoText').style.display = 'none';
             }
-
-            // Coloca data de hoje se estiver vazio
-            if(!document.getElementById('dataAtual').value) {
-                let hoje = new Date();
-                document.getElementById('dataAtual').value = hoje.toLocaleDateString('pt-BR');
-            }
-        }
-
-        // Inicia carregando os dados ao abrir a página
-        window.onload = carregarDadosSalvos;
+            if(!document.getElementById('dataAtual').value) document.getElementById('dataAtual').value = new Date().toLocaleDateString('pt-BR');
+        };
     </script>
 </body>
 </html>
