@@ -3,331 +3,428 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kleber Informática - v5.7 INTEGRAL</title>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-
+    <title>OS - Kleber Informática</title>
     <style>
-        :root { --primary: #1a2a3a; --accent: #3498db; --success: #27ae60; --light: #f8f9fa; --dark: #2c3e50; --warning: #f39c12; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; color: #333; }
-        .container { max-width: 950px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
-        
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary); padding-bottom: 15px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
-        
-        /* Restauração da Logo Area */
-        .logo-area { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-        .logo-placeholder { width: 60px; height: 60px; border: 2px dashed #ccc; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; }
-        .logo-placeholder img { max-width: 100%; max-height: 100%; }
+        :root {
+            --primary: #2c3e50;
+            --border: #bdc3c7;
+            --bg-light: #f9f9f9;
+        }
 
-        .info-header { font-size: 10px; color: #666; line-height: 1.3; }
-        .section-title { background: var(--primary); color: white; padding: 10px; font-size: 12px; border-radius: 5px; margin: 20px 0 10px 0; text-transform: uppercase; font-weight: bold; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .col-2 { grid-column: span 2; }
-        .full-width { grid-column: 1 / -1; }
+        body { 
+            background: #e0e5ec; 
+            padding: 20px; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+        }
+
+        /* Controles flutuantes que não saem na impressão */
+        .controls {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn-save { background: #27ae60; color: white; }
+        .btn-view { background: #2980b9; color: white; }
+        .btn-print { background: #8e44ad; color: white; }
+
+        /* A Folha da OS */
+        .document-a4 {
+            background: white;
+            width: 100%;
+            max-width: 800px;
+            padding: 40px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Cabeçalho */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .logo-upload {
+            width: 150px;
+            height: 80px;
+            border: 2px dashed var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            background-size: contain;
+            background-repeat: no-origin;
+            background-position: center;
+        }
+        .logo-upload input { display: none; }
+        .logo-text { color: #7f8c8d; font-size: 12px; text-align: center; }
+
+        .company-info { text-align: center; flex: 1; padding: 0 20px; }
+        .company-info h2 { margin: 0 0 5px 0; color: var(--primary); }
+        .company-info p { margin: 2px 0; font-size: 11px; color: #333; }
+
+        .os-number { text-align: right; }
+        .os-number label { font-size: 12px; font-weight: bold; display: block; color: var(--primary); }
+        .os-number input { font-size: 24px; font-weight: bold; width: 100px; color: red; border: none; outline: none; text-align: right; }
+
+        /* Seções */
+        .section-title {
+            background: var(--primary);
+            color: white;
+            padding: 5px 10px;
+            font-size: 14px;
+            font-weight: bold;
+            margin: 20px 0 10px 0;
+        }
+
+        .grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .grid-form.col-3 { grid-template-columns: 1fr 1fr 1fr; }
+        .grid-form.col-1 { grid-template-columns: 1fr; }
+
+        .input-group { display: flex; flex-direction: column; }
+        .input-group label { font-size: 11px; font-weight: bold; color: #555; margin-bottom: 3px; }
+        .input-group input, .input-group textarea {
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 14px;
+            width: 100%;
+        }
+        .input-group textarea { resize: vertical; min-height: 60px; }
+
+        /* Checklist */
+        .checklist-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .checkbox-item { display: flex; align-items: center; gap: 5px; font-size: 13px; }
         
-        label { display: block; font-size: 10px; font-weight: bold; margin-bottom: 3px; color: var(--dark); }
-        input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
-        input:read-only { background: #f9f9f9; color: #555; }
-        
-        .checklist-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #eee; }
-        .check-item { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; min-height: 35px; }
-        .check-item input[type="checkbox"] { width: 22px; height: 22px; flex-shrink: 0; }
+        /* Financeiro */
+        .financeiro-box {
+            background: var(--bg-light);
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+        }
+        .total-highlight {
+            font-size: 20px;
+            font-weight: bold;
+            color: #27ae60;
+        }
 
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 20px; }
-        .full-btn { grid-column: span 2; }
-        button { padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 12px; color: white; text-transform: uppercase; }
-        .btn-save { background: var(--success); }
-        .btn-pdf { background: var(--accent); }
-        .btn-wa { background: #25D366; }
-        .btn-new { background: #6c757d; }
-        .btn-view-mode { background: var(--warning); }
+        /* Assinaturas */
+        .signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 50px; text-align: center; }
+        .sig-line { border-top: 1px solid #000; padding-top: 5px; font-size: 12px; }
 
-        .os-card { background: white; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 6px solid var(--accent); }
-        .os-card-actions { display: flex; gap: 5px; margin-top: 8px; }
-        .btn-mini { padding: 10px; flex: 1; font-size: 10px; }
+        /* MODO VISUALIZAÇÃO (Remove bordas de inputs para parecer documento final) */
+        body.view-mode .controls .btn-view { background: #f39c12; }
+        body.view-mode input, body.view-mode textarea {
+            border: none;
+            background: transparent;
+            padding: 0;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        body.view-mode textarea { resize: none; overflow: hidden; }
+        body.view-mode .logo-upload { border: none; }
+        body.view-mode .logo-text { display: none; }
 
-        .hidden { display: none !important; }
+        /* MODO IMPRESSÃO / PDF */
+        @media print {
+            body { background: white; padding: 0; }
+            .controls { display: none; }
+            .document-a4 { box-shadow: none; padding: 0; width: 100%; max-width: 100%; }
+            input, textarea { border: none !important; background: transparent !important; resize: none; }
+            .logo-upload { border: none; }
+            .logo-text { display: none; }
+        }
 
-        @media (max-width: 600px) {
-            .grid { grid-template-columns: 1fr; }
-            .col-2 { grid-column: span 1; }
-            .mobile-side { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-            header { flex-direction: column; text-align: center; }
-            .logo-area { justify-content: center; }
+        /* RESPONSIVO PARA IPHONE / MOBILE */
+        @media (max-width: 768px) {
+            .grid-form, .grid-form.col-3 { grid-template-columns: 1fr; }
+            .header { flex-direction: column; align-items: center; text-align: center; gap: 15px; }
+            .os-number { text-align: center; }
+            .os-number input { text-align: center; }
+            .checklist-grid { grid-template-columns: 1fr 1fr; }
+            .document-a4 { padding: 15px; }
+            .controls { flex-direction: column; }
+            input, textarea { font-size: 16px; } /* Evita zoom automático no iOS */
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <div class="logo-area" onclick="document.getElementById('upload-logo').click()">
-            <div class="logo-placeholder" id="logo-view">
-                <span id="logo-text" style="font-size: 8px;">LOGOTIPO</span>
-                <img id="img-logo" class="hidden">
+    <div class="controls">
+        <button class="btn-save" onclick="salvarDados()">💾 Salvar Dados (Local)</button>
+        <button class="btn-view" id="btnViewToggle" onclick="toggleViewMode()">👁️ Visualizar / PDF</button>
+        <button class="btn-print" onclick="window.print()">🖨️ Imprimir OS</button>
+    </div>
+
+    <div class="document-a4" id="osDocument">
+        <div class="header">
+            <div class="logo-upload" id="logoContainer" onclick="document.getElementById('logoInput').click()">
+                <span class="logo-text" id="logoText">Clique para<br>adicionar Logo</span>
+                <input type="file" id="logoInput" accept="image/*" onchange="carregarLogo(event)">
             </div>
-            <input type="file" id="upload-logo" class="hidden" accept="image/*" onchange="previewLogo(this)">
+
+            <div class="company-info">
+                <h2>KLEBER INFORMÁTICA</h2>
+                <p>Avenida Dalva 228, esquina com a Psg: Oliveira</p>
+                <p>Próximo o Delícias Dú Pará, em frente ao antigo Clube dos Médicos</p>
+                <p>Bairro Marambaia - CEP 666.15.850</p>
+                <p><strong>Telefone:</strong> 91 98051-0776</p>
+            </div>
+
+            <div class="os-number">
+                <label>Nº DA ORDEM DE SERVIÇO</label>
+                <input type="text" id="osNum" value="0003">
+            </div>
+        </div>
+
+        <div class="section-title">1. DADOS DO CLIENTE</div>
+        <div class="grid-form col-3">
+            <div class="input-group">
+                <label>Nome do Cliente</label>
+                <input type="text" id="cliNome">
+            </div>
+            <div class="input-group">
+                <label>CPF</label>
+                <input type="text" id="cliCPF">
+            </div>
+            <div class="input-group">
+                <label>RG</label>
+                <input type="text" id="cliRG">
+            </div>
+        </div>
+        <div class="grid-form col-3">
+            <div class="input-group">
+                <label>Telefone / WhatsApp</label>
+                <input type="text" id="cliTel">
+            </div>
+            <div class="input-group">
+                <label>CEP (Busca Automática)</label>
+                <input type="text" id="cliCEP" maxlength="9" onblur="buscarCEP(this.value)">
+            </div>
+            <div class="input-group">
+                <label>Bairro</label>
+                <input type="text" id="cliBairro">
+            </div>
+        </div>
+        <div class="grid-form col-1">
+            <div class="input-group">
+                <label>Endereço Completo</label>
+                <input type="text" id="cliEnd">
+            </div>
+        </div>
+
+        <div class="section-title">2. DADOS DO EQUIPAMENTO</div>
+        <div class="grid-form col-3">
+            <div class="input-group">
+                <label>Tipo (Ex: Notebook, Celular)</label>
+                <input type="text" id="eqTipo">
+            </div>
+            <div class="input-group">
+                <label>Marca / Modelo</label>
+                <input type="text" id="eqModelo">
+            </div>
+            <div class="input-group">
+                <label>Nº de Série</label>
+                <input type="text" id="eqSerie">
+            </div>
+        </div>
+        
+        <div class="input-group" style="margin-bottom: 15px;">
+            <label>Checklist de Entrada (Acessórios/Estado):</label>
+            <div class="checklist-grid">
+                <label class="checkbox-item"><input type="checkbox" id="chkFonte"> Fonte/Carregador</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkCabo"> Cabo de Dados</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkCapa"> Capa Protetora</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkTela"> Tela Trincada</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkBateria"> Bateria Estufada</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkLigar"> Aparelho Liga</label>
+            </div>
+            <input type="text" id="chkOutros" placeholder="Outras observações do equipamento..." style="margin-top: 10px;">
+        </div>
+
+        <div class="section-title">3. HISTÓRICO DE ATENDIMENTO</div>
+        <div class="grid-form col-1">
+            <div class="input-group">
+                <label>3.1. Defeito Relatado pelo Cliente</label>
+                <textarea id="relatoDefeito" rows="2"></textarea>
+            </div>
+            <div class="input-group">
+                <label>3.2. Laudo Técnico (Análise da Kleber Informática)</label>
+                <textarea id="laudoTecnico" rows="3"></textarea>
+            </div>
+            <div class="input-group">
+                <label>3.3. Serviços Executados / Peças Utilizadas</label>
+                <textarea id="servicosExecutados" rows="3"></textarea>
+            </div>
+        </div>
+
+        <div class="section-title">4. VALORES E GARANTIA</div>
+        <div class="financeiro-box">
+            <div class="grid-form col-3">
+                <div class="input-group">
+                    <label>Valor Mão de Obra (R$)</label>
+                    <input type="number" id="valMaoObra" value="0.00" oninput="calcularTotal()">
+                </div>
+                <div class="input-group">
+                    <label>Valor Peças (R$)</label>
+                    <input type="number" id="valPecas" value="0.00" oninput="calcularTotal()">
+                </div>
+                <div class="input-group">
+                    <label>Valor TOTAL (R$)</label>
+                    <input type="text" id="valTotal" class="total-highlight" value="R$ 0,00" readonly>
+                </div>
+            </div>
+            <div class="grid-form" style="margin-top: 15px;">
+                <div class="input-group">
+                    <label>Garantia de Mão de Obra</label>
+                    <input type="text" id="garantiaMaoObra" placeholder="Ex: 90 dias">
+                </div>
+                <div class="input-group">
+                    <label>Garantia de Peças</label>
+                    <input type="text" id="garantiaPecas" placeholder="Ex: 1 ano pelo fabricante">
+                </div>
+            </div>
+        </div>
+
+        <div class="signatures">
             <div>
-                <h1 style="margin:0; font-size: 19px; color: var(--primary);">Kleber Informática</h1>
-                <div class="info-header">
-                    Av. Dalva 228, Marambaia - Belém/PA<br>
-                    <strong>(91) 98051-0776</strong>
-                </div>
+                <p>Belém, <input type="text" id="dataAtual" style="width: 120px; text-align: center; border:none; border-bottom: 1px solid #000; outline: none;"></p>
+                <div class="sig-line">Kleber Informática</div>
+            </div>
+            <div style="margin-top: 36px;">
+                <div class="sig-line">Assinatura do Cliente</div>
             </div>
         </div>
-        <div style="text-align: center;">
-            <label>Nº DA OS</label>
-            <input type="number" id="f-os" style="font-weight: bold; color: #e74c3c; text-align: center; font-size: 22px; width: 110px;" readonly>
-            <div id="status-view" style="font-size: 10px; font-weight: bold; color: var(--accent); margin-top: 4px;"></div>
-        </div>
-    </header>
 
-    <div style="margin-bottom: 15px; display: flex; gap: 8px;">
-        <button onclick="novaOS()" style="background: var(--dark); flex: 1;">📝 NOVA OS</button>
-        <button onclick="showTab('lista')" style="background: var(--dark); flex: 1;">📂 HISTÓRICO</button>
     </div>
 
-    <div id="tab-form">
-        <input type="hidden" id="f-id">
+    <script>
+        // Função 1: Upload de Logo via LocalStorage para persistir
+        function carregarLogo(event) {
+            const reader = new FileReader();
+            reader.onload = function(){
+                const imgData = reader.result;
+                document.getElementById('logoContainer').style.backgroundImage = `url(${imgData})`;
+                document.getElementById('logoText').style.display = 'none';
+                localStorage.setItem('kleber_os_logo', imgData);
+            }
+            if(event.target.files[0]) {
+                reader.readAsDataURL(event.target.files[0]);
+            }
+        }
+
+        // Função 2: API ViaCEP
+        function buscarCEP(cep) {
+            let cepLimpo = cep.replace(/\D/g, '');
+            if (cepLimpo.length === 8) {
+                fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`)
+                .then(res => res.json())
+                .then(dados => {
+                    if (!dados.erro) {
+                        document.getElementById('cliEnd').value = `${dados.logradouro}, Nº - ${dados.complemento}`;
+                        document.getElementById('cliBairro').value = `${dados.bairro}, ${dados.localidade} - ${dados.uf}`;
+                    }
+                })
+                .catch(err => console.error("Erro ao buscar CEP", err));
+            }
+        }
+
+        // Função 3: Calcular Soma Total
+        function calcularTotal() {
+            let maoObra = parseFloat(document.getElementById('valMaoObra').value) || 0;
+            let pecas = parseFloat(document.getElementById('valPecas').value) || 0;
+            let total = maoObra + pecas;
+            document.getElementById('valTotal').value = total.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+        }
+
+        // Função 4: Alternar Modo de Visualização (Editar / View)
+        function toggleViewMode() {
+            document.body.classList.toggle('view-mode');
+            let btn = document.getElementById('btnViewToggle');
+            if(document.body.classList.contains('view-mode')){
+                btn.innerHTML = "✏️ Voltar para Edição";
+                // Ajusta altura dos textareas para caber o texto ao visualizar
+                document.querySelectorAll('textarea').forEach(el => {
+                    el.style.height = 'auto';
+                    el.style.height = (el.scrollHeight) + 'px';
+                });
+            } else {
+                btn.innerHTML = "👁️ Visualizar / PDF";
+            }
+        }
+
+        // Função 5: Salvar e Carregar todos os dados (LocalStorage)
+        const inputsParaSalvar = [
+            'osNum', 'cliNome', 'cliCPF', 'cliRG', 'cliTel', 'cliCEP', 'cliBairro', 'cliEnd',
+            'eqTipo', 'eqModelo', 'eqSerie', 'chkOutros', 'relatoDefeito', 'laudoTecnico', 
+            'servicosExecutados', 'valMaoObra', 'valPecas', 'garantiaMaoObra', 'garantiaPecas', 'dataAtual'
+        ];
         
-        <div class="section-title">1. Informações do Cliente</div>
-        <div class="grid">
-            <div class="col-2"><label>Nome Completo</label><input type="text" id="f-cliente"></div>
-            <div><label>WhatsApp</label><input type="tel" id="f-whatsapp"></div>
-            <div><label>Status</label>
-                <select id="f-status">
-                    <option value="ORÇAMENTO">ORÇAMENTO</option>
-                    <option value="APROVADO">APROVADO</option>
-                    <option value="FINALIZADO">FINALIZADO</option>
-                    <option value="ENTREGUE">ENTREGUE</option>
-                </select>
-            </div>
-            <div><label>CPF / CNPJ</label><input type="text" id="f-cpf"></div>
-            <div><label>RG</label><input type="text" id="f-rg"></div>
-            <div><label>CEP</label><input type="text" id="f-cep" onblur="buscarCEP(this.value)"></div>
-            <div class="col-2"><label>Endereço Completo</label><input type="text" id="f-rua"></div>
-        </div>
+        const checkboxesParaSalvar = ['chkFonte', 'chkCabo', 'chkCapa', 'chkTela', 'chkBateria', 'chkLigar'];
 
-        <div class="section-title">2. Equipamento e Checklist</div>
-        <div class="grid">
-            <div class="col-2"><label>Aparelho / Modelo</label><input type="text" id="f-equip"></div>
-            <div class="col-2"><label>Nº de Série</label><input type="text" id="f-serie"></div>
-            <div class="full-width">
-                <div class="checklist-grid">
-                    <label class="check-item"><input type="checkbox" class="chk" value="Carregador"> Carregador</label>
-                    <label class="check-item"><input type="checkbox" class="chk" value="Bateria"> Bateria</label>
-                    <label class="check-item"><input type="checkbox" class="chk" value="Mouse"> Mouse</label>
-                    <label class="check-item"><input type="checkbox" class="chk" value="Cabo de Força"> Cabo Força</label>
-                    <label class="check-item"><input type="checkbox" class="chk" value="Case"> Case/Bolsa</label>
-                    <label class="check-item"><input type="checkbox" class="chk" value="Teclado"> Teclado</label>
-                </div>
-                <label style="margin-top: 10px;">Outros Acessórios / Observações Visuais</label>
-                <input type="text" id="f-outros" placeholder="Detalhes adicionais...">
-            </div>
-        </div>
+        function salvarDados() {
+            let osData = {};
+            inputsParaSalvar.forEach(id => { osData[id] = document.getElementById(id).value; });
+            checkboxesParaSalvar.forEach(id => { osData[id] = document.getElementById(id).checked; });
+            
+            localStorage.setItem('kleber_os_data', JSON.stringify(osData));
+            alert("Dados da OS salvos no seu aparelho!");
+        }
 
-        <div class="section-title">3. Laudo Técnico e Financeiro</div>
-        <div class="grid">
-            <div class="col-2"><label>Defeito Relatado</label><textarea id="f-defeito" rows="2"></textarea></div>
-            <div class="col-2"><label>Serviço Executado / Peças</label><textarea id="f-servico" rows="2"></textarea></div>
-            <div class="full-width mobile-side">
-                <div><label>Mão de Obra (R$)</label><input type="number" id="v-obra" value="0" oninput="calcTotal()"></div>
-                <div><label>Valor Peças (R$)</label><input type="number" id="v-pecas" value="0" oninput="calcTotal()"></div>
-            </div>
-            <div class="col-2"><label>Total OS</label><div id="lbl-total" style="font-size: 22px; font-weight: bold; color: var(--success);">R$ 0,00</div></div>
-            <div><label>Garantia MO</label><input type="text" id="f-garantia-mo" value="90 Dias"></div>
-            <div><label>Garantia Peças</label><input type="text" id="f-garantia-pc" value="90 Dias"></div>
-        </div>
+        function carregarDadosSalvos() {
+            let savedData = localStorage.getItem('kleber_os_data');
+            if (savedData) {
+                let osData = JSON.parse(savedData);
+                inputsParaSalvar.forEach(id => { 
+                    if(osData[id] !== undefined) document.getElementById(id).value = osData[id]; 
+                });
+                checkboxesParaSalvar.forEach(id => { 
+                    if(osData[id] !== undefined) document.getElementById(id).checked = osData[id]; 
+                });
+                calcularTotal();
+            }
 
-        <div class="btn-group" id="group-edit">
-            <button class="btn-save full-btn" onclick="salvar()">💾 SALVAR OS</button>
-            <button class="btn-pdf" onclick="gerarPDF()">📄 PDF</button>
-            <button class="btn-wa" onclick="enviarWA()">📲 WHATSAPP</button>
-        </div>
+            // Carrega logo salva
+            let savedLogo = localStorage.getItem('kleber_os_logo');
+            if (savedLogo) {
+                document.getElementById('logoContainer').style.backgroundImage = `url(${savedLogo})`;
+                document.getElementById('logoText').style.display = 'none';
+            }
 
-        <div class="btn-group hidden" id="group-view">
-            <button class="btn-new full-btn" onclick="novaOS()">Sair da Visualização</button>
-            <button class="btn-pdf" onclick="gerarPDF()">📄 GERAR PDF</button>
-            <button class="btn-wa" onclick="enviarWA()">📲 ENVIAR WHATSAPP</button>
-        </div>
-    </div>
+            // Coloca data de hoje se estiver vazio
+            if(!document.getElementById('dataAtual').value) {
+                let hoje = new Date();
+                document.getElementById('dataAtual').value = hoje.toLocaleDateString('pt-BR');
+            }
+        }
 
-    <div id="tab-lista" class="hidden">
-        <input type="text" id="busca" placeholder="🔍 Buscar cliente ou equipamento..." onkeyup="buscar()" style="margin-bottom: 15px;">
-        <div id="resultados"></div>
-    </div>
-</div>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, where, doc, updateDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyDXkyJBXMgh0Vi6dwOCr7oHthyVaq3hcPE",
-        authDomain: "sistema-kleber-informatica.firebaseapp.com",
-        projectId: "sistema-kleber-informatica",
-        storageBucket: "sistema-kleber-informatica.firebasestorage.app",
-        messagingSenderId: "916217534730",
-        appId: "1:916217534730:web:477e2a1a1cf7f4873982f3"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    async function proximoNumeroOS() {
-        const q = query(collection(db, "servicos"), orderBy("os", "desc"), limit(1));
-        const snap = await getDocs(q);
-        document.getElementById('f-os').value = snap.empty ? 3 : parseInt(snap.docs[0].data().os) + 1;
-    }
-
-    window.onload = proximoNumeroOS;
-
-    window.previewLogo = (input) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            document.getElementById('img-logo').src = e.target.result;
-            document.getElementById('img-logo').classList.remove('hidden');
-            document.getElementById('logo-text').classList.add('hidden');
-        };
-        reader.readAsDataURL(input.files[0]);
-    };
-
-    window.calcTotal = () => {
-        const t = (parseFloat(document.getElementById('v-obra').value) || 0) + (parseFloat(document.getElementById('v-pecas').value) || 0);
-        document.getElementById('lbl-total').innerText = "R$ " + t.toFixed(2).replace('.', ',');
-    };
-
-    window.showTab = (t) => {
-        document.getElementById('tab-form').classList.toggle('hidden', t !== 'form');
-        document.getElementById('tab-lista').classList.toggle('hidden', t !== 'lista');
-    };
-
-    window.buscarCEP = async (cep) => {
-        const r = await fetch(`https://viacep.com.br/ws/${cep.replace(/\D/g,"")}/json/`);
-        const d = await r.json();
-        if(!d.erro) document.getElementById('f-rua').value = `${d.logradouro}, ${d.bairro} - ${d.localidade}/${d.uf}`;
-    };
-
-    window.salvar = async () => {
-        const id = document.getElementById('f-id').value;
-        const dados = {
-            os: parseInt(document.getElementById('f-os').value),
-            cliente: document.getElementById('f-cliente').value.toUpperCase(),
-            whatsapp: document.getElementById('f-whatsapp').value,
-            cpf: document.getElementById('f-cpf').value,
-            rg: document.getElementById('f-rg').value,
-            cep: document.getElementById('f-cep').value,
-            endereco: document.getElementById('f-rua').value,
-            equip: document.getElementById('f-equip').value,
-            serie: document.getElementById('f-serie').value,
-            checklist: Array.from(document.querySelectorAll('.chk:checked')).map(c => c.value),
-            outros_acess: document.getElementById('f-outros').value,
-            defeito: document.getElementById('f-defeito').value,
-            servico: document.getElementById('f-servico').value,
-            v_obra: parseFloat(document.getElementById('v-obra').value) || 0,
-            v_pecas: parseFloat(document.getElementById('v-pecas').value) || 0,
-            garantia_mo: document.getElementById('f-garantia-mo').value,
-            garantia_pc: document.getElementById('f-garantia-pc').value,
-            status: document.getElementById('f-status').value,
-            data_upd: new Date().toLocaleDateString('pt-BR')
-        };
-
-        if(id) await updateDoc(doc(db, "servicos", id), dados);
-        else await addDoc(collection(db, "servicos"), {...dados, data_in: new Date().toLocaleDateString('pt-BR')});
-        
-        alert("OS " + dados.os + " SALVA!");
-        location.reload();
-    };
-
-    window.buscar = async () => {
-        const t = document.getElementById('busca').value.toUpperCase();
-        const q = query(collection(db, "servicos"), where("cliente", ">=", t), where("cliente", "<=", t + '\uf8ff'));
-        const snap = await getDocs(q);
-        const res = document.getElementById('resultados');
-        res.innerHTML = "";
-        snap.forEach(d => {
-            const item = d.data();
-            const div = document.createElement('div');
-            div.className = 'os-card';
-            div.innerHTML = `<strong>OS ${item.os} - ${item.cliente}</strong><br><small>${item.equip}</small>
-                <div class="os-card-actions">
-                    <button class="btn-save btn-mini" onclick="carregar('${d.id}', false)">✏️ EDITAR</button>
-                    <button class="btn-view-mode btn-mini" onclick="carregar('${d.id}', true)">👁️ VER</button>
-                </div>`;
-            res.appendChild(div);
-        });
-    };
-
-    window.carregar = async (id, isViewOnly) => {
-        const q = await getDocs(query(collection(db, "servicos")));
-        const d = q.docs.find(doc => doc.id === id).data();
-
-        document.getElementById('f-id').value = id;
-        document.getElementById('f-os').value = d.os;
-        document.getElementById('f-cliente').value = d.cliente;
-        document.getElementById('f-whatsapp').value = d.whatsapp;
-        document.getElementById('f-cpf').value = d.cpf || "";
-        document.getElementById('f-rg').value = d.rg || "";
-        document.getElementById('f-cep').value = d.cep || "";
-        document.getElementById('f-rua').value = d.endereco || "";
-        document.getElementById('f-equip').value = d.equip;
-        document.getElementById('f-serie').value = d.serie;
-        document.getElementById('f-outros').value = d.outros_acess || "";
-        document.getElementById('f-defeito').value = d.defeito;
-        document.getElementById('f-servico').value = d.servico;
-        document.getElementById('v-obra').value = d.v_obra || 0;
-        document.getElementById('v-pecas').value = d.v_pecas || 0;
-        document.getElementById('f-garantia-mo').value = d.garantia_mo || "90 Dias";
-        document.getElementById('f-garantia-pc').value = d.garantia_pc || "90 Dias";
-        document.getElementById('f-status').value = d.status;
-
-        document.querySelectorAll('.chk').forEach(cb => {
-            cb.checked = d.checklist?.includes(cb.value);
-            cb.disabled = isViewOnly;
-        });
-
-        calcTotal();
-
-        const inputs = document.querySelectorAll('#tab-form input, #tab-form textarea, #tab-form select');
-        inputs.forEach(i => { if(i.id !== 'f-os') i.readOnly = isViewOnly; if(i.tagName === 'SELECT') i.disabled = isViewOnly; });
-        
-        document.getElementById('group-edit').classList.toggle('hidden', isViewOnly);
-        document.getElementById('group-view').classList.toggle('hidden', !isViewOnly);
-        document.getElementById('status-view').innerText = isViewOnly ? "MODO VISUALIZAÇÃO" : "MODO EDIÇÃO";
-
-        showTab('form');
-        window.scrollTo(0,0);
-    };
-
-    window.novaOS = () => { location.reload(); };
-
-    window.gerarPDF = () => {
-        const { jsPDF } = window.jspdf;
-        const docPDF = new jsPDF();
-        const obra = parseFloat(document.getElementById('v-obra').value) || 0;
-        const pecas = parseFloat(document.getElementById('v-pecas').value) || 0;
-        
-        docPDF.text("KLEBER INFORMÁTICA - OS " + document.getElementById('f-os').value, 15, 20);
-        docPDF.autoTable({
-            startY: 30,
-            body: [
-                ["CLIENTE", document.getElementById('f-cliente').value],
-                ["EQUIPAMENTO", document.getElementById('f-equip').value],
-                ["MÃO DE OBRA", "R$ " + obra.toFixed(2)],
-                ["PEÇAS", "R$ " + pecas.toFixed(2)],
-                ["TOTAL", document.getElementById('lbl-total').innerText]
-            ]
-        });
-        docPDF.save(`OS_${document.getElementById('f-os').value}.pdf`);
-    };
-
-    window.enviarWA = () => {
-        const tel = document.getElementById('f-whatsapp').value.replace(/\D/g,"");
-        const msg = `Olá ${document.getElementById('f-cliente').value}, OS ${document.getElementById('f-os').value} (${document.getElementById('f-equip').value}) - Status: ${document.getElementById('f-status').value}. Total: ${document.getElementById('lbl-total').innerText}`;
-        window.open(`https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(msg)}`);
-    };
-</script>
+        // Inicia carregando os dados ao abrir a página
+        window.onload = carregarDadosSalvos;
+    </script>
 </body>
 </html>
