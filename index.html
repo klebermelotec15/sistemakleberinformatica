@@ -143,7 +143,11 @@
 
         <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">3. Detalhes Técnicos</h3>
         <div class="grid">
-            <div class="full">
+            <div>
+                <label>Data de Entrada da OS:</label>
+                <input type="date" id="dataEntrada">
+            </div>
+            <div>
                 <label>Situação da OS:</label>
                 <select id="status">
                     <option value="Falta Orçar">🔴 Falta Orçar</option>
@@ -362,7 +366,7 @@
     let tipoDocOriginal = 'ENTRADA';
     let ultimaAbaAberta = 'abaNovaOS';
 
-    // VERIFICAÇÃO DE LOGIN E GATILHO INTELIGENTE DE BACKUP
+    // VERIFICAÇÃO DE LOGIN
     function fazerLogin() {
         const senhaDigitada = document.getElementById('senhaAcesso').value;
         const senhaCorreta = localStorage.getItem('senhaAdmin') || '123456';
@@ -372,7 +376,8 @@
             document.getElementById('conteinerPrincipal').style.display = 'block';
             carregarConfiguracoes();
             carregarHistorico();
-            gatilhoInteligenteBackup(); // Aciona automaticamente no momento do login!
+            limparFormularioOS(); // Preenche a data de hoje ao logar
+            gatilhoInteligenteBackup();
         } else {
             document.getElementById('erroLogin').style.display = 'block';
         }
@@ -389,7 +394,6 @@
         
         document.getElementById('telaDocumento').style.display = 'none';
         document.getElementById('conteinerPrincipal').style.display = 'block';
-        // BUG DA EDIÇÃO CORRIGIDO: A linha que limpava o formulário de forma errada foi removida!
     }
 
     function cancelarEdicao() {
@@ -433,14 +437,13 @@
         return Math.floor(diffTempo / (1000 * 60 * 60 * 24));
     }
 
-    // INTELIGÊNCIA: CONVERTER TEXTO DE GARANTIA EM DIAS
     function converterParaDias(texto) {
         if (!texto) return 0;
         let t = texto.toLowerCase().trim();
         let numero = parseFloat(t.replace(/[^0-9.]/g, '')) || 0;
         if (t.includes('mês') || t.includes('mes')) return numero * 30;
         if (t.includes('ano')) return numero * 365;
-        return numero; // default assumimos que são dias
+        return numero; 
     }
 
     async function obterProximaOS() {
@@ -482,7 +485,7 @@
         if(imprimirRecibo) { prepararImpressao(dados); } else { carregarHistorico(); }
     }
 
-    // SALVAR OS
+    // SALVAR OS (COM DATA MANUAL)
     async function salvarOS(tipoDoc) {
         const vp = parseFloat(document.getElementById('vPecas').value) || 0;
         const vo = parseFloat(document.getElementById('vObra').value) || 0;
@@ -492,6 +495,10 @@
         const cred = parseFloat(document.getElementById('osCred').value) || 0;
         const deb = parseFloat(document.getElementById('osDeb').value) || 0;
         const totalPago = pix + din + cred + deb;
+
+        // Captura a data digitada (YYYY-MM-DD) e converte para PT-BR (DD/MM/YYYY)
+        const dataInput = document.getElementById('dataEntrada').value;
+        const dataFormatada = dataInput ? dataInput.split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
 
         let numOS = editandoId ? parseInt(document.getElementById('idEdicao').innerText) : await obterProximaOS();
 
@@ -508,21 +515,20 @@
             vPecas: vp, vObra: vo, vSinal: totalPago, total: vp + vo, faltaPagar: (vp + vo) - totalPago,
             pagamentos: { pix, din, cred, deb },
             garP: document.getElementById('garPecas').value, garO: document.getElementById('garObra').value,
-            data: editandoId ? undefined : new Date().toLocaleDateString('pt-BR'),
+            data: dataFormatada, // A nova data entra aqui!
             tipo: tipoDoc
         };
 
         if(!dados.cliente) return alert("Digite o nome do cliente!");
 
         if(editandoId) {
-            delete dados.data; 
             await db.collection("servicos").doc(editandoId).update(dados);
             limparFormularioOS();
-            mudarAba('abaHistorico'); // Volta ao histórico após salvar edição
+            mudarAba('abaHistorico'); 
         } else {
-            dados.data = new Date().toLocaleDateString('pt-BR');
             await db.collection("servicos").add(dados);
             prepararImpressao(dados);
+            limparFormularioOS(); // Prepara a tela limpa e data de hoje para a próxima
         }
         carregarHistorico();
     }
@@ -535,7 +541,16 @@
         document.getElementById('botoesCriar').style.display = 'flex';
         document.getElementById('botaoSalvarEdicao').style.display = 'none';
         document.querySelectorAll('#abaNovaOS input[type=text], #abaNovaOS input[type=number], #abaNovaOS textarea').forEach(el => el.value = '');
-        document.getElementById('cliente').value = ''; 
+        
+        // Retorna checkbox e select para padrão
+        document.getElementById('chkFonte').checked = false;
+        document.getElementById('chkCapa').checked = false;
+        document.getElementById('status').value = "Falta Orçar";
+        document.getElementById('garObra').value = "90 Dias";
+        document.getElementById('garPecas').value = "3 meses";
+        
+        // Define campo data sempre para a data de HOJE
+        document.getElementById('dataEntrada').value = new Date().toISOString().split('T')[0];
     }
 
     function prepararImpressao(d) {
@@ -634,7 +649,6 @@
         } else { document.getElementById('alertaAbandono').style.display = 'none'; }
     }
 
-    // APLICADA INTELIGÊNCIA DE LEITURA DE GARANTIAS
     function renderizar(snap) {
         let html = "";
         snap.forEach(doc => {
@@ -710,6 +724,12 @@
 
         document.getElementById('garPecas').value = d.garP || ""; document.getElementById('garObra').value = d.garO || "";
         
+        // PUXA A DATA PARA EDIÇÃO (Converte de DD/MM/YYYY para YYYY-MM-DD do input)
+        if(d.data) {
+            const [dia, mes, ano] = d.data.split('/');
+            document.getElementById('dataEntrada').value = `${ano}-${mes}-${dia}`;
+        }
+
         document.getElementById('idEdicao').innerText = String(d.os).padStart(4, '0');
         document.getElementById('avisoEdicao').style.display = 'block';
         document.getElementById('botoesCriar').style.display = 'none';
@@ -723,10 +743,6 @@
         const filtrados = snap.docs.filter(doc => doc.data().cliente.toUpperCase().includes(t) || String(doc.data().os).includes(t) || (doc.data().defeito && doc.data().defeito.toUpperCase().includes(t)));
         renderizar(filtrados);
     }
-
-    // ==========================================
-    // MÓDULO DE GATILHO DE BACKUP DIRETO NO DRIVE
-    // ==========================================
 
     function gatilhoInteligenteBackup() {
         const ultimoBackupStr = localStorage.getItem('ultimoBackupData');
@@ -753,12 +769,10 @@
         if (precisaFazer) {
             const clientId = localStorage.getItem('gapiClientId');
             if(clientId) {
-                // Tenta fazer o backup direto no Drive de forma silenciosa
                 document.getElementById('alertaBackupInteligente').style.display = 'block';
                 document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático:</strong> A iniciar o envio de segurança para o Google Drive...";
                 iniciarBackupDrive(true);
             } else {
-                // Se não houver Client ID, avisa e descarrega localmente por segurança
                 document.getElementById('alertaBackupInteligente').style.display = 'block';
                 document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático:</strong> A descarregar backup local (Google Drive não configurado).";
                 setTimeout(() => { baixarBackupLocalManual(true); }, 3000); 
@@ -788,7 +802,6 @@
         }
     }
 
-    // Google Drive Integration Logic (Agora com opção silenciosa para o modo Automático)
     let tokenClient;
     async function iniciarBackupDrive(silencioso = false) {
         const clientId = localStorage.getItem('gapiClientId');
