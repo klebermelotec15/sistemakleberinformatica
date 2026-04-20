@@ -112,7 +112,6 @@
         
         <details style="background: #e9ecef; padding: 10px; border-radius: 8px; margin-bottom: 20px;">
             <summary>⚙️ Configurações da Loja (Logo, Endereço e Telefone)</summary>
-            <p style="font-size:12px; color:#555; margin-top:5px;">*A logomarca agora é fixa e puxada automaticamente do arquivo <b>logo.png</b> no seu GitHub.</p>
             <div class="grid" style="margin-top:10px;">
                 <div class="full"><label>Sua Logomarca (Selecione novamente caso não apareça):</label><input type="file" id="inputLogo" accept="image/*"></div>
                 <div><label>Telefone:</label><input type="text" id="lojaTel" value="(91) 98051-0776"></div>
@@ -124,7 +123,7 @@
         <div id="avisoEdicao" style="display:none; background: #fff3cd; padding:15px; border: 1px solid #ffeeba; border-radius:8px; margin-bottom:20px;">
             <div style="display:flex; justify-content: space-between; align-items: center;">
                 <strong style="color: #856404; font-size:16px;">⚠️ MODO DE EDIÇÃO (OS: <span id="idEdicao"></span>)</strong>
-                <button onclick="cancelarEdicao()" class="btn-red btn-small">❌ CANCELAR EDIÇÃO</button>
+                <button onclick="voltarParaHome()" class="btn-red btn-small">❌ CANCELAR EDIÇÃO</button>
             </div>
         </div>
 
@@ -302,7 +301,7 @@
         </div>
 
         <div class="pdf-assinaturas" style="margin-top: 40px; display: flex; justify-content: space-around; text-align: center; font-size: 12px;">
-            <div><p>______________________________________</p><p>Kleber Informática</p></div>
+            <div><p>______________________________________</p><p>Kleber Melo</p></div>
             <div><p>______________________________________</p><p>Assinatura do Cliente</p></div>
         </div>
         
@@ -351,18 +350,8 @@
         }
     }
 
-    // Função do Botão Home (Botão Flutuante)
+    // Função do Botão Home (Recarrega a página)
     function voltarParaHome() {
-        document.getElementById('telaDocumento').style.display = 'none';
-        document.getElementById('telaPrincipal').style.display = 'block';
-        if(editandoId) {
-            cancelarEdicao(); // Se estava editando, limpa tudo.
-        } else {
-            window.scrollTo(0, 0); // Só sobe para o topo.
-        }
-    }
-
-    function cancelarEdicao() {
         location.reload();
     }
 
@@ -374,7 +363,7 @@
     async function salvarOS(tipoDoc) {
         const vp = parseFloat(document.getElementById('vPecas').value) || 0;
         const vo = parseFloat(document.getElementById('vObra').value) || 0;
-        const vsinal = parseFloat(document.getElementById('vSinal').value) || 0; // Novo campo
+        const vsinal = parseFloat(document.getElementById('vSinal').value) || 0;
         let numOS = editandoId ? parseInt(document.getElementById('idEdicao').innerText) : await obterProximaOS();
 
         const totalGeral = vp + vo;
@@ -431,14 +420,13 @@
     }
 
     function prepararImpressao(d) {
-        // Mostra a Logo Salva
         const logoData = localStorage.getItem('logo');
         const imgEl = document.getElementById('docLogo');
         if (logoData) {
             imgEl.src = logoData;
             imgEl.style.display = 'inline-block';
         } else {
-            imgEl.src = 'logo.png'; // Fallback
+            imgEl.src = 'logo.png'; 
             imgEl.style.display = 'inline-block';
             imgEl.onerror = function() { this.style.display = 'none'; };
         }
@@ -446,7 +434,6 @@
         document.getElementById('docEnd').innerText = localStorage.getItem('end') || document.getElementById('lojaEnd').value;
         document.getElementById('docTel').innerText = localStorage.getItem('tel') || document.getElementById('lojaTel').value;
         
-        // Dados Preenchidos
         document.getElementById('resOS').innerText = String(d.os).padStart(4, '0');
         document.getElementById('resCliente').innerText = d.cliente;
         document.getElementById('resCpf').innerText = d.cpf || "";
@@ -467,7 +454,6 @@
         document.getElementById('resLaudo').innerText = d.laudo || "";
         document.getElementById('resServicos').innerText = d.servicos || "";
         
-        // Matemática Financeira e Formatação
         document.getElementById('resObra').innerText = d.vObra ? d.vObra.toFixed(2) : "0.00";
         document.getElementById('resPecas').innerText = d.vPecas ? d.vPecas.toFixed(2) : "0.00";
         document.getElementById('resTotal').innerText = "R$ " + (d.total ? d.total.toFixed(2) : "0.00");
@@ -479,7 +465,6 @@
         document.getElementById('resGarP').innerText = d.garP || "";
         document.getElementById('resData').innerText = d.data;
 
-        // Troca de Tela
         document.getElementById('telaPrincipal').style.display = 'none';
         document.getElementById('telaDocumento').style.display = 'block';
         window.scrollTo(0, 0);
@@ -565,7 +550,6 @@
         document.getElementById('laudo').value = d.laudo || "";
         document.getElementById('servicos').value = d.servicos || "";
         
-        // Mantém os valores vazios se não houverem para não aparecer o zero
         document.getElementById('vPecas').value = d.vPecas ? d.vPecas : "";
         document.getElementById('vObra').value = d.vObra ? d.vObra : "";
         document.getElementById('vSinal').value = d.vSinal ? d.vSinal : "";
