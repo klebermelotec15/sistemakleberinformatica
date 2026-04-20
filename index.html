@@ -3,29 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kleber Informática - Gestão Total</title>
+    <title>Kleber Informática - OS Oficial</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     
     <style>
         :root { --primary: #007bff; --secondary: #28a745; --dark: #333; --danger: #dc3545; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 950px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
         h2 { color: var(--dark); border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        .full { grid-column: span 2; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .full { grid-column: 1 / -1; }
         
-        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; color: #555; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 15px; }
-        
-        /* Status Badges */
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; color: white; text-transform: uppercase; }
-        .bg-aberto { background: #dc3545; }
-        .bg-executando { background: #ffc107; color: #000; }
-        .bg-concluida { background: #17a2b8; }
-        .bg-finalizada { background: #28a745; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #555; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        .checkbox-group { display: flex; gap: 15px; align-items: center; }
+        .checkbox-group input { width: auto; transform: scale(1.2); }
 
         .btn-group { display: flex; gap: 10px; margin-top: 20px; }
         button { flex: 1; padding: 15px; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; color: white; transition: 0.3s; }
@@ -33,23 +29,44 @@
         .btn-green { background: var(--secondary); }
         .btn-dark { background: var(--dark); }
         .btn-red { background: var(--danger); }
-        .btn-small { padding: 5px 8px; font-size: 12px; flex: none; width: auto; }
-
-        /* Impressão */
-        #documento, #etiqueta { display: none; background: white; color: #000; }
-        .header-doc { text-align: center; border-bottom: 2px solid #000; margin-bottom: 20px; padding-bottom: 15px; }
-        
-        /* Layout Etiqueta */
-        #etiqueta { width: 300px; border: 1px dashed #000; padding: 10px; text-align: center; }
+        .btn-small { padding: 6px 10px; font-size: 12px; flex: none; width: auto; }
 
         .os-card { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 6px solid #ccc; }
-        .os-actions { display: flex; gap: 5px; }
-
+        
+        /* =========================================================
+           ESTILOS EXCLUSIVOS PARA IMPRESSÃO (LAYOUT PDF OFICIAL)
+           ========================================================= */
+        #documento { display: none; background: white; color: #000; font-family: Arial, sans-serif; }
+        
         @media print {
-            body { background: white; padding: 0; }
+            body { background: white; padding: 0; margin: 0; }
             .no-print { display: none !important; }
-            #documento.print-mode { display: block !important; border: none; }
-            #etiqueta.print-mode { display: block !important; border: 1px solid #000; }
+            #documento.print-mode { display: block !important; padding: 10px; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            
+            /* Cabeçalho do PDF */
+            .pdf-header { display: flex; justify-content: space-between; margin-bottom: 20px; align-items: flex-start; }
+            .pdf-logo-area { width: 30%; text-align: center; }
+            .pdf-logo-area img { max-height: 80px; }
+            .pdf-info-loja { width: 40%; font-size: 11px; text-align: center; }
+            .pdf-os-area { width: 30%; text-align: right; }
+            .pdf-os-area h1 { margin: 0; font-size: 20px; }
+            .pdf-os-area h2 { margin: 5px 0 0 0; font-size: 28px; color: #d00; border: none; padding: 0;}
+            
+            /* Caixas e Seções do PDF */
+            .pdf-section { border: 1px solid #000; margin-bottom: 15px; border-radius: 4px; overflow: hidden; }
+            .pdf-title { background: #e0e0e0; padding: 6px 10px; font-weight: bold; font-size: 12px; border-bottom: 1px solid #000; text-transform: uppercase; }
+            
+            .pdf-row { display: flex; border-bottom: 1px solid #000; }
+            .pdf-row:last-child { border-bottom: none; }
+            .pdf-col { flex: 1; padding: 6px 10px; border-right: 1px solid #000; }
+            .pdf-col:last-child { border-right: none; }
+            
+            .pdf-label { font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold; }
+            .pdf-value { font-size: 13px; min-height: 15px; }
+            
+            .pdf-textarea { padding: 10px; font-size: 13px; min-height: 40px; }
+            .pdf-assinaturas { margin-top: 60px; display: flex; justify-content: space-around; text-align: center; font-size: 12px; }
         }
     </style>
 </head>
@@ -57,25 +74,51 @@
 
 <div class="container">
     <div class="no-print">
-        <h2>🛠️ Kleber Informática - Gestão de OS</h2>
+        <h2>🛠️ Kleber Informática - Gerador de OS (Modo PDF)</h2>
         
         <details style="background: #e9ecef; padding: 10px; border-radius: 8px; margin-bottom: 20px;">
             <summary>⚙️ Configurações da Loja</summary>
             <div class="grid" style="margin-top:10px;">
-                <div><label>WhatsApp da Loja:</label><input type="text" id="lojaTel" value="(91) 98888-7777"></div>
-                <div class="full"><label>Endereço:</label><input type="text" id="lojaEnd" value="Seu Endereço Aqui, Nº 00"></div>
+                <div><label>Logo da Loja:</label><input type="file" id="inputLogo"></div>
+                <div><label>Telefone:</label><input type="text" id="lojaTel" value="(91) 98051-0776"></div>
+                <div class="full"><label>Endereço Completo:</label><input type="text" id="lojaEnd" value="Avenida Dalva 228, esquina com a Psg: Oliveira, Marambaia CEP 666.15.850 - Belém/PA"></div>
             </div>
             <button class="btn-dark" onclick="salvarConfig()">SALVAR DADOS</button>
         </details>
 
-        <div id="avisoEdicao" style="display:none; background: #ffc107; padding:15px; border-radius:8px; margin-bottom:20px; font-weight:bold;">
-            ⚠️ EDITANDO OS: <span id="idEdicao"></span>
-            <button onclick="location.reload()" style="background:red; padding:5px 10px; margin-left:20px; width:auto; color:white; border:none; border-radius:4px; cursor:pointer;">Sair da Edição</button>
+        <div id="avisoEdicao" style="display:none; background: #ffc107; padding:15px; border-radius:8px; margin-bottom:20px;">
+            <strong>⚠️ EDITANDO OS: <span id="idEdicao"></span></strong>
+            <button onclick="location.reload()" style="background:red; padding:5px; margin-left:15px; border:none; border-radius:4px; color:white; cursor:pointer;">Cancelar Edição</button>
         </div>
 
+        <h3 style="margin-top: 30px; border-bottom: 1px solid #ccc;">1. Informações do Cliente</h3>
+        <div class="grid-3">
+            <div class="full"><label>Nome do Cliente:</label><input type="text" id="cliente"></div>
+            <div><label>CPF:</label><input type="text" id="cpf"></div>
+            <div><label>RG:</label><input type="text" id="rg"></div>
+            <div><label>WhatsApp:</label><input type="text" id="whatsapp" placeholder="Ex: 91988887777"></div>
+            <div style="grid-column: span 2;"><label>Endereço (Rua, Número):</label><input type="text" id="endCliente"></div>
+            <div><label>Bairro:</label><input type="text" id="bairro"></div>
+            <div><label>CEP:</label><input type="text" id="cep"></div>
+        </div>
+
+        <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">2. Dados do Equipamento & Checklist</h3>
+        <div class="grid-3">
+            <div><label>Equipamento:</label><input type="text" id="equip" placeholder="Ex: Notebook"></div>
+            <div><label>Marca/Modelo:</label><input type="text" id="modelo" placeholder="Ex: HP"></div>
+            <div><label>Nº de Série:</label><input type="text" id="serie" placeholder="Ex: BR4207WRX"></div>
+            <div class="full checkbox-group">
+                <label><strong>Checklist:</strong></label>
+                <input type="checkbox" id="chkFonte"> <label for="chkFonte">Fonte/Cabo</label>
+                <input type="checkbox" id="chkCapa"> <label for="chkCapa">Capa/Case</label>
+            </div>
+            <div class="full"><label>Outros Acessórios / Estado Físico:</label><input type="text" id="aces"></div>
+        </div>
+
+        <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">3. Detalhes Técnicos</h3>
         <div class="grid">
             <div class="full">
-                <label>Situação do Serviço:</label>
+                <label>Situação da OS:</label>
                 <select id="status">
                     <option value="EM ABERTO">🔴 EM ABERTO</option>
                     <option value="EXECUTANDO">🟡 EXECUTANDO</option>
@@ -83,54 +126,116 @@
                     <option value="FINALIZADA">🟢 FINALIZADA</option>
                 </select>
             </div>
-            <div><label>Cliente:</label><input type="text" id="cliente"></div>
-            <div><label>WhatsApp Cliente (Com DDD):</label><input type="text" id="whatsapp" placeholder="Ex: 91988887777"></div>
-            <div><label>Equipamento:</label><input type="text" id="equip"></div>
-            <div><label>Modelo / Série:</label><input type="text" id="serie"></div>
-            <div class="full"><label>Defeito / Relato:</label><textarea id="defeito" rows="2"></textarea></div>
-            <div><label>Valor Peças:</label><input type="number" id="vPecas" value="0"></div>
-            <div><label>Mão de Obra:</label><input type="number" id="vObra" value="0"></div>
+            <div class="full"><label>3.1. Defeito Relatado:</label><textarea id="defeito" rows="2"></textarea></div>
+            <div class="full"><label>3.2. Laudo Técnico (Diagnóstico):</label><textarea id="laudo" rows="2"></textarea></div>
+            <div class="full"><label>3.3. Serviços Executados / Peças:</label><textarea id="servicos" rows="2"></textarea></div>
+        </div>
+
+        <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">4. Fechamento & Garantia</h3>
+        <div class="grid-3">
+            <div><label>Mão de Obra (R$):</label><input type="number" id="vObra" value="0"></div>
+            <div><label>Peças (R$):</label><input type="number" id="vPecas" value="0"></div>
+            <div><label>Garantia Mão de Obra:</label><input type="text" id="garObra" value="90 Dias"></div>
+            <div><label>Garantia Peças:</label><input type="text" id="garPecas" value="3 meses"></div>
         </div>
 
         <div class="btn-group">
-            <button class="btn-blue" onclick="salvarOS('ENTRADA')">GERAR ENTRADA</button>
-            <button class="btn-green" onclick="salvarOS('RECIBO')">GERAR RECIBO FINAL</button>
+            <button class="btn-blue" onclick="salvarOS('ENTRADA')">GERAR OS / ENTRADA</button>
+            <button class="btn-green" onclick="salvarOS('RECIBO')">GERAR OS / SAÍDA</button>
         </div>
     </div>
 
     <div id="documento">
-        <div class="header-doc">
-            <h2 id="nomeLojaDoc">Kleber Informática</h2>
-            <p id="infoLojaDoc"></p>
-            <h2 id="tituloDoc">ORDEM DE SERVIÇO</h2>
-            <p style="font-size: 20px;">Nº: <strong id="resOS"></strong></p>
+        <div class="pdf-header">
+            <div class="pdf-logo-area">
+                <img id="docLogo" src="" style="display:none;">
+            </div>
+            <div class="pdf-info-loja">
+                <strong style="font-size:16px;">KLEBER INFORMÁTICA</strong><br>
+                <span id="docEnd"></span><br>
+                Telefone: <span id="docTel"></span>
+            </div>
+            <div class="pdf-os-area">
+                <h1>Nº DA OS</h1>
+                <h2 id="resOS">0000</h2>
+            </div>
         </div>
-        <div style="border-bottom:1px solid #000; padding:10px 0; font-size: 16px; line-height: 1.6;">
-            <p><strong>STATUS:</strong> <span id="resStatus"></span> | <strong>DATA:</strong> <span id="resData"></span></p>
-            <p><strong>CLIENTE:</strong> <span id="resCliente"></span></p>
-            <p><strong>EQUIPAMENTO:</strong> <span id="resEquip"></span> | <strong>SÉRIE:</strong> <span id="resSerie"></span></p>
-            <p><strong>DEFEITO:</strong> <span id="resDefeito"></span></p>
+
+        <div class="pdf-section">
+            <div class="pdf-title">1. INFORMAÇÕES DO CLIENTE</div>
+            <div class="pdf-row">
+                <div class="pdf-col" style="flex:2;"><span class="pdf-label">Nome</span><span class="pdf-value" id="resCliente"></span></div>
+                <div class="pdf-col"><span class="pdf-label">CPF</span><span class="pdf-value" id="resCpf"></span></div>
+                <div class="pdf-col"><span class="pdf-label">RG</span><span class="pdf-value" id="resRg"></span></div>
+            </div>
+            <div class="pdf-row">
+                <div class="pdf-col" style="flex:2;"><span class="pdf-label">Endereço</span><span class="pdf-value" id="resEndCli"></span></div>
+                <div class="pdf-col"><span class="pdf-label">Bairro</span><span class="pdf-value" id="resBairro"></span></div>
+            </div>
+            <div class="pdf-row">
+                <div class="pdf-col"><span class="pdf-label">CEP</span><span class="pdf-value" id="resCep"></span></div>
+                <div class="pdf-col"><span class="pdf-label">WhatsApp</span><span class="pdf-value" id="resZap"></span></div>
+            </div>
         </div>
-        <div style="text-align:right; padding:20px; font-size:22px; background:#eee; margin-top:20px;">
-            <strong id="resValor"></strong>
+
+        <div class="pdf-section">
+            <div class="pdf-title">2. DADOS DO EQUIPAMENTO & CHECKLIST</div>
+            <div class="pdf-row">
+                <div class="pdf-col"><span class="pdf-label">Equipamento</span><span class="pdf-value" id="resEquip"></span></div>
+                <div class="pdf-col"><span class="pdf-label">Marca/Modelo</span><span class="pdf-value" id="resModelo"></span></div>
+                <div class="pdf-col"><span class="pdf-label">Nº de Série</span><span class="pdf-value" id="resSerie"></span></div>
+            </div>
+            <div class="pdf-row">
+                <div class="pdf-col"><span class="pdf-label">Fonte/Cabo</span><span class="pdf-value" id="resFonte"></span></div>
+                <div class="pdf-col"><span class="pdf-label">Capa/Case</span><span class="pdf-value" id="resCapa"></span></div>
+            </div>
+            <div class="pdf-row">
+                <div class="pdf-col">
+                    <span class="pdf-label">Outros acessórios / Estado físico:</span>
+                    <span class="pdf-value" id="resAces"></span>
+                </div>
+            </div>
         </div>
-        <div style="margin-top:50px; display:flex; justify-content:space-around; text-align:center;">
-            <div><p>___________________</p><p>Técnico</p></div>
-            <div><p>___________________</p><p>Cliente</p></div>
+
+        <div class="pdf-section" style="border:none;">
+            <div class="pdf-title" style="border: 1px solid #000; margin-bottom:10px;">3. DETALHES TÉCNICOS DO ATENDIMENTO</div>
+            
+            <span class="pdf-label">3.1. Defeito Relatado</span>
+            <div class="pdf-textarea" id="resDefeito" style="border: 1px solid #000; margin-bottom:10px;"></div>
+            
+            <span class="pdf-label">3.2. Laudo Técnico (Diagnóstico)</span>
+            <div class="pdf-textarea" id="resLaudo" style="border: 1px solid #000; margin-bottom:10px;"></div>
+            
+            <span class="pdf-label">3.3. Serviços Executados / Peças</span>
+            <div class="pdf-textarea" id="resServicos" style="border: 1px solid #000; margin-bottom:10px;"></div>
         </div>
-        <button class="btn-dark no-print" onclick="window.print()" style="margin-top:30px;">🖨️ IMPRIMIR DOCUMENTO</button>
+
+        <div class="pdf-section">
+            <div class="pdf-title">4. FECHAMENTO FINANCEIRO & GARANTIA</div>
+            <div class="pdf-row">
+                <div class="pdf-col"><span class="pdf-label">Mão de Obra (R$)</span><span class="pdf-value" id="resObra"></span></div>
+                <div class="pdf-col"><span class="pdf-label">Peças (R$)</span><span class="pdf-value" id="resPecas"></span></div>
+                <div class="pdf-col" style="background:#f0f0f0;"><span class="pdf-label">TOTAL</span><span class="pdf-value" id="resTotal" style="font-size:16px;"></span></div>
+            </div>
+            <div class="pdf-row">
+                <div class="pdf-col" style="flex:2;"><span class="pdf-label">Garantia Mão de Obra</span><span class="pdf-value" id="resGarO"></span></div>
+                <div class="pdf-col" style="flex:2;"><span class="pdf-label">Garantia Peças</span><span class="pdf-value" id="resGarP"></span></div>
+            </div>
+        </div>
+
+        <div style="text-align: right; font-size: 12px; margin-top: 10px;">
+            Belém, <span id="resData"></span>
+        </div>
+
+        <div class="pdf-assinaturas">
+            <div><p>______________________________________</p><p>Kleber Informática</p></div>
+            <div><p>______________________________________</p><p>Assinatura do Cliente</p></div>
+        </div>
+        
+        <button class="btn-dark no-print" onclick="window.print()" style="margin-top:30px; width:100%;">🖨️ IMPRIMIR OS</button>
     </div>
 
-    <div id="etiqueta">
-        <h3 style="margin:0;">Kleber Informática</h3>
-        <hr>
-        <p style="font-size:24px; margin:5px 0;"><strong>OS: <span id="etiOS"></span></strong></p>
-        <p style="margin:5px 0;">Cliente: <span id="etiCliente"></span></p>
-        <p style="font-size:12px;">Equip: <span id="etiEquip"></span></p>
-        <button class="btn-dark no-print" onclick="window.print()" style="width:100%; padding:5px;">🖨️ IMPRIMIR ETIQUETA</button>
-    </div>
-
-    <div class="historico no-print">
+    <div class="historico no-print" style="margin-top: 40px;">
         <h3>📂 Controle de Serviços</h3>
         <input type="text" id="busca" onkeyup="buscar()" placeholder="🔍 Buscar cliente ou nº OS..." style="margin-bottom:15px;">
         <div id="listaHistorico">Carregando registros...</div>
@@ -138,7 +243,7 @@
 </div>
 
 <script>
-    // CONFIGURAÇÃO CORRIGIDA
+    // CONFIGURAÇÃO CORRIGIDA FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyDKxyJBXMgh0Vi6dwOCr7oHthyVaq3hcPE",
         authDomain: "sistema-kleber-informatica.firebaseapp.com",
@@ -161,7 +266,13 @@
     function salvarConfig() {
         localStorage.setItem('end', document.getElementById('lojaEnd').value);
         localStorage.setItem('tel', document.getElementById('lojaTel').value);
-        alert("Dados da loja salvos!");
+        const file = document.getElementById('inputLogo').files[0];
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => localStorage.setItem('logo', e.target.result);
+            reader.readAsDataURL(file);
+        }
+        alert("Configurações Salvas!");
     }
 
     async function obterProximaOS() {
@@ -177,13 +288,26 @@
         const dados = {
             os: numOS,
             status: document.getElementById('status').value,
-            cliente: document.getElementById('cliente').value.toUpperCase(),
-            whatsapp: document.getElementById('whatsapp').value.replace(/\D/g, ''),
-            equip: document.getElementById('equip').value.toUpperCase(),
+            cliente: document.getElementById('cliente').value,
+            cpf: document.getElementById('cpf').value,
+            rg: document.getElementById('rg').value,
+            whatsapp: document.getElementById('whatsapp').value,
+            endCliente: document.getElementById('endCliente').value,
+            bairro: document.getElementById('bairro').value,
+            cep: document.getElementById('cep').value,
+            equip: document.getElementById('equip').value,
+            modelo: document.getElementById('modelo').value,
             serie: document.getElementById('serie').value,
+            chkFonte: document.getElementById('chkFonte').checked ? "Sim" : "Não",
+            chkCapa: document.getElementById('chkCapa').checked ? "Sim" : "Não",
+            aces: document.getElementById('aces').value,
             defeito: document.getElementById('defeito').value,
-            total: vp + vo,
-            data: new Date().toLocaleString('pt-BR'),
+            laudo: document.getElementById('laudo').value,
+            servicos: document.getElementById('servicos').value,
+            vPecas: vp, vObra: vo, total: vp + vo,
+            garP: document.getElementById('garPecas').value,
+            garO: document.getElementById('garObra').value,
+            data: new Date().toLocaleDateString('pt-BR'),
             tipo: tipoDoc
         };
 
@@ -196,37 +320,47 @@
             await db.collection("servicos").add(dados);
         }
         
-        prepararImpressao(dados, 'documento');
+        prepararImpressao(dados);
         carregarHistorico();
     }
 
-    function prepararImpressao(d, modo) {
-        document.getElementById('documento').classList.remove('print-mode');
-        document.getElementById('etiqueta').classList.remove('print-mode');
-        document.getElementById('documento').style.display = 'none';
-        document.getElementById('etiqueta').style.display = 'none';
+    function prepararImpressao(d) {
+        // Dados da Loja
+        const logo = localStorage.getItem('logo');
+        if(logo) { document.getElementById('docLogo').src = logo; document.getElementById('docLogo').style.display = 'inline'; }
+        document.getElementById('docEnd').innerText = localStorage.getItem('end');
+        document.getElementById('docTel').innerText = localStorage.getItem('tel');
+        
+        // Dados Preenchidos
+        document.getElementById('resOS').innerText = String(d.os).padStart(4, '0'); // Ex: 0001
+        document.getElementById('resCliente').innerText = d.cliente;
+        document.getElementById('resCpf').innerText = d.cpf;
+        document.getElementById('resRg').innerText = d.rg;
+        document.getElementById('resEndCli').innerText = d.endCliente;
+        document.getElementById('resBairro').innerText = d.bairro;
+        document.getElementById('resCep').innerText = d.cep;
+        document.getElementById('resZap').innerText = d.whatsapp;
+        
+        document.getElementById('resEquip').innerText = d.equip;
+        document.getElementById('resModelo').innerText = d.modelo;
+        document.getElementById('resSerie').innerText = d.serie;
+        document.getElementById('resFonte').innerText = d.chkFonte;
+        document.getElementById('resCapa').innerText = d.chkCapa;
+        document.getElementById('resAces').innerText = d.aces;
+        
+        document.getElementById('resDefeito').innerText = d.defeito;
+        document.getElementById('resLaudo').innerText = d.laudo;
+        document.getElementById('resServicos').innerText = d.servicos;
+        
+        document.getElementById('resObra').innerText = d.vObra.toFixed(2);
+        document.getElementById('resPecas').innerText = d.vPecas.toFixed(2);
+        document.getElementById('resTotal').innerText = "R$ " + d.total.toFixed(2);
+        document.getElementById('resGarO').innerText = d.garO;
+        document.getElementById('resGarP').innerText = d.garP;
+        
+        document.getElementById('resData').innerText = d.data;
 
-        if(modo === 'documento') {
-            document.getElementById('infoLojaDoc').innerText = `${localStorage.getItem('end')} | Tel: ${localStorage.getItem('tel')}`;
-            document.getElementById('resOS').innerText = d.os;
-            document.getElementById('resStatus').innerText = d.status;
-            document.getElementById('resData').innerText = d.data;
-            document.getElementById('resCliente').innerText = d.cliente;
-            document.getElementById('resEquip').innerText = d.equip;
-            document.getElementById('resSerie').innerText = d.serie;
-            document.getElementById('resDefeito').innerText = d.defeito;
-            document.getElementById('resValor').innerText = d.tipo === 'ENTRADA' ? "STATUS: EM ANÁLISE" : "TOTAL: R$ " + d.total.toFixed(2);
-            const doc = document.getElementById('documento');
-            doc.style.display = 'block';
-            doc.classList.add('print-mode');
-        } else {
-            document.getElementById('etiOS').innerText = d.os;
-            document.getElementById('etiCliente').innerText = d.cliente;
-            document.getElementById('etiEquip').innerText = d.equip;
-            const eti = document.getElementById('etiqueta');
-            eti.style.display = 'block';
-            eti.classList.add('print-mode');
-        }
+        document.getElementById('documento').classList.add('print-mode');
         window.scrollTo(0, document.body.scrollHeight);
     }
 
@@ -239,29 +373,21 @@
         let html = "";
         snap.forEach(doc => {
             const d = doc.data();
-            const corStatus = d.status === 'EM ABERTO' ? 'bg-aberto' : d.status === 'EXECUTANDO' ? 'bg-executando' : d.status === 'CONCLUÍDA' ? 'bg-concluida' : 'bg-finalizada';
-            
+            let cor = d.status === 'EM ABERTO' ? '#dc3545' : d.status === 'EXECUTANDO' ? '#ffc107' : d.status === 'CONCLUÍDA' ? '#17a2b8' : '#28a745';
             html += `
-            <div class="os-card">
-                <div style="flex-grow:1">
-                    <strong>#${d.os} - ${d.cliente}</strong> <span class="status-badge ${corStatus}">${d.status}</span><br>
-                    <small>${d.equip} | R$ ${d.total.toFixed(2)}</small>
+            <div class="os-card" style="border-left-color:${cor}">
+                <div>
+                    <strong>#${String(d.os).padStart(4, '0')} - ${d.cliente}</strong><br>
+                    <small>${d.equip} | <span style="color:${cor}; font-weight:bold;">${d.status}</span></small>
                 </div>
-                <div class="os-actions">
-                    <button class="btn-green btn-small" onclick='enviarOrcamento(${JSON.stringify(d)})' title="Enviar Orçamento">💬</button>
-                    <button class="btn-dark btn-small" onclick='prepararImpressao(${JSON.stringify(d)}, "etiqueta")' title="Etiqueta">🏷️</button>
-                    <button class="btn-blue btn-small" onclick="editarOS('${doc.id}')">✏️</button>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-dark btn-small" onclick='prepararImpressao(${JSON.stringify(d)})'>🖨️ Ver OS</button>
+                    <button class="btn-blue btn-small" onclick="editarOS('${doc.id}')">✏️ Editar</button>
                     <button class="btn-red btn-small" onclick="excluirOS('${doc.id}')">🗑️</button>
                 </div>
             </div>`;
         });
         document.getElementById('listaHistorico').innerHTML = html || "Nenhuma OS cadastrada.";
-    }
-
-    function enviarOrcamento(d) {
-        if(!d.whatsapp) return alert("WhatsApp não cadastrado!");
-        const msg = `Olá ${d.cliente}, o orçamento para o conserto do seu ${d.equip} (OS #${d.os}) ficou em R$ ${d.total.toFixed(2)}. Podemos seguir com o serviço?`;
-        window.open(`https://wa.me/55${d.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
     async function excluirOS(id) {
@@ -276,13 +402,28 @@
         const d = doc.data();
         document.getElementById('status').value = d.status;
         document.getElementById('cliente').value = d.cliente;
+        document.getElementById('cpf').value = d.cpf || "";
+        document.getElementById('rg').value = d.rg || "";
         document.getElementById('whatsapp').value = d.whatsapp;
+        document.getElementById('endCliente').value = d.endCliente || "";
+        document.getElementById('bairro').value = d.bairro || "";
+        document.getElementById('cep').value = d.cep || "";
         document.getElementById('equip').value = d.equip;
+        document.getElementById('modelo').value = d.modelo || "";
         document.getElementById('serie').value = d.serie;
+        document.getElementById('chkFonte').checked = d.chkFonte === "Sim";
+        document.getElementById('chkCapa').checked = d.chkCapa === "Sim";
+        document.getElementById('aces').value = d.aces;
         document.getElementById('defeito').value = d.defeito;
-        document.getElementById('vObra').value = d.total;
+        document.getElementById('laudo').value = d.laudo || "";
+        document.getElementById('servicos').value = d.servicos || "";
+        document.getElementById('vPecas').value = d.vPecas;
+        document.getElementById('vObra').value = d.vObra;
+        document.getElementById('garPecas').value = d.garP;
+        document.getElementById('garObra').value = d.garO;
+        
         editandoId = id;
-        document.getElementById('idEdicao').innerText = d.os;
+        document.getElementById('idEdicao').innerText = String(d.os).padStart(4, '0');
         document.getElementById('avisoEdicao').style.display = 'block';
         window.scrollTo(0,0);
     }
@@ -290,7 +431,7 @@
     async function buscar() {
         const t = document.getElementById('busca').value.toUpperCase();
         const snap = await db.collection("servicos").get();
-        const filtrados = snap.docs.filter(doc => doc.data().cliente.includes(t) || doc.data().os.toString().includes(t));
+        const filtrados = snap.docs.filter(doc => doc.data().cliente.toUpperCase().includes(t) || String(doc.data().os).includes(t));
         renderizar(filtrados);
     }
 </script>
