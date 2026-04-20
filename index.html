@@ -11,7 +11,7 @@
     <style>
         :root { --primary: #007bff; --secondary: #28a745; --dark: #333; --danger: #dc3545; --warning: #ffc107; --info: #17a2b8; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-        .container { max-width: 950px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .container { max-width: 950px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; }
         
         h2 { color: var(--dark); border-bottom: 2px solid var(--primary); padding-bottom: 10px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
@@ -31,6 +31,25 @@
         .btn-red { background: var(--danger); }
         .btn-warning { background: var(--warning); color: #000; }
         .btn-small { padding: 6px 10px; font-size: 12px; flex: none; width: auto; }
+
+        /* Botão Flutuante Home */
+        .btn-home {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #000;
+            color: #fff;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            border: 2px solid #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            cursor: pointer;
+            z-index: 9999;
+            transition: 0.3s;
+        }
+        .btn-home:hover { background: var(--primary); transform: scale(1.05); }
 
         /* Dashboard Financeiro */
         .dashboard { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; }
@@ -82,15 +101,17 @@
 </head>
 <body>
 
+<button class="btn-home no-print" onclick="voltarParaHome()">🏠 INÍCIO</button>
+
 <div class="container">
     
     <div id="telaPrincipal" class="no-print">
         <h2>🛠️ Kleber Informática - Gerador de OS</h2>
         
         <details style="background: #e9ecef; padding: 10px; border-radius: 8px; margin-bottom: 20px;">
-            <summary>⚙️ Configurações da Loja (Telefone e Endereço)</summary>
-            <p style="font-size:12px; color:#555; margin-top:5px;">*A logomarca agora é fixa e puxada automaticamente do arquivo <b>logo.png</b> no seu GitHub.</p>
+            <summary>⚙️ Configurações da Loja (Logo, Endereço e Telefone)</summary>
             <div class="grid" style="margin-top:10px;">
+                <div class="full"><label>Sua Logomarca (Selecione novamente):</label><input type="file" id="inputLogo" accept="image/*"></div>
                 <div><label>Telefone:</label><input type="text" id="lojaTel" value="(91) 98051-0776"></div>
                 <div class="full"><label>Endereço Completo:</label><input type="text" id="lojaEnd" value="Avenida Dalva 228, esquina com a Psg: Oliveira, Marambaia CEP 666.15.850 - Belém/PA"></div>
             </div>
@@ -185,11 +206,11 @@
     </div>
 
     <div id="telaDocumento">
-        <button class="btn-red no-print" onclick="voltarParaSistema()" style="margin-bottom:20px; width:100%;">⬅️ VOLTAR AO SISTEMA</button>
+        <button class="btn-red no-print" onclick="voltarParaHome()" style="margin-bottom:20px; width:100%; font-size:16px;">⬅️ VOLTAR AO INÍCIO</button>
         
         <div class="pdf-header" style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: flex-start;">
             <div class="pdf-logo-area" style="width: 30%; text-align: center;">
-                <img id="docLogo" src="logo.png" style="max-height: 80px;" onerror="this.style.display='none'">
+                <img id="docLogo" src="" style="max-height: 80px; display:none;">
             </div>
             <div class="pdf-info-loja" style="width: 40%; font-size: 11px; text-align: center;">
                 <strong style="font-size:16px;">KLEBER INFORMÁTICA</strong><br>
@@ -293,7 +314,7 @@
     const db = firebase.firestore();
     
     let editandoId = null;
-    let tipoDocumentoOriginal = 'ENTRADA'; // Guarda qual era o tipo original ao editar
+    let tipoDocumentoOriginal = 'ENTRADA';
 
     window.onload = function() {
         if(localStorage.getItem('end')) document.getElementById('lojaEnd').value = localStorage.getItem('end');
@@ -304,13 +325,29 @@
     function salvarConfig() {
         localStorage.setItem('end', document.getElementById('lojaEnd').value);
         localStorage.setItem('tel', document.getElementById('lojaTel').value);
-        alert("Configurações Salvas!");
+        
+        const file = document.getElementById('inputLogo').files[0];
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                localStorage.setItem('logo', e.target.result);
+                alert("Configurações Salvas com Sucesso! A logo foi atualizada.");
+            };
+            reader.readAsDataURL(file);
+        } else {
+            alert("Configurações Salvas (Sem nova logo)!");
+        }
     }
 
-    // Função para voltar para o formulário após ver a OS
-    function voltarParaSistema() {
+    // Função do Botão Home (Botão Flutuante)
+    function voltarParaHome() {
         document.getElementById('telaDocumento').style.display = 'none';
         document.getElementById('telaPrincipal').style.display = 'block';
+        if(editandoId) {
+            cancelarEdicao(); // Se estava editando, limpa tudo.
+        } else {
+            window.scrollTo(0, 0); // Só sobe para o topo.
+        }
     }
 
     function cancelarEdicao() {
@@ -358,7 +395,6 @@
         if(editandoId) {
             await db.collection("servicos").doc(editandoId).update(dados);
             editandoId = null;
-            // Restaura botões
             document.getElementById('botoesCriar').style.display = 'flex';
             document.getElementById('botaoSalvarEdicao').style.display = 'none';
             document.getElementById('avisoEdicao').style.display = 'none';
@@ -370,18 +406,28 @@
         carregarHistorico();
     }
 
-    // Nova função chamada pelo botão "SALVAR ALTERAÇÕES"
     function salvarEdicao() {
         salvarOS(tipoDocumentoOriginal);
     }
 
     function prepararImpressao(d) {
-        // Dados da Loja
+        // Mostra a Logo Salva
+        const logoData = localStorage.getItem('logo');
+        const imgEl = document.getElementById('docLogo');
+        if (logoData) {
+            imgEl.src = logoData;
+            imgEl.style.display = 'inline-block';
+        } else {
+            imgEl.src = 'logo.png'; // Fallback se o usuário colocou no GitHub mas não upou
+            imgEl.style.display = 'inline-block';
+            imgEl.onerror = function() { this.style.display = 'none'; };
+        }
+
         document.getElementById('docEnd').innerText = localStorage.getItem('end') || document.getElementById('lojaEnd').value;
         document.getElementById('docTel').innerText = localStorage.getItem('tel') || document.getElementById('lojaTel').value;
         
         // Dados Preenchidos
-        document.getElementById('resOS').innerText = String(d.os).padStart(4, '0'); // Ex: 0001
+        document.getElementById('resOS').innerText = String(d.os).padStart(4, '0');
         document.getElementById('resCliente').innerText = d.cliente;
         document.getElementById('resCpf').innerText = d.cpf || "";
         document.getElementById('resRg').innerText = d.rg || "";
@@ -401,7 +447,7 @@
         document.getElementById('resLaudo').innerText = d.laudo || "";
         document.getElementById('resServicos').innerText = d.servicos || "";
         
-        // Valores (Apresenta 0,00 se estiver vazio no form)
+        // Valores sem formatação 0.00 se estiverem vazios
         document.getElementById('resObra').innerText = d.vObra ? d.vObra.toFixed(2) : "0.00";
         document.getElementById('resPecas').innerText = d.vPecas ? d.vPecas.toFixed(2) : "0.00";
         document.getElementById('resTotal').innerText = "R$ " + (d.total ? d.total.toFixed(2) : "0.00");
@@ -428,7 +474,6 @@
 
         snap.forEach(doc => {
             const d = doc.data();
-            // Apenas calcula o lucro das OS marcadas como "Entregue ao Cliente"
             if(d.status === 'Entregue ao Cliente') {
                 faturado += d.total || 0;
                 custoPecas += d.vPecas || 0;
@@ -436,7 +481,6 @@
         });
 
         const lucro = faturado - custoPecas;
-
         document.getElementById('dashFaturado').innerText = "R$ " + faturado.toFixed(2);
         document.getElementById('dashPecas').innerText = "R$ " + custoPecas.toFixed(2);
         document.getElementById('dashLucro').innerText = "R$ " + lucro.toFixed(2);
@@ -448,7 +492,7 @@
             const d = doc.data();
             let cor = d.status === 'Falta Orçar' ? '#dc3545' : 
                       d.status === 'Executando' ? '#ffc107' : 
-                      d.status === 'Concluída' ? '#17a2b8' : '#28a745'; // Entregue ao Cliente
+                      d.status === 'Concluída' ? '#17a2b8' : '#28a745';
 
             html += `
             <div class="os-card" style="border-left-color:${cor}">
@@ -477,10 +521,9 @@
         const doc = await db.collection("servicos").doc(id).get();
         const d = doc.data();
         
-        tipoDocumentoOriginal = d.tipo || 'ENTRADA'; // Guarda qual era o botão clicado na criação
+        tipoDocumentoOriginal = d.tipo || 'ENTRADA';
         editandoId = id;
 
-        // Preenche o formulário
         document.getElementById('status').value = d.status;
         document.getElementById('cliente').value = d.cliente;
         document.getElementById('cpf').value = d.cpf || "";
@@ -499,14 +542,12 @@
         document.getElementById('laudo').value = d.laudo || "";
         document.getElementById('servicos').value = d.servicos || "";
         
-        // Se for zero, deixa em branco conforme pedido
         document.getElementById('vPecas').value = d.vPecas ? d.vPecas : "";
         document.getElementById('vObra').value = d.vObra ? d.vObra : "";
         
         document.getElementById('garPecas').value = d.garP || "";
         document.getElementById('garObra').value = d.garO || "";
         
-        // Mostra o aviso e esconde botões normais
         document.getElementById('idEdicao').innerText = String(d.os).padStart(4, '0');
         document.getElementById('avisoEdicao').style.display = 'block';
         document.getElementById('botoesCriar').style.display = 'none';
