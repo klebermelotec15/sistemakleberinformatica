@@ -3,16 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kleber Informática - ERP</title>
+    <title>Kleber Informática - ERP Premium</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     
+    <script async defer src="https://apis.google.com/js/api.js"></script>
+    <script async defer src="https://accounts.google.com/gsi/client"></script>
+
     <style>
         :root { --primary: #007bff; --secondary: #28a745; --dark: #333; --danger: #dc3545; --warning: #ffc107; --info: #17a2b8; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
         
-        /* TELA DE LOGIN */
+        /* LOGIN */
         #telaLogin { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #222; display: flex; justify-content: center; align-items: center; z-index: 99999; }
         .login-box { background: white; padding: 40px; border-radius: 12px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 300px; }
         .login-box input { margin: 15px 0; font-size: 18px; text-align: center; }
@@ -42,27 +45,28 @@
         .btn-warning { background: var(--warning); color: #000; }
         .btn-small { padding: 6px 10px; font-size: 12px; flex: none; width: auto; }
 
-        /* Dashboard */
+        /* DASHBOARD & ALERTAS */
         .dashboard { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .dash-card { padding: 15px; border-radius: 8px; color: white; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .dash-blue { background: #007bff; }
         .dash-red { background: #dc3545; }
         .dash-green { background: #28a745; }
         
-        /* Avisos e Abas */
         .alerta-abandono { background: #ffe3e3; border-left: 5px solid #dc3545; padding: 15px; margin-bottom: 20px; border-radius: 4px; display: none; }
+        .alerta-backup { background: #d4edda; border-left: 5px solid #28a745; padding: 15px; margin-bottom: 20px; border-radius: 4px; display: none; }
+        
         .os-card { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 6px solid #ccc; }
         .aba { display: none; }
         .aba.ativa { display: block; }
 
         /* =========================================================
-           ESTILOS DO DOCUMENTO (OTIMIZADO PARA 1 PÁGINA)
+           ESTILOS DO DOCUMENTO (OTIMIZADO PARA 1 PÁGINA A4)
            ========================================================= */
-        #telaDocumento { display: none; background: white; color: #000; font-family: Arial, sans-serif; padding: 30px; border: 1px solid #ccc; box-shadow: 0 5px 15px rgba(0,0,0,0.2); margin: 20px auto; max-width: 800px; }
+        #telaDocumento { display: none; background: white; color: #000; font-family: Arial, sans-serif; padding: 25px; border: 1px solid #ccc; box-shadow: 0 5px 15px rgba(0,0,0,0.2); margin: 20px auto; max-width: 790px; }
         
         .pdf-header { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: flex-start; }
-        .pdf-section { border: 1px solid #000; margin-bottom: 5px; border-radius: 4px; overflow: hidden; }
-        .pdf-title { background: #e0e0e0; padding: 3px 6px; font-weight: bold; font-size: 11px; border-bottom: 1px solid #000; text-transform: uppercase; }
+        .pdf-section { border: 1px solid #000; margin-bottom: 6px; border-radius: 4px; overflow: hidden; page-break-inside: avoid; }
+        .pdf-title { background: #e0e0e0; padding: 3px 6px; font-weight: bold; font-size: 10px; border-bottom: 1px solid #000; text-transform: uppercase; }
         .pdf-row { display: flex; border-bottom: 1px solid #000; }
         .pdf-row:last-child { border-bottom: none; }
         .pdf-col { flex: 1; padding: 3px 6px; border-right: 1px solid #000; }
@@ -86,10 +90,9 @@
 <div id="telaLogin">
     <div class="login-box">
         <h2 style="border:none; margin-top:0;">🔒 Área Restrita</h2>
-        <p style="color:#666; font-size:14px;">Insira a senha de acesso</p>
         <input type="password" id="senhaAcesso" placeholder="Senha" onkeypress="if(event.key === 'Enter') fazerLogin()">
         <button class="btn-blue" onclick="fazerLogin()">ENTRAR</button>
-        <p id="erroLogin" style="color:red; display:none; font-size:12px; margin-top:10px;">Senha incorreta!</p>
+        <p id="erroLogin" style="color:red; display:none; font-size:12px;">Senha incorreta!</p>
     </div>
 </div>
 
@@ -98,12 +101,16 @@
     <button onclick="mudarAba('abaHistorico')" id="btn-abaHistorico">📂 2. Histórico</button>
     <button onclick="mudarAba('abaPDV')" id="btn-abaPDV">🛒 3. Venda PDV</button>
     <button onclick="mudarAba('abaFinanceiro')" id="btn-abaFinanceiro">📊 4. Financeiro</button>
-    <button onclick="mudarAba('abaConfig')" id="btn-abaConfig">⚙️ 5. Configurações</button>
+    <button onclick="mudarAba('abaConfig')" id="btn-abaConfig">⚙️ 5. Configs & Backup</button>
     <button class="btn-sair" onclick="sairSistema()">Sair 🚪</button>
 </div>
 
 <div class="container" id="conteinerPrincipal" style="display:none;">
     
+    <div class="alerta-backup" id="alertaBackupInteligente">
+        <strong>⚙️ Backup Automático:</strong> O sistema identificou backups pendentes e realizou o download da cópia de segurança para o seu dispositivo.
+    </div>
+
     <div id="abaNovaOS" class="aba ativa no-print">
         <div id="avisoEdicao" style="display:none; background: #fff3cd; padding:15px; border-radius:8px; margin-bottom:20px;">
             <div style="display:flex; justify-content: space-between; align-items: center;">
@@ -158,7 +165,7 @@
             <div><label>Peças (R$):</label><input type="number" id="vPecas"></div>
         </div>
         
-        <label style="margin-top:15px; display:block;"><strong>Métodos de Pagamento (Sinal/Entrada):</strong></label>
+        <label style="margin-top:15px; display:block;"><strong>Métodos de Pagamento Utilizados (Soma Automática):</strong></label>
         <div class="grid-4" style="background:#eef8e5; padding:15px; border-radius:8px; border:1px solid #c3e6cb;">
             <div><label>PIX (R$):</label><input type="number" id="osPix"></div>
             <div><label>Dinheiro (R$):</label><input type="number" id="osDin"></div>
@@ -184,7 +191,6 @@
         <div class="alerta-abandono" id="alertaAbandono">
             <strong>🚨 ATENÇÃO:</strong> Existem <span id="qtdAbandonados">0</span> equipamento(s) na loja há mais de 180 dias!
         </div>
-
         <h2 style="margin-top: 0;">📂 Histórico de Serviços e Vendas</h2>
         <input type="text" id="busca" onkeyup="buscar()" placeholder="🔍 Buscar cliente, OS ou produto..." style="margin-bottom:15px;">
         <div id="listaHistorico">Carregando registros...</div>
@@ -192,11 +198,10 @@
 
     <div id="abaPDV" class="aba no-print">
         <h2 style="margin-top: 0;">🛒 Venda de Balcão (PDV)</h2>
-        <p style="color:#666; margin-bottom:20px;">Use esta tela para registar vendas diretas. O valor do custo foi removido.</p>
-        
+        <p style="color:#666; font-size:13px; margin-bottom:20px;">Use esta tela para registar vendas diretas. O recibo gerado oculta os laudos técnicos.</p>
         <div class="grid">
             <div class="full"><label>Nome do Cliente (Opcional):</label><input type="text" id="pdvCliente" value="CLIENTE BALCÃO"></div>
-            <div class="full"><label>Produto(s) Vendido(s):</label><textarea id="pdvProduto" rows="3" placeholder="Ex: 1x Rato sem Fio Logitech, 1x Cabo USB"></textarea></div>
+            <div class="full"><label>Produto(s) Vendido(s):</label><textarea id="pdvProduto" rows="3"></textarea></div>
             <div class="full"><label>Valor Total da Venda (R$):</label><input type="number" id="pdvVenda" placeholder="Total a ser cobrado"></div>
         </div>
         
@@ -225,11 +230,27 @@
     </div>
 
     <div id="abaConfig" class="aba no-print">
-        <h2 style="margin-top: 0;">⚙️ Configurações do Sistema</h2>
+        <h2 style="margin-top: 0;">⚙️ Configurações e Segurança</h2>
+        
+        <h3 style="border-bottom: 1px solid #ccc; padding-bottom:5px;">🛡️ Backup de Segurança</h3>
+        <p style="font-size: 13px; color: #555;">O sistema verifica automaticamente se houve backup após o último Domingo. Você também pode forçar um backup manual a qualquer momento.</p>
+        
         <div class="grid">
-            <div class="full"><label>Senha de Acesso (Login):</label>
-                <input type="text" id="configSenha" placeholder="Senha para entrar no sistema">
+            <div class="full">
+                <label>Seu Google Client ID (Para envio automático ao Google Drive):</label>
+                <input type="text" id="configClientId" placeholder="Ex: 123456789-abcde.apps.googleusercontent.com">
             </div>
+        </div>
+        
+        <div class="btn-group" style="margin-bottom: 30px;">
+            <button class="btn-blue" onclick="baixarBackupLocalManual()">💾 BAIXAR BACKUP NO COMPUTADOR</button>
+            <button class="btn-green" onclick="iniciarBackupDrive()">☁️ ENVIAR PARA O GOOGLE DRIVE</button>
+        </div>
+        <p id="statusBackup" style="text-align:center; font-weight:bold; color:var(--primary);"></p>
+
+        <h3 style="border-bottom: 1px solid #ccc; padding-bottom:5px;">🏪 Dados da Loja</h3>
+        <div class="grid">
+            <div class="full"><label>Senha de Acesso (Login):</label><input type="text" id="configSenha"></div>
             <div class="full"><label>Sua Logomarca:</label><input type="file" id="inputLogo" accept="image/*"></div>
             <div><label>Telefone da Loja:</label><input type="text" id="lojaTel"></div>
             <div class="full"><label>Endereço Completo:</label><input type="text" id="lojaEnd"></div>
@@ -240,20 +261,20 @@
 </div>
 
 <div id="telaDocumento">
-    <button class="btn-red no-print" onclick="mudarAba('abaHistorico')" style="margin-bottom:20px; width:100%; font-size:16px; padding:15px;">⬅️ FECHAR IMPRESSÃO E VOLTAR</button>
+    <button class="btn-red no-print" onclick="fecharImpressao()" style="margin-bottom:20px; width:100%; font-size:16px; padding:15px;">⬅️ FECHAR IMPRESSÃO E VOLTAR</button>
     
     <div class="pdf-header">
         <div style="width: 30%; text-align: center;">
-            <img id="docLogo" src="" style="max-height: 80px; display:none;">
+            <img id="docLogo" src="" style="max-height: 70px; display:none;">
         </div>
-        <div style="width: 40%; font-size: 11px; text-align: center;">
-            <strong style="font-size:16px;">KLEBER INFORMÁTICA</strong><br>
+        <div style="width: 40%; font-size: 10px; text-align: center; line-height:1.2;">
+            <strong style="font-size:14px;">KLEBER INFORMÁTICA</strong><br>
             <span id="docEnd"></span><br>Telefone: <span id="docTel"></span>
         </div>
         <div style="width: 30%; text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
-            <h1 style="margin: 0; font-size: 18px;">Nº DOC</h1>
-            <h2 id="resOS" style="margin: 0 0 5px 0; font-size: 24px; color: #d00;">0000</h2>
-            <img id="qrCode" src="" style="width: 50px; height: 50px;">
+            <h1 style="margin: 0; font-size: 16px;">Nº DOC</h1>
+            <h2 id="resOS" style="margin: 0 0 5px 0; font-size: 22px; color: #d00;">0000</h2>
+            <img id="qrCode" src="" style="width: 45px; height: 45px;">
         </div>
     </div>
 
@@ -305,7 +326,7 @@
         <div class="pdf-row">
             <div class="pdf-col"><span class="pdf-label" id="lblObra">Mão de Obra (R$)</span><span class="pdf-value" id="resObra"></span></div>
             <div class="pdf-col"><span class="pdf-label" id="lblPecas">Peças (R$)</span><span class="pdf-value" id="resPecas"></span></div>
-            <div class="pdf-col"><span class="pdf-label">Total Pago</span><strong class="pdf-value" id="resSinal" style="color:#28a745;"></strong></div>
+            <div class="pdf-col"><span class="pdf-label">Total Pago / Sinal</span><strong class="pdf-value" id="resSinal" style="color:#28a745;"></strong></div>
         </div>
         <div class="pdf-row" id="rowMetodosPagamento" style="background:#eef8e5;">
             <div class="pdf-col" style="flex:1;"><span class="pdf-label">Meios de Pagamento Utilizados</span><span class="pdf-value" id="resMeiosPag"></span></div>
@@ -320,28 +341,30 @@
         </div>
     </div>
 
-    <div style="text-align: right; font-size: 11px; margin-top: 5px;">Belém, <span id="resData"></span></div>
+    <div style="text-align: right; font-size: 10px; margin-top: 5px;">Belém, <span id="resData"></span></div>
 
     <div class="termo-juridico" id="termoJuridico">
-        <strong>TERMO DE RESPONSABILIDADE E ABANDONO:</strong> O cliente declara estar ciente de que o equipamento deverá ser retirado em até <strong>90 dias (3 meses)</strong>. Após este prazo, será cobrada uma taxa de armazenamento de <strong>R$ 30,00 por mês</strong>. Passados <strong>180 dias (6 meses)</strong>, o equipamento será legalmente considerado como <strong>abandonado e tratado como sucata</strong> para abatimento de custos.
+        <strong>TERMO DE RESPONSABILIDADE E ABANDONO:</strong> O cliente declara estar ciente de que o equipamento deverá ser retirado em até <strong>90 dias (3 meses)</strong>. Após este prazo, será cobrada uma taxa de armazenamento de <strong>R$ 30,00 por mês</strong>. Passados <strong>180 dias (6 meses)</strong> sem retirada, o equipamento será legalmente considerado como <strong>abandonado e tratado como sucata</strong> para abatimento dos custos operacionais, não cabendo reclamações ou indenizações posteriores.
     </div>
 
     <div class="pdf-assinaturas">
         <div><p>______________________________________</p><p><strong>Kleber Informática</strong><br>Técnico: Kleber Melo</p></div>
         <div><p>______________________________________</p><p><strong>Assinatura do Cliente</strong></p></div>
     </div>
-    <button class="btn-dark no-print" onclick="window.print()" style="margin-top:15px; width:100%;">🖨️ IMPRIMIR</button>
+    <button class="btn-dark no-print" onclick="window.print()" style="margin-top:15px; width:100%;">🖨️ IMPRIMIR DOCUMENTO</button>
 </div>
 
 <script>
-    // Configurações e Inicialização
+    // CONFIGURAÇÕES FIREBASE
     const firebaseConfig = { apiKey: "AIzaSyDKxyJBXMgh0Vi6dwOCr7oHthyVaq3hcPE", authDomain: "sistema-kleber-informatica.firebaseapp.com", projectId: "sistema-kleber-informatica", storageBucket: "sistema-kleber-informatica.firebasestorage.app", messagingSenderId: "374020359871", appId: "1:374020359871:web:e0f6c77f0a672e8116749d" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     
     let editandoId = null;
     let tipoDocOriginal = 'ENTRADA';
+    let ultimaAbaAberta = 'abaNovaOS';
 
+    // VERIFICAÇÃO DE LOGIN E GATILHO INTELIGENTE DE BACKUP
     function fazerLogin() {
         const senhaDigitada = document.getElementById('senhaAcesso').value;
         const senhaCorreta = localStorage.getItem('senhaAdmin') || '123456';
@@ -351,6 +374,7 @@
             document.getElementById('conteinerPrincipal').style.display = 'block';
             carregarConfiguracoes();
             carregarHistorico();
+            gatilhoInteligenteBackup();
         } else {
             document.getElementById('erroLogin').style.display = 'block';
         }
@@ -359,6 +383,7 @@
     function sairSistema() { location.reload(); }
 
     function mudarAba(idAba) {
+        ultimaAbaAberta = idAba;
         document.querySelectorAll('.aba').forEach(el => el.classList.remove('ativa'));
         document.querySelectorAll('.navbar button').forEach(el => el.classList.remove('ativo'));
         document.getElementById(idAba).classList.add('ativa');
@@ -369,20 +394,29 @@
         if(idAba === 'abaNovaOS' && editandoId) limparFormularioOS();
     }
 
+    function fecharImpressao() {
+        document.getElementById('telaDocumento').style.display = 'none';
+        document.getElementById('conteinerPrincipal').style.display = 'block';
+        mudarAba(ultimaAbaAberta);
+    }
+
     function carregarConfiguracoes() {
         document.getElementById('lojaEnd').value = localStorage.getItem('end') || "";
         document.getElementById('lojaTel').value = localStorage.getItem('tel') || "";
         document.getElementById('configSenha').value = localStorage.getItem('senhaAdmin') || "123456";
+        document.getElementById('configClientId').value = localStorage.getItem('gapiClientId') || "";
     }
 
     function salvarConfig() {
         localStorage.setItem('end', document.getElementById('lojaEnd').value);
         localStorage.setItem('tel', document.getElementById('lojaTel').value);
         localStorage.setItem('senhaAdmin', document.getElementById('configSenha').value);
+        localStorage.setItem('gapiClientId', document.getElementById('configClientId').value);
+        
         const file = document.getElementById('inputLogo').files[0];
         if(file) {
             const reader = new FileReader();
-            reader.onload = (e) => { localStorage.setItem('logo', e.target.result); alert("Salvo com Logo!"); };
+            reader.onload = (e) => { localStorage.setItem('logo', e.target.result); alert("Configurações e Logo Salvos!"); };
             reader.readAsDataURL(file);
         } else { alert("Configurações Salvas!"); }
     }
@@ -401,7 +435,7 @@
         return snap.empty ? 1 : snap.docs[0].data().os + 1;
     }
 
-    // SALVAR PDV (MULTI PAGAMENTO E SEM CUSTO)
+    // SALVAR PDV (MULTI PAGAMENTO)
     async function salvarVendaPDV(imprimirRecibo) {
         const desc = document.getElementById('pdvProduto').value;
         const venda = parseFloat(document.getElementById('pdvVenda').value) || 0;
@@ -428,18 +462,11 @@
         await db.collection("servicos").add(dados);
         alert("Venda registada com sucesso!");
         
-        document.getElementById('pdvProduto').value = "";
-        document.getElementById('pdvVenda').value = "";
-        document.getElementById('pdvPix').value = "";
-        document.getElementById('pdvDin').value = "";
-        document.getElementById('pdvCred').value = "";
-        document.getElementById('pdvDeb').value = "";
+        document.getElementById('pdvProduto').value = ""; document.getElementById('pdvVenda').value = "";
+        document.getElementById('pdvPix').value = ""; document.getElementById('pdvDin').value = "";
+        document.getElementById('pdvCred').value = ""; document.getElementById('pdvDeb').value = "";
 
-        if(imprimirRecibo) {
-            prepararImpressao(dados);
-        } else {
-            carregarHistorico();
-        }
+        if(imprimirRecibo) { prepararImpressao(dados); } else { carregarHistorico(); }
     }
 
     // SALVAR OS (MULTI PAGAMENTO)
@@ -482,7 +509,6 @@
             dados.data = new Date().toLocaleDateString('pt-BR');
             await db.collection("servicos").add(dados);
         }
-        
         prepararImpressao(dados);
         carregarHistorico();
     }
@@ -510,7 +536,6 @@
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=OS:${d.os}-Cliente:${encodeURIComponent(d.cliente)}`;
         document.getElementById('qrCode').src = qrUrl;
 
-        // ADAPTAÇÃO DO RECIBO PARA PDV x SERVIÇO
         if(d.categoria === 'VENDA_BALCAO') {
             document.getElementById('secEquipamento').style.display = 'none';
             document.getElementById('tituloTecnico').innerText = "PRODUTOS VENDIDOS";
@@ -552,7 +577,6 @@
         document.getElementById('resGarO').innerText = d.garO || ""; document.getElementById('resGarP').innerText = d.garP || "";
         document.getElementById('resData').innerText = d.data || new Date().toLocaleDateString('pt-BR');
 
-        // MONTANDO A STRING MULTI-PAGAMENTOS
         let pagText = [];
         if(d.pagamentos) {
             if(d.pagamentos.pix > 0) pagText.push(`PIX: R$ ${d.pagamentos.pix.toFixed(2)}`);
@@ -564,9 +588,7 @@
         if(pagText.length > 0) {
             document.getElementById('rowMetodosPagamento').style.display = 'flex';
             document.getElementById('resMeiosPag').innerText = pagText.join('  |  ');
-        } else {
-            document.getElementById('rowMetodosPagamento').style.display = 'none';
-        }
+        } else { document.getElementById('rowMetodosPagamento').style.display = 'none'; }
 
         document.getElementById('conteinerPrincipal').style.display = 'none';
         document.getElementById('telaDocumento').style.display = 'block';
@@ -581,17 +603,11 @@
 
     function atualizarDashboard(snap) {
         let faturado = 0, custoPecas = 0, abandonados = 0;
-
         snap.forEach(doc => {
             const d = doc.data();
             const diasPassados = calcularDias(d.data);
-
-            if(d.status === 'Entregue ao Cliente') {
-                faturado += d.total || 0;
-                custoPecas += d.vPecas || 0; // Se for PDV, o custo é 0.
-            } else if (diasPassados > 180 && d.categoria !== 'VENDA_BALCAO') {
-                abandonados++;
-            }
+            if(d.status === 'Entregue ao Cliente') { faturado += d.total || 0; custoPecas += d.vPecas || 0; } 
+            else if (diasPassados > 180 && d.categoria !== 'VENDA_BALCAO') { abandonados++; }
         });
 
         document.getElementById('dashFaturado').innerText = "R$ " + faturado.toFixed(2);
@@ -601,9 +617,7 @@
         if(abandonados > 0) {
             document.getElementById('qtdAbandonados').innerText = abandonados;
             document.getElementById('alertaAbandono').style.display = 'block';
-        } else {
-            document.getElementById('alertaAbandono').style.display = 'none';
-        }
+        } else { document.getElementById('alertaAbandono').style.display = 'none'; }
     }
 
     function renderizar(snap) {
@@ -614,14 +628,11 @@
             const dias = calcularDias(d.data);
             
             let tagExtra = "";
-            if(d.categoria === 'VENDA_BALCAO') {
-                tagExtra = `<span style="background:#6c757d; color:white; padding:2px 5px; border-radius:3px; font-size:10px;">🛒 VENDA</span>`;
-            } else if(d.status === 'Entregue ao Cliente') {
+            if(d.categoria === 'VENDA_BALCAO') { tagExtra = `<span style="background:#6c757d; color:white; padding:2px 5px; border-radius:3px; font-size:10px;">🛒 VENDA</span>`; } 
+            else if(d.status === 'Entregue ao Cliente') {
                 if(dias <= 90) tagExtra = `<span style="color:green; font-size:12px;">🛡️ Na Garantia</span>`;
                 else tagExtra = `<span style="color:red; font-size:12px;">❌ Garantia Expirada</span>`;
-            } else if(dias > 180) {
-                tagExtra = `<span style="background:red; color:white; padding:2px 5px; border-radius:3px; font-size:10px; font-weight:bold;">🚨 ABANDONADO</span>`;
-            }
+            } else if(dias > 180) { tagExtra = `<span style="background:red; color:white; padding:2px 5px; border-radius:3px; font-size:10px; font-weight:bold;">🚨 ABANDONADO</span>`; }
 
             html += `
             <div class="os-card" style="border-left-color:${cor}">
@@ -661,10 +672,8 @@
         document.getElementById('servicos').value = d.servicos || ""; document.getElementById('vPecas').value = d.vPecas || "";
         document.getElementById('vObra').value = d.vObra || ""; 
         
-        document.getElementById('osPix').value = d.pagamentos?.pix || "";
-        document.getElementById('osDin').value = d.pagamentos?.din || "";
-        document.getElementById('osCred').value = d.pagamentos?.cred || "";
-        document.getElementById('osDeb').value = d.pagamentos?.deb || "";
+        document.getElementById('osPix').value = d.pagamentos?.pix || ""; document.getElementById('osDin').value = d.pagamentos?.din || "";
+        document.getElementById('osCred').value = d.pagamentos?.cred || ""; document.getElementById('osDeb').value = d.pagamentos?.deb || "";
 
         document.getElementById('garPecas').value = d.garP || ""; document.getElementById('garObra').value = d.garO || "";
         
@@ -672,7 +681,6 @@
         document.getElementById('avisoEdicao').style.display = 'block';
         document.getElementById('botoesCriar').style.display = 'none';
         document.getElementById('botaoSalvarEdicao').style.display = 'flex';
-
         mudarAba('abaNovaOS');
     }
 
@@ -681,6 +689,135 @@
         const snap = await db.collection("servicos").get();
         const filtrados = snap.docs.filter(doc => doc.data().cliente.toUpperCase().includes(t) || String(doc.data().os).includes(t) || (doc.data().defeito && doc.data().defeito.toUpperCase().includes(t)));
         renderizar(filtrados);
+    }
+
+    // ==========================================
+    // MÓDULO DE GATILHO DE BACKUP INTELIGENTE
+    // ==========================================
+
+    function gatilhoInteligenteBackup() {
+        const ultimoBackupStr = localStorage.getItem('ultimoBackupData');
+        const hoje = new Date();
+        const dataHojeStr = hoje.toLocaleDateString('pt-BR');
+
+        // Encontra o último domingo
+        const dataUltimoDomingo = new Date(hoje);
+        dataUltimoDomingo.setDate(hoje.getDate() - hoje.getDay());
+        dataUltimoDomingo.setHours(0,0,0,0);
+
+        let precisaFazer = false;
+
+        if (!ultimoBackupStr) {
+            precisaFazer = true; // Nunca fez
+        } else {
+            const partes = ultimoBackupStr.split('/');
+            const dataUltimo = new Date(partes[2], partes[1] - 1, partes[0]);
+            
+            // Se o último backup foi antes do último domingo, ou se hoje é domingo e ainda não fez
+            if (dataUltimo < dataUltimoDomingo || (hoje.getDay() === 0 && ultimoBackupStr !== dataHojeStr)) {
+                precisaFazer = true;
+            }
+        }
+
+        if (precisaFazer) {
+            document.getElementById('alertaBackupInteligente').style.display = 'block';
+            setTimeout(() => {
+                baixarBackupLocalManual(true); // Oculta aviso ao baixar
+            }, 3000); // Dá 3 segundos para o utilizador ver o aviso antes de descarregar
+        }
+    }
+
+    async function baixarBackupLocalManual(silencioso = false) {
+        const snap = await db.collection("servicos").get();
+        let dados = [];
+        snap.forEach(doc => dados.push(doc.data()));
+        
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dados, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "backup_kleber_os_" + new Date().toISOString().split('T')[0] + ".json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+        
+        localStorage.setItem('ultimoBackupData', new Date().toLocaleDateString('pt-BR'));
+        
+        if(!silencioso) {
+            document.getElementById('statusBackup').innerText = "✅ Backup Local Concluído com Sucesso!";
+        } else {
+            setTimeout(() => { document.getElementById('alertaBackupInteligente').style.display = 'none'; }, 6000);
+        }
+    }
+
+    // Google Drive Integration Logic
+    let tokenClient;
+    async function iniciarBackupDrive() {
+        const clientId = localStorage.getItem('gapiClientId');
+        if(!clientId) return alert("Por favor, insira o seu Google Client ID nas Configurações primeiro.");
+        
+        document.getElementById('statusBackup').innerText = "⏳ A autenticar no Google Drive...";
+        
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: clientId,
+            scope: 'https://www.googleapis.com/auth/drive.file',
+            callback: (tokenResponse) => {
+                if (tokenResponse && tokenResponse.access_token) {
+                    executarFluxoDrive(tokenResponse.access_token);
+                }
+            },
+        });
+        tokenClient.requestAccessToken();
+    }
+
+    async function executarFluxoDrive(accessToken) {
+        gapi.client.setToken({ access_token: accessToken });
+        document.getElementById('statusBackup').innerText = "🔍 A procurar a pasta 'backup Sistema OS'...";
+        
+        try {
+            let response = await fetch('https://www.googleapis.com/drive/v3/files?q=mimeType="application/vnd.google-apps.folder" and name="backup Sistema OS" and trashed=false', {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            });
+            let result = await response.json();
+            let folderId;
+
+            if (result.files && result.files.length > 0) {
+                folderId = result.files[0].id;
+            } else {
+                document.getElementById('statusBackup').innerText = "📁 A criar pasta 'backup Sistema OS'...";
+                const folderMetadata = { name: 'backup Sistema OS', mimeType: 'application/vnd.google-apps.folder' };
+                let createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(folderMetadata)
+                });
+                let createData = await createRes.json();
+                folderId = createData.id;
+            }
+
+            document.getElementById('statusBackup').innerText = "📦 A preparar dados do sistema...";
+            const snap = await db.collection("servicos").get();
+            let dados = [];
+            snap.forEach(doc => dados.push(doc.data()));
+            const fileContent = JSON.stringify(dados, null, 2);
+            
+            document.getElementById('statusBackup').innerText = "☁️ A enviar para o Drive...";
+            const metadata = { name: `Backup_OS_${new Date().toISOString().split('T')[0]}.json`, parents: [folderId] };
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            form.append('file', new Blob([fileContent], { type: 'application/json' }));
+
+            await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${accessToken}` },
+                body: form
+            });
+
+            localStorage.setItem('ultimoBackupData', new Date().toLocaleDateString('pt-BR'));
+            document.getElementById('statusBackup').innerText = "✅ Sucesso! Backup salvo no seu Google Drive.";
+        } catch (error) {
+            console.error(error);
+            document.getElementById('statusBackup').innerText = "❌ Erro ao comunicar com o Drive. (Verifique o Client ID ou permita pop-ups)";
+        }
     }
 </script>
 </body>
