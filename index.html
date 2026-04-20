@@ -95,7 +95,9 @@
             .pdf-value { font-size: 13px; min-height: 15px; font-weight: normal; }
             
             .pdf-textarea { padding: 10px; font-size: 13px; min-height: 40px; font-weight: normal; }
-            .pdf-assinaturas { margin-top: 60px; display: flex; justify-content: space-around; text-align: center; font-size: 12px; }
+            .pdf-assinaturas { margin-top: 30px; display: flex; justify-content: space-around; text-align: center; font-size: 12px; }
+            
+            .termo-juridico { font-size: 9px; text-align: justify; margin-top: 15px; border: 1px solid #000; padding: 8px; background: #f9f9f9; border-radius: 4px; color: #333; }
         }
     </style>
 </head>
@@ -110,8 +112,9 @@
         
         <details style="background: #e9ecef; padding: 10px; border-radius: 8px; margin-bottom: 20px;">
             <summary>⚙️ Configurações da Loja (Logo, Endereço e Telefone)</summary>
+            <p style="font-size:12px; color:#555; margin-top:5px;">*A logomarca agora é fixa e puxada automaticamente do arquivo <b>logo.png</b> no seu GitHub.</p>
             <div class="grid" style="margin-top:10px;">
-                <div class="full"><label>Sua Logomarca (Selecione novamente):</label><input type="file" id="inputLogo" accept="image/*"></div>
+                <div class="full"><label>Sua Logomarca (Selecione novamente caso não apareça):</label><input type="file" id="inputLogo" accept="image/*"></div>
                 <div><label>Telefone:</label><input type="text" id="lojaTel" value="(91) 98051-0776"></div>
                 <div class="full"><label>Endereço Completo:</label><input type="text" id="lojaEnd" value="Avenida Dalva 228, esquina com a Psg: Oliveira, Marambaia CEP 666.15.850 - Belém/PA"></div>
             </div>
@@ -169,6 +172,7 @@
         <div class="grid-3">
             <div><label>Mão de Obra (R$):</label><input type="number" id="vObra" placeholder="Vazio"></div>
             <div><label>Peças (R$):</label><input type="number" id="vPecas" placeholder="Vazio"></div>
+            <div><label>Sinal / Adiantamento (R$):</label><input type="number" id="vSinal" placeholder="Vazio"></div>
             <div><label>Garantia Mão de Obra:</label><input type="text" id="garObra" value="90 Dias"></div>
             <div><label>Garantia Peças:</label><input type="text" id="garPecas" value="3 meses"></div>
         </div>
@@ -277,10 +281,14 @@
             <div class="pdf-row" style="display: flex; border-bottom: 1px solid #000;">
                 <div class="pdf-col" style="flex:1; padding: 6px 10px; border-right: 1px solid #000;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Mão de Obra (R$)</span><span class="pdf-value" id="resObra" style="font-size: 13px; min-height: 15px;"></span></div>
                 <div class="pdf-col" style="flex:1; padding: 6px 10px; border-right: 1px solid #000;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Peças (R$)</span><span class="pdf-value" id="resPecas" style="font-size: 13px; min-height: 15px;"></span></div>
-                <div class="pdf-col" style="flex:1; padding: 6px 10px; background:#f0f0f0;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">TOTAL</span><strong class="pdf-value" id="resTotal" style="font-size:16px;"></strong></div>
+                <div class="pdf-col" style="flex:1; padding: 6px 10px;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Sinal Pago / Adiantado</span><strong class="pdf-value" id="resSinal" style="font-size:13px; color:#28a745;"></strong></div>
+            </div>
+            <div class="pdf-row" style="display: flex; border-bottom: 1px solid #000;">
+                <div class="pdf-col" style="flex:1; padding: 6px 10px; background:#f0f0f0; border-right: 1px solid #000;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">TOTAL GERAL</span><strong class="pdf-value" id="resTotal" style="font-size:16px;"></strong></div>
+                <div class="pdf-col" style="flex:2; padding: 6px 10px; background:#fff3cd;"><span class="pdf-label" style="font-size: 10px; color: #856404; display: block; margin-bottom: 3px; font-weight: bold;">VALOR RESTANTE (FALTA PAGAR)</span><strong class="pdf-value" id="resFaltaPagar" style="font-size:16px; color:#d00;"></strong></div>
             </div>
             <div class="pdf-row" style="display: flex;">
-                <div class="pdf-col" style="flex:2; padding: 6px 10px; border-right: 1px solid #000;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Garantia Mão de Obra</span><span class="pdf-value" id="resGarO" style="font-size: 13px; min-height: 15px;"></span></div>
+                <div class="pdf-col" style="flex:1; padding: 6px 10px; border-right: 1px solid #000;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Garantia Mão de Obra</span><span class="pdf-value" id="resGarO" style="font-size: 13px; min-height: 15px;"></span></div>
                 <div class="pdf-col" style="flex:2; padding: 6px 10px;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Garantia Peças</span><span class="pdf-value" id="resGarP" style="font-size: 13px; min-height: 15px;"></span></div>
             </div>
         </div>
@@ -289,7 +297,11 @@
             Belém, <span id="resData"></span>
         </div>
 
-        <div class="pdf-assinaturas" style="margin-top: 60px; display: flex; justify-content: space-around; text-align: center; font-size: 12px;">
+        <div class="termo-juridico" style="font-size: 9px; text-align: justify; margin-top: 15px; border: 1px solid #000; padding: 8px; background: #f9f9f9; border-radius: 4px; color: #333; line-height: 1.4;">
+            <strong>TERMO DE RESPONSABILIDADE E ABANDONO:</strong> O cliente declara estar ciente de que o equipamento deverá ser retirado em até <strong>90 dias (3 meses)</strong> após a notificação de conclusão ou reprovação do orçamento. Após este prazo, será cobrada uma taxa de armazenamento de <strong>R$ 30,00 por mês</strong>. Passados <strong>180 dias (6 meses)</strong> sem a retirada, o equipamento será legalmente considerado como <strong>abandonado e tratado como sucata</strong>, podendo ser desmontado ou vendido para abatimento dos custos operacionais e de peças da assistência técnica, não cabendo ao cliente reclamações ou indemnizações posteriores.
+        </div>
+
+        <div class="pdf-assinaturas" style="margin-top: 40px; display: flex; justify-content: space-around; text-align: center; font-size: 12px;">
             <div><p>______________________________________</p><p>Kleber Informática</p></div>
             <div><p>______________________________________</p><p>Assinatura do Cliente</p></div>
         </div>
@@ -362,7 +374,11 @@
     async function salvarOS(tipoDoc) {
         const vp = parseFloat(document.getElementById('vPecas').value) || 0;
         const vo = parseFloat(document.getElementById('vObra').value) || 0;
+        const vsinal = parseFloat(document.getElementById('vSinal').value) || 0; // Novo campo
         let numOS = editandoId ? parseInt(document.getElementById('idEdicao').innerText) : await obterProximaOS();
+
+        const totalGeral = vp + vo;
+        const faltaPagar = totalGeral - vsinal;
 
         const dados = {
             os: numOS,
@@ -383,7 +399,11 @@
             defeito: document.getElementById('defeito').value,
             laudo: document.getElementById('laudo').value,
             servicos: document.getElementById('servicos').value,
-            vPecas: vp, vObra: vo, total: vp + vo,
+            vPecas: vp, 
+            vObra: vo, 
+            vSinal: vsinal,
+            total: totalGeral,
+            faltaPagar: faltaPagar,
             garP: document.getElementById('garPecas').value,
             garO: document.getElementById('garObra').value,
             data: new Date().toLocaleDateString('pt-BR'),
@@ -418,7 +438,7 @@
             imgEl.src = logoData;
             imgEl.style.display = 'inline-block';
         } else {
-            imgEl.src = 'logo.png'; // Fallback se o usuário colocou no GitHub mas não upou
+            imgEl.src = 'logo.png'; // Fallback
             imgEl.style.display = 'inline-block';
             imgEl.onerror = function() { this.style.display = 'none'; };
         }
@@ -447,13 +467,16 @@
         document.getElementById('resLaudo').innerText = d.laudo || "";
         document.getElementById('resServicos').innerText = d.servicos || "";
         
-        // Valores sem formatação 0.00 se estiverem vazios
+        // Matemática Financeira e Formatação
         document.getElementById('resObra').innerText = d.vObra ? d.vObra.toFixed(2) : "0.00";
         document.getElementById('resPecas').innerText = d.vPecas ? d.vPecas.toFixed(2) : "0.00";
         document.getElementById('resTotal').innerText = "R$ " + (d.total ? d.total.toFixed(2) : "0.00");
+        
+        document.getElementById('resSinal').innerText = d.vSinal ? "R$ " + d.vSinal.toFixed(2) : "R$ 0.00";
+        document.getElementById('resFaltaPagar').innerText = d.faltaPagar ? "R$ " + d.faltaPagar.toFixed(2) : "R$ 0.00";
+        
         document.getElementById('resGarO').innerText = d.garO || "";
         document.getElementById('resGarP').innerText = d.garP || "";
-        
         document.getElementById('resData').innerText = d.data;
 
         // Troca de Tela
@@ -542,8 +565,10 @@
         document.getElementById('laudo').value = d.laudo || "";
         document.getElementById('servicos').value = d.servicos || "";
         
+        // Mantém os valores vazios se não houverem para não aparecer o zero
         document.getElementById('vPecas').value = d.vPecas ? d.vPecas : "";
         document.getElementById('vObra').value = d.vObra ? d.vObra : "";
+        document.getElementById('vSinal').value = d.vSinal ? d.vSinal : "";
         
         document.getElementById('garPecas').value = d.garP || "";
         document.getElementById('garObra').value = d.garO || "";
