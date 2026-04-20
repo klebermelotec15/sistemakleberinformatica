@@ -31,17 +31,26 @@
         .btn-red { background: var(--danger); }
         .btn-small { padding: 6px 10px; font-size: 12px; flex: none; width: auto; }
 
+        /* Dashboard Financeiro */
+        .dashboard { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .dash-card { padding: 15px; border-radius: 8px; color: white; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .dash-blue { background: #007bff; }
+        .dash-red { background: #dc3545; }
+        .dash-green { background: #28a745; }
+        .dash-card h4 { margin: 0 0 5px 0; font-size: 13px; text-transform: uppercase; opacity: 0.9; }
+        .dash-card h2 { margin: 0; font-size: 24px; border: none; padding: 0; color: white; }
+
         .os-card { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 6px solid #ccc; }
         
         /* =========================================================
            ESTILOS EXCLUSIVOS PARA IMPRESSÃO (LAYOUT PDF OFICIAL)
            ========================================================= */
-        #documento { display: none; background: white; color: #000; font-family: Arial, sans-serif; }
+        #telaDocumento { display: none; background: white; color: #000; font-family: Arial, sans-serif; padding: 20px; border: 2px solid #ccc; border-radius: 8px; }
         
         @media print {
             body { background: white; padding: 0; margin: 0; }
             .no-print { display: none !important; }
-            #documento.print-mode { display: block !important; padding: 10px; }
+            #telaDocumento { display: block !important; padding: 0; border: none; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             
             /* Cabeçalho do PDF */
@@ -63,9 +72,9 @@
             .pdf-col:last-child { border-right: none; }
             
             .pdf-label { font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold; }
-            .pdf-value { font-size: 13px; min-height: 15px; }
+            .pdf-value { font-size: 13px; min-height: 15px; font-weight: normal; }
             
-            .pdf-textarea { padding: 10px; font-size: 13px; min-height: 40px; }
+            .pdf-textarea { padding: 10px; font-size: 13px; min-height: 40px; font-weight: normal; }
             .pdf-assinaturas { margin-top: 60px; display: flex; justify-content: space-around; text-align: center; font-size: 12px; }
         }
     </style>
@@ -73,13 +82,14 @@
 <body>
 
 <div class="container">
-    <div class="no-print">
-        <h2>🛠️ Kleber Informática - Gerador de OS (Modo PDF)</h2>
+    
+    <div id="telaPrincipal" class="no-print">
+        <h2>🛠️ Kleber Informática - Gerador de OS</h2>
         
         <details style="background: #e9ecef; padding: 10px; border-radius: 8px; margin-bottom: 20px;">
-            <summary>⚙️ Configurações da Loja</summary>
+            <summary>⚙️ Configurações da Loja (Telefone e Endereço)</summary>
+            <p style="font-size:12px; color:#555; margin-top:5px;">*A logomarca agora é fixa e puxada automaticamente do arquivo <b>logo.png</b> no seu GitHub.</p>
             <div class="grid" style="margin-top:10px;">
-                <div><label>Logo da Loja:</label><input type="file" id="inputLogo"></div>
                 <div><label>Telefone:</label><input type="text" id="lojaTel" value="(91) 98051-0776"></div>
                 <div class="full"><label>Endereço Completo:</label><input type="text" id="lojaEnd" value="Avenida Dalva 228, esquina com a Psg: Oliveira, Marambaia CEP 666.15.850 - Belém/PA"></div>
             </div>
@@ -108,7 +118,7 @@
             <div><label>Marca/Modelo:</label><input type="text" id="modelo" placeholder="Ex: HP"></div>
             <div><label>Nº de Série:</label><input type="text" id="serie" placeholder="Ex: BR4207WRX"></div>
             <div class="full checkbox-group">
-                <label><strong>Checklist:</strong></label>
+                <label><strong>Checklist de Entrada:</strong></label>
                 <input type="checkbox" id="chkFonte"> <label for="chkFonte">Fonte/Cabo</label>
                 <input type="checkbox" id="chkCapa"> <label for="chkCapa">Capa/Case</label>
             </div>
@@ -143,83 +153,107 @@
             <button class="btn-blue" onclick="salvarOS('ENTRADA')">GERAR OS / ENTRADA</button>
             <button class="btn-green" onclick="salvarOS('RECIBO')">GERAR OS / SAÍDA</button>
         </div>
+
+        <div class="historico" style="margin-top: 40px;">
+            <h3>📊 Resumo Financeiro (OS Finalizadas)</h3>
+            <div class="dashboard">
+                <div class="dash-card dash-blue">
+                    <h4>Total Faturado</h4>
+                    <h2 id="dashFaturado">R$ 0,00</h2>
+                </div>
+                <div class="dash-card dash-red">
+                    <h4>Custo Peças</h4>
+                    <h2 id="dashPecas">R$ 0,00</h2>
+                </div>
+                <div class="dash-card dash-green">
+                    <h4>Lucro Real</h4>
+                    <h2 id="dashLucro">R$ 0,00</h2>
+                </div>
+            </div>
+
+            <h3>📂 Controle de Serviços</h3>
+            <input type="text" id="busca" onkeyup="buscar()" placeholder="🔍 Buscar cliente ou nº OS..." style="margin-bottom:15px; width:100%; padding:10px;">
+            <div id="listaHistorico">Carregando registros...</div>
+        </div>
     </div>
 
-    <div id="documento">
-        <div class="pdf-header">
-            <div class="pdf-logo-area">
-                <img id="docLogo" src="" style="display:none;">
+    <div id="telaDocumento">
+        <button class="btn-red no-print" onclick="voltarParaSistema()" style="margin-bottom:20px; width:100%;">⬅️ VOLTAR AO SISTEMA</button>
+        
+        <div class="pdf-header" style="display: flex; justify-content: space-between; margin-bottom: 20px; align-items: flex-start;">
+            <div class="pdf-logo-area" style="width: 30%; text-align: center;">
+                <img id="docLogo" src="logo.png" style="max-height: 80px;" onerror="this.style.display='none'">
             </div>
-            <div class="pdf-info-loja">
+            <div class="pdf-info-loja" style="width: 40%; font-size: 11px; text-align: center;">
                 <strong style="font-size:16px;">KLEBER INFORMÁTICA</strong><br>
                 <span id="docEnd"></span><br>
                 Telefone: <span id="docTel"></span>
             </div>
-            <div class="pdf-os-area">
-                <h1>Nº DA OS</h1>
-                <h2 id="resOS">0000</h2>
+            <div class="pdf-os-area" style="width: 30%; text-align: right;">
+                <h1 style="margin: 0; font-size: 20px;">Nº DA OS</h1>
+                <h2 id="resOS" style="margin: 5px 0 0 0; font-size: 28px; color: #d00; border: none; padding: 0;">0000</h2>
             </div>
         </div>
 
-        <div class="pdf-section">
-            <div class="pdf-title">1. INFORMAÇÕES DO CLIENTE</div>
-            <div class="pdf-row">
-                <div class="pdf-col" style="flex:2;"><span class="pdf-label">Nome</span><span class="pdf-value" id="resCliente"></span></div>
-                <div class="pdf-col"><span class="pdf-label">CPF</span><span class="pdf-value" id="resCpf"></span></div>
-                <div class="pdf-col"><span class="pdf-label">RG</span><span class="pdf-value" id="resRg"></span></div>
+        <div class="pdf-section" style="border: 1px solid #000; margin-bottom: 15px; border-radius: 4px; overflow: hidden;">
+            <div class="pdf-title" style="background: #e0e0e0; padding: 6px 10px; font-weight: bold; font-size: 12px; border-bottom: 1px solid #000; text-transform: uppercase;">1. INFORMAÇÕES DO CLIENTE</div>
+            <div class="pdf-row" style="display: flex; border-bottom: 1px solid #000;">
+                <div class="pdf-col" style="flex:2; padding: 6px 10px; border-right: 1px solid #000;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Nome</span><span class="pdf-value" id="resCliente" style="font-size: 13px; min-height: 15px;"></span></div>
+                <div class="pdf-col" style="flex:1; padding: 6px 10px; border-right: 1px solid #000;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">CPF</span><span class="pdf-value" id="resCpf" style="font-size: 13px; min-height: 15px;"></span></div>
+                <div class="pdf-col" style="flex:1; padding: 6px 10px;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">RG</span><span class="pdf-value" id="resRg" style="font-size: 13px; min-height: 15px;"></span></div>
             </div>
-            <div class="pdf-row">
-                <div class="pdf-col" style="flex:2;"><span class="pdf-label">Endereço</span><span class="pdf-value" id="resEndCli"></span></div>
-                <div class="pdf-col"><span class="pdf-label">Bairro</span><span class="pdf-value" id="resBairro"></span></div>
+            <div class="pdf-row" style="display: flex; border-bottom: 1px solid #000;">
+                <div class="pdf-col" style="flex:2; padding: 6px 10px; border-right: 1px solid #000;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Endereço</span><span class="pdf-value" id="resEndCli" style="font-size: 13px; min-height: 15px;"></span></div>
+                <div class="pdf-col" style="flex:1; padding: 6px 10px;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Bairro</span><span class="pdf-value" id="resBairro" style="font-size: 13px; min-height: 15px;"></span></div>
             </div>
-            <div class="pdf-row">
-                <div class="pdf-col"><span class="pdf-label">CEP</span><span class="pdf-value" id="resCep"></span></div>
-                <div class="pdf-col"><span class="pdf-label">WhatsApp</span><span class="pdf-value" id="resZap"></span></div>
+            <div class="pdf-row" style="display: flex;">
+                <div class="pdf-col" style="flex:1; padding: 6px 10px; border-right: 1px solid #000;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">CEP</span><span class="pdf-value" id="resCep" style="font-size: 13px; min-height: 15px;"></span></div>
+                <div class="pdf-col" style="flex:1; padding: 6px 10px;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">WhatsApp</span><span class="pdf-value" id="resZap" style="font-size: 13px; min-height: 15px;"></span></div>
             </div>
         </div>
 
-        <div class="pdf-section">
-            <div class="pdf-title">2. DADOS DO EQUIPAMENTO & CHECKLIST</div>
-            <div class="pdf-row">
-                <div class="pdf-col"><span class="pdf-label">Equipamento</span><span class="pdf-value" id="resEquip"></span></div>
-                <div class="pdf-col"><span class="pdf-label">Marca/Modelo</span><span class="pdf-value" id="resModelo"></span></div>
-                <div class="pdf-col"><span class="pdf-label">Nº de Série</span><span class="pdf-value" id="resSerie"></span></div>
+        <div class="pdf-section" style="border: 1px solid #000; margin-bottom: 15px; border-radius: 4px; overflow: hidden;">
+            <div class="pdf-title" style="background: #e0e0e0; padding: 6px 10px; font-weight: bold; font-size: 12px; border-bottom: 1px solid #000; text-transform: uppercase;">2. DADOS DO EQUIPAMENTO & CHECKLIST</div>
+            <div class="pdf-row" style="display: flex; border-bottom: 1px solid #000;">
+                <div class="pdf-col" style="flex:1; padding: 6px 10px; border-right: 1px solid #000;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Equipamento</span><span class="pdf-value" id="resEquip" style="font-size: 13px; min-height: 15px;"></span></div>
+                <div class="pdf-col" style="flex:1; padding: 6px 10px; border-right: 1px solid #000;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Marca/Modelo</span><span class="pdf-value" id="resModelo" style="font-size: 13px; min-height: 15px;"></span></div>
+                <div class="pdf-col" style="flex:1; padding: 6px 10px;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Nº de Série</span><span class="pdf-value" id="resSerie" style="font-size: 13px; min-height: 15px;"></span></div>
             </div>
-            <div class="pdf-row">
-                <div class="pdf-col"><span class="pdf-label">Fonte/Cabo</span><span class="pdf-value" id="resFonte"></span></div>
-                <div class="pdf-col"><span class="pdf-label">Capa/Case</span><span class="pdf-value" id="resCapa"></span></div>
+            <div class="pdf-row" style="display: flex; border-bottom: 1px solid #000;">
+                <div class="pdf-col" style="flex:1; padding: 6px 10px; border-right: 1px solid #000;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Fonte/Cabo</span><span class="pdf-value" id="resFonte" style="font-size: 13px; min-height: 15px;"></span></div>
+                <div class="pdf-col" style="flex:1; padding: 6px 10px;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Capa/Case</span><span class="pdf-value" id="resCapa" style="font-size: 13px; min-height: 15px;"></span></div>
             </div>
-            <div class="pdf-row">
-                <div class="pdf-col">
-                    <span class="pdf-label">Outros acessórios / Estado físico:</span>
-                    <span class="pdf-value" id="resAces"></span>
+            <div class="pdf-row" style="display: flex;">
+                <div class="pdf-col" style="flex:1; padding: 6px 10px;">
+                    <span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Outros acessórios / Estado físico:</span>
+                    <span class="pdf-value" id="resAces" style="font-size: 13px; min-height: 15px;"></span>
                 </div>
             </div>
         </div>
 
         <div class="pdf-section" style="border:none;">
-            <div class="pdf-title" style="border: 1px solid #000; margin-bottom:10px;">3. DETALHES TÉCNICOS DO ATENDIMENTO</div>
+            <div class="pdf-title" style="background: #e0e0e0; padding: 6px 10px; font-weight: bold; font-size: 12px; border: 1px solid #000; text-transform: uppercase; margin-bottom:10px;">3. DETALHES TÉCNICOS DO ATENDIMENTO</div>
             
-            <span class="pdf-label">3.1. Defeito Relatado</span>
-            <div class="pdf-textarea" id="resDefeito" style="border: 1px solid #000; margin-bottom:10px;"></div>
+            <span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">3.1. Defeito Relatado</span>
+            <div class="pdf-textarea" id="resDefeito" style="border: 1px solid #000; margin-bottom:10px; padding: 10px; font-size: 13px; min-height: 40px;"></div>
             
-            <span class="pdf-label">3.2. Laudo Técnico (Diagnóstico)</span>
-            <div class="pdf-textarea" id="resLaudo" style="border: 1px solid #000; margin-bottom:10px;"></div>
+            <span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">3.2. Laudo Técnico (Diagnóstico)</span>
+            <div class="pdf-textarea" id="resLaudo" style="border: 1px solid #000; margin-bottom:10px; padding: 10px; font-size: 13px; min-height: 40px;"></div>
             
-            <span class="pdf-label">3.3. Serviços Executados / Peças</span>
-            <div class="pdf-textarea" id="resServicos" style="border: 1px solid #000; margin-bottom:10px;"></div>
+            <span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">3.3. Serviços Executados / Peças</span>
+            <div class="pdf-textarea" id="resServicos" style="border: 1px solid #000; margin-bottom:10px; padding: 10px; font-size: 13px; min-height: 40px;"></div>
         </div>
 
-        <div class="pdf-section">
-            <div class="pdf-title">4. FECHAMENTO FINANCEIRO & GARANTIA</div>
-            <div class="pdf-row">
-                <div class="pdf-col"><span class="pdf-label">Mão de Obra (R$)</span><span class="pdf-value" id="resObra"></span></div>
-                <div class="pdf-col"><span class="pdf-label">Peças (R$)</span><span class="pdf-value" id="resPecas"></span></div>
-                <div class="pdf-col" style="background:#f0f0f0;"><span class="pdf-label">TOTAL</span><span class="pdf-value" id="resTotal" style="font-size:16px;"></span></div>
+        <div class="pdf-section" style="border: 1px solid #000; margin-bottom: 15px; border-radius: 4px; overflow: hidden;">
+            <div class="pdf-title" style="background: #e0e0e0; padding: 6px 10px; font-weight: bold; font-size: 12px; border-bottom: 1px solid #000; text-transform: uppercase;">4. FECHAMENTO FINANCEIRO & GARANTIA</div>
+            <div class="pdf-row" style="display: flex; border-bottom: 1px solid #000;">
+                <div class="pdf-col" style="flex:1; padding: 6px 10px; border-right: 1px solid #000;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Mão de Obra (R$)</span><span class="pdf-value" id="resObra" style="font-size: 13px; min-height: 15px;"></span></div>
+                <div class="pdf-col" style="flex:1; padding: 6px 10px; border-right: 1px solid #000;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Peças (R$)</span><span class="pdf-value" id="resPecas" style="font-size: 13px; min-height: 15px;"></span></div>
+                <div class="pdf-col" style="flex:1; padding: 6px 10px; background:#f0f0f0;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">TOTAL</span><strong class="pdf-value" id="resTotal" style="font-size:16px;"></strong></div>
             </div>
-            <div class="pdf-row">
-                <div class="pdf-col" style="flex:2;"><span class="pdf-label">Garantia Mão de Obra</span><span class="pdf-value" id="resGarO"></span></div>
-                <div class="pdf-col" style="flex:2;"><span class="pdf-label">Garantia Peças</span><span class="pdf-value" id="resGarP"></span></div>
+            <div class="pdf-row" style="display: flex;">
+                <div class="pdf-col" style="flex:2; padding: 6px 10px; border-right: 1px solid #000;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Garantia Mão de Obra</span><span class="pdf-value" id="resGarO" style="font-size: 13px; min-height: 15px;"></span></div>
+                <div class="pdf-col" style="flex:2; padding: 6px 10px;"><span class="pdf-label" style="font-size: 10px; color: #444; display: block; margin-bottom: 3px; font-weight: bold;">Garantia Peças</span><span class="pdf-value" id="resGarP" style="font-size: 13px; min-height: 15px;"></span></div>
             </div>
         </div>
 
@@ -227,7 +261,7 @@
             Belém, <span id="resData"></span>
         </div>
 
-        <div class="pdf-assinaturas">
+        <div class="pdf-assinaturas" style="margin-top: 60px; display: flex; justify-content: space-around; text-align: center; font-size: 12px;">
             <div><p>______________________________________</p><p>Kleber Informática</p></div>
             <div><p>______________________________________</p><p>Assinatura do Cliente</p></div>
         </div>
@@ -235,15 +269,10 @@
         <button class="btn-dark no-print" onclick="window.print()" style="margin-top:30px; width:100%;">🖨️ IMPRIMIR OS</button>
     </div>
 
-    <div class="historico no-print" style="margin-top: 40px;">
-        <h3>📂 Controle de Serviços</h3>
-        <input type="text" id="busca" onkeyup="buscar()" placeholder="🔍 Buscar cliente ou nº OS..." style="margin-bottom:15px;">
-        <div id="listaHistorico">Carregando registros...</div>
-    </div>
 </div>
 
 <script>
-    // CONFIGURAÇÃO CORRIGIDA FIREBASE
+    // CONFIGURAÇÃO FIREBASE
     const firebaseConfig = {
         apiKey: "AIzaSyDKxyJBXMgh0Vi6dwOCr7oHthyVaq3hcPE",
         authDomain: "sistema-kleber-informatica.firebaseapp.com",
@@ -266,13 +295,13 @@
     function salvarConfig() {
         localStorage.setItem('end', document.getElementById('lojaEnd').value);
         localStorage.setItem('tel', document.getElementById('lojaTel').value);
-        const file = document.getElementById('inputLogo').files[0];
-        if(file) {
-            const reader = new FileReader();
-            reader.onload = (e) => localStorage.setItem('logo', e.target.result);
-            reader.readAsDataURL(file);
-        }
         alert("Configurações Salvas!");
+    }
+
+    // Função para voltar para o formulário após ver a OS
+    function voltarParaSistema() {
+        document.getElementById('telaDocumento').style.display = 'none';
+        document.getElementById('telaPrincipal').style.display = 'block';
     }
 
     async function obterProximaOS() {
@@ -326,47 +355,68 @@
 
     function prepararImpressao(d) {
         // Dados da Loja
-        const logo = localStorage.getItem('logo');
-        if(logo) { document.getElementById('docLogo').src = logo; document.getElementById('docLogo').style.display = 'inline'; }
-        document.getElementById('docEnd').innerText = localStorage.getItem('end');
-        document.getElementById('docTel').innerText = localStorage.getItem('tel');
+        document.getElementById('docEnd').innerText = localStorage.getItem('end') || document.getElementById('lojaEnd').value;
+        document.getElementById('docTel').innerText = localStorage.getItem('tel') || document.getElementById('lojaTel').value;
         
         // Dados Preenchidos
         document.getElementById('resOS').innerText = String(d.os).padStart(4, '0'); // Ex: 0001
         document.getElementById('resCliente').innerText = d.cliente;
-        document.getElementById('resCpf').innerText = d.cpf;
-        document.getElementById('resRg').innerText = d.rg;
-        document.getElementById('resEndCli').innerText = d.endCliente;
-        document.getElementById('resBairro').innerText = d.bairro;
-        document.getElementById('resCep').innerText = d.cep;
-        document.getElementById('resZap').innerText = d.whatsapp;
+        document.getElementById('resCpf').innerText = d.cpf || "";
+        document.getElementById('resRg').innerText = d.rg || "";
+        document.getElementById('resEndCli').innerText = d.endCliente || "";
+        document.getElementById('resBairro').innerText = d.bairro || "";
+        document.getElementById('resCep').innerText = d.cep || "";
+        document.getElementById('resZap').innerText = d.whatsapp || "";
         
         document.getElementById('resEquip').innerText = d.equip;
-        document.getElementById('resModelo').innerText = d.modelo;
-        document.getElementById('resSerie').innerText = d.serie;
+        document.getElementById('resModelo').innerText = d.modelo || "";
+        document.getElementById('resSerie').innerText = d.serie || "";
         document.getElementById('resFonte').innerText = d.chkFonte;
         document.getElementById('resCapa').innerText = d.chkCapa;
-        document.getElementById('resAces').innerText = d.aces;
+        document.getElementById('resAces').innerText = d.aces || "";
         
-        document.getElementById('resDefeito').innerText = d.defeito;
-        document.getElementById('resLaudo').innerText = d.laudo;
-        document.getElementById('resServicos').innerText = d.servicos;
+        document.getElementById('resDefeito').innerText = d.defeito || "";
+        document.getElementById('resLaudo').innerText = d.laudo || "";
+        document.getElementById('resServicos').innerText = d.servicos || "";
         
-        document.getElementById('resObra').innerText = d.vObra.toFixed(2);
-        document.getElementById('resPecas').innerText = d.vPecas.toFixed(2);
-        document.getElementById('resTotal').innerText = "R$ " + d.total.toFixed(2);
-        document.getElementById('resGarO').innerText = d.garO;
-        document.getElementById('resGarP').innerText = d.garP;
+        document.getElementById('resObra').innerText = d.vObra ? d.vObra.toFixed(2) : "0.00";
+        document.getElementById('resPecas').innerText = d.vPecas ? d.vPecas.toFixed(2) : "0.00";
+        document.getElementById('resTotal').innerText = "R$ " + (d.total ? d.total.toFixed(2) : "0.00");
+        document.getElementById('resGarO').innerText = d.garO || "";
+        document.getElementById('resGarP').innerText = d.garP || "";
         
         document.getElementById('resData').innerText = d.data;
 
-        document.getElementById('documento').classList.add('print-mode');
-        window.scrollTo(0, document.body.scrollHeight);
+        // Troca de Tela
+        document.getElementById('telaPrincipal').style.display = 'none';
+        document.getElementById('telaDocumento').style.display = 'block';
+        window.scrollTo(0, 0);
     }
 
     async function carregarHistorico() {
         const snap = await db.collection("servicos").orderBy("os", "desc").get();
+        atualizarDashboard(snap);
         renderizar(snap);
+    }
+
+    function atualizarDashboard(snap) {
+        let faturado = 0;
+        let custoPecas = 0;
+
+        snap.forEach(doc => {
+            const d = doc.data();
+            // Apenas calcula o lucro das OS marcadas como FINALIZADA
+            if(d.status === 'FINALIZADA') {
+                faturado += d.total || 0;
+                custoPecas += d.vPecas || 0;
+            }
+        });
+
+        const lucro = faturado - custoPecas;
+
+        document.getElementById('dashFaturado').innerText = "R$ " + faturado.toFixed(2);
+        document.getElementById('dashPecas').innerText = "R$ " + custoPecas.toFixed(2);
+        document.getElementById('dashLucro').innerText = "R$ " + lucro.toFixed(2);
     }
 
     function renderizar(snap) {
@@ -404,23 +454,23 @@
         document.getElementById('cliente').value = d.cliente;
         document.getElementById('cpf').value = d.cpf || "";
         document.getElementById('rg').value = d.rg || "";
-        document.getElementById('whatsapp').value = d.whatsapp;
+        document.getElementById('whatsapp').value = d.whatsapp || "";
         document.getElementById('endCliente').value = d.endCliente || "";
         document.getElementById('bairro').value = d.bairro || "";
         document.getElementById('cep').value = d.cep || "";
         document.getElementById('equip').value = d.equip;
         document.getElementById('modelo').value = d.modelo || "";
-        document.getElementById('serie').value = d.serie;
+        document.getElementById('serie').value = d.serie || "";
         document.getElementById('chkFonte').checked = d.chkFonte === "Sim";
         document.getElementById('chkCapa').checked = d.chkCapa === "Sim";
-        document.getElementById('aces').value = d.aces;
-        document.getElementById('defeito').value = d.defeito;
+        document.getElementById('aces').value = d.aces || "";
+        document.getElementById('defeito').value = d.defeito || "";
         document.getElementById('laudo').value = d.laudo || "";
         document.getElementById('servicos').value = d.servicos || "";
-        document.getElementById('vPecas').value = d.vPecas;
-        document.getElementById('vObra').value = d.vObra;
-        document.getElementById('garPecas').value = d.garP;
-        document.getElementById('garObra').value = d.garO;
+        document.getElementById('vPecas').value = d.vPecas || 0;
+        document.getElementById('vObra').value = d.vObra || 0;
+        document.getElementById('garPecas').value = d.garP || "";
+        document.getElementById('garObra').value = d.garO || "";
         
         editandoId = id;
         document.getElementById('idEdicao').innerText = String(d.os).padStart(4, '0');
