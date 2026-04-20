@@ -174,8 +174,8 @@
         </div>
 
         <div class="grid" style="margin-top:15px;">
-            <div><label>Garantia Obra:</label><input type="text" id="garObra" value="90 Dias"></div>
-            <div><label>Garantia Peças:</label><input type="text" id="garPecas" value="3 meses"></div>
+            <div><label>Garantia Obra:</label><input type="text" id="garObra" value="90 Dias" placeholder="Ex: 90 Dias, 3 Meses"></div>
+            <div><label>Garantia Peças:</label><input type="text" id="garPecas" value="3 meses" placeholder="Ex: 90 Dias, 3 Meses"></div>
         </div>
 
         <div class="btn-group" id="botoesCriar">
@@ -427,7 +427,17 @@
         if(partes.length < 3) return 0;
         const dataOS = new Date(partes[2], partes[1] - 1, partes[0]);
         const diffTempo = Math.abs(new Date() - dataOS);
-        return Math.ceil(diffTempo / (1000 * 60 * 60 * 24));
+        return Math.floor(diffTempo / (1000 * 60 * 60 * 24));
+    }
+
+    // INTELIGÊNCIA: CONVERTER TEXTO DE GARANTIA EM DIAS
+    function converterParaDias(texto) {
+        if (!texto) return 0;
+        let t = texto.toLowerCase().trim();
+        let numero = parseFloat(t.replace(/[^0-9.]/g, '')) || 0;
+        if (t.includes('mês') || t.includes('mes')) return numero * 30;
+        if (t.includes('ano')) return numero * 365;
+        return numero; // default assumimos que são dias
     }
 
     async function obterProximaOS() {
@@ -435,7 +445,7 @@
         return snap.empty ? 1 : snap.docs[0].data().os + 1;
     }
 
-    // SALVAR PDV (MULTI PAGAMENTO)
+    // SALVAR PDV
     async function salvarVendaPDV(imprimirRecibo) {
         const desc = document.getElementById('pdvProduto').value;
         const venda = parseFloat(document.getElementById('pdvVenda').value) || 0;
@@ -469,7 +479,7 @@
         if(imprimirRecibo) { prepararImpressao(dados); } else { carregarHistorico(); }
     }
 
-    // SALVAR OS (MULTI PAGAMENTO)
+    // SALVAR OS
     async function salvarOS(tipoDoc) {
         const vp = parseFloat(document.getElementById('vPecas').value) || 0;
         const vo = parseFloat(document.getElementById('vObra').value) || 0;
@@ -620,6 +630,7 @@
         } else { document.getElementById('alertaAbandono').style.display = 'none'; }
     }
 
+    // APLICADA INTELIGÊNCIA DE LEITURA DE GARANTIAS
     function renderizar(snap) {
         let html = "";
         snap.forEach(doc => {
@@ -628,11 +639,32 @@
             const dias = calcularDias(d.data);
             
             let tagExtra = "";
-            if(d.categoria === 'VENDA_BALCAO') { tagExtra = `<span style="background:#6c757d; color:white; padding:2px 5px; border-radius:3px; font-size:10px;">🛒 VENDA</span>`; } 
-            else if(d.status === 'Entregue ao Cliente') {
-                if(dias <= 90) tagExtra = `<span style="color:green; font-size:12px;">🛡️ Na Garantia</span>`;
-                else tagExtra = `<span style="color:red; font-size:12px;">❌ Garantia Expirada</span>`;
-            } else if(dias > 180) { tagExtra = `<span style="background:red; color:white; padding:2px 5px; border-radius:3px; font-size:10px; font-weight:bold;">🚨 ABANDONADO</span>`; }
+            if(d.categoria === 'VENDA_BALCAO') { 
+                tagExtra = `<span style="background:#6c757d; color:white; padding:2px 5px; border-radius:3px; font-size:10px;">🛒 VENDA</span>`; 
+            } else if(d.status === 'Entregue ao Cliente') {
+                
+                // Inteligência: Converter textos livres em números (dias)
+                let garObraDias = converterParaDias(d.garO);
+                let garPecasDias = converterParaDias(d.garP);
+                
+                // Validadores Lógicos
+                let obraAtiva = garObraDias > 0 && dias <= garObraDias;
+                let pecasAtiva = garPecasDias > 0 && dias <= garPecasDias;
+
+                // Construção das Etiquetas
+                if (obraAtiva && pecasAtiva) {
+                    tagExtra = `<span style="background:#28a745; color:white; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">🛡️ Garantia: AMBAS</span>`;
+                } else if (obraAtiva && !pecasAtiva) {
+                    tagExtra = `<span style="background:#17a2b8; color:white; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">🛡️ Garantia: MÃO DE OBRA</span>`;
+                } else if (!obraAtiva && pecasAtiva) {
+                    tagExtra = `<span style="background:#6f42c1; color:white; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">🛡️ Garantia: PEÇAS</span>`;
+                } else {
+                    tagExtra = `<span style="background:#dc3545; color:white; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">❌ GARANTIA EXPIRADA</span>`;
+                }
+
+            } else if(dias > 180) { 
+                tagExtra = `<span style="background:red; color:white; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">🚨 ABANDONADO</span>`; 
+            }
 
             html += `
             <div class="os-card" style="border-left-color:${cor}">
@@ -700,7 +732,6 @@
         const hoje = new Date();
         const dataHojeStr = hoje.toLocaleDateString('pt-BR');
 
-        // Encontra o último domingo
         const dataUltimoDomingo = new Date(hoje);
         dataUltimoDomingo.setDate(hoje.getDate() - hoje.getDay());
         dataUltimoDomingo.setHours(0,0,0,0);
@@ -708,12 +739,11 @@
         let precisaFazer = false;
 
         if (!ultimoBackupStr) {
-            precisaFazer = true; // Nunca fez
+            precisaFazer = true; 
         } else {
             const partes = ultimoBackupStr.split('/');
             const dataUltimo = new Date(partes[2], partes[1] - 1, partes[0]);
             
-            // Se o último backup foi antes do último domingo, ou se hoje é domingo e ainda não fez
             if (dataUltimo < dataUltimoDomingo || (hoje.getDay() === 0 && ultimoBackupStr !== dataHojeStr)) {
                 precisaFazer = true;
             }
@@ -722,8 +752,8 @@
         if (precisaFazer) {
             document.getElementById('alertaBackupInteligente').style.display = 'block';
             setTimeout(() => {
-                baixarBackupLocalManual(true); // Oculta aviso ao baixar
-            }, 3000); // Dá 3 segundos para o utilizador ver o aviso antes de descarregar
+                baixarBackupLocalManual(true); 
+            }, 3000); 
         }
     }
 
