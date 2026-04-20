@@ -107,15 +107,13 @@
 
 <div class="container" id="conteinerPrincipal" style="display:none;">
     
-    <div class="alerta-backup" id="alertaBackupInteligente">
-        <strong>⚙️ Backup Automático:</strong> O sistema identificou backups pendentes e realizou o download da cópia de segurança para o seu dispositivo.
-    </div>
+    <div class="alerta-backup" id="alertaBackupInteligente"></div>
 
     <div id="abaNovaOS" class="aba ativa no-print">
         <div id="avisoEdicao" style="display:none; background: #fff3cd; padding:15px; border-radius:8px; margin-bottom:20px;">
             <div style="display:flex; justify-content: space-between; align-items: center;">
                 <strong style="color: #856404; font-size:16px;">⚠️ MODO DE EDIÇÃO (OS: <span id="idEdicao"></span>)</strong>
-                <button onclick="mudarAba('abaHistorico')" class="btn-red btn-small">❌ CANCELAR EDIÇÃO</button>
+                <button onclick="cancelarEdicao()" class="btn-red btn-small">❌ CANCELAR EDIÇÃO</button>
             </div>
         </div>
 
@@ -374,7 +372,7 @@
             document.getElementById('conteinerPrincipal').style.display = 'block';
             carregarConfiguracoes();
             carregarHistorico();
-            gatilhoInteligenteBackup();
+            gatilhoInteligenteBackup(); // Aciona automaticamente no momento do login!
         } else {
             document.getElementById('erroLogin').style.display = 'block';
         }
@@ -391,7 +389,12 @@
         
         document.getElementById('telaDocumento').style.display = 'none';
         document.getElementById('conteinerPrincipal').style.display = 'block';
-        if(idAba === 'abaNovaOS' && editandoId) limparFormularioOS();
+        // BUG DA EDIÇÃO CORRIGIDO: A linha que limpava o formulário de forma errada foi removida!
+    }
+
+    function cancelarEdicao() {
+        limparFormularioOS();
+        mudarAba('abaHistorico');
     }
 
     function fecharImpressao() {
@@ -515,11 +518,12 @@
             delete dados.data; 
             await db.collection("servicos").doc(editandoId).update(dados);
             limparFormularioOS();
+            mudarAba('abaHistorico'); // Volta ao histórico após salvar edição
         } else {
             dados.data = new Date().toLocaleDateString('pt-BR');
             await db.collection("servicos").add(dados);
+            prepararImpressao(dados);
         }
-        prepararImpressao(dados);
         carregarHistorico();
     }
 
@@ -643,15 +647,12 @@
                 tagExtra = `<span style="background:#6c757d; color:white; padding:2px 5px; border-radius:3px; font-size:10px;">🛒 VENDA</span>`; 
             } else if(d.status === 'Entregue ao Cliente') {
                 
-                // Inteligência: Converter textos livres em números (dias)
                 let garObraDias = converterParaDias(d.garO);
                 let garPecasDias = converterParaDias(d.garP);
                 
-                // Validadores Lógicos
                 let obraAtiva = garObraDias > 0 && dias <= garObraDias;
                 let pecasAtiva = garPecasDias > 0 && dias <= garPecasDias;
 
-                // Construção das Etiquetas
                 if (obraAtiva && pecasAtiva) {
                     tagExtra = `<span style="background:#28a745; color:white; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">🛡️ Garantia: AMBAS</span>`;
                 } else if (obraAtiva && !pecasAtiva) {
@@ -724,7 +725,7 @@
     }
 
     // ==========================================
-    // MÓDULO DE GATILHO DE BACKUP INTELIGENTE
+    // MÓDULO DE GATILHO DE BACKUP DIRETO NO DRIVE
     // ==========================================
 
     function gatilhoInteligenteBackup() {
@@ -750,10 +751,18 @@
         }
 
         if (precisaFazer) {
-            document.getElementById('alertaBackupInteligente').style.display = 'block';
-            setTimeout(() => {
-                baixarBackupLocalManual(true); 
-            }, 3000); 
+            const clientId = localStorage.getItem('gapiClientId');
+            if(clientId) {
+                // Tenta fazer o backup direto no Drive de forma silenciosa
+                document.getElementById('alertaBackupInteligente').style.display = 'block';
+                document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático:</strong> A iniciar o envio de segurança para o Google Drive...";
+                iniciarBackupDrive(true);
+            } else {
+                // Se não houver Client ID, avisa e descarrega localmente por segurança
+                document.getElementById('alertaBackupInteligente').style.display = 'block';
+                document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático:</strong> A descarregar backup local (Google Drive não configurado).";
+                setTimeout(() => { baixarBackupLocalManual(true); }, 3000); 
+            }
         }
     }
 
@@ -779,29 +788,33 @@
         }
     }
 
-    // Google Drive Integration Logic
+    // Google Drive Integration Logic (Agora com opção silenciosa para o modo Automático)
     let tokenClient;
-    async function iniciarBackupDrive() {
+    async function iniciarBackupDrive(silencioso = false) {
         const clientId = localStorage.getItem('gapiClientId');
-        if(!clientId) return alert("Por favor, insira o seu Google Client ID nas Configurações primeiro.");
+        if(!clientId) {
+            if(!silencioso) alert("Por favor, insira o seu Google Client ID nas Configurações primeiro.");
+            return;
+        }
         
-        document.getElementById('statusBackup').innerText = "⏳ A autenticar no Google Drive...";
+        if(!silencioso) document.getElementById('statusBackup').innerText = "⏳ A autenticar no Google Drive...";
         
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: clientId,
             scope: 'https://www.googleapis.com/auth/drive.file',
             callback: (tokenResponse) => {
                 if (tokenResponse && tokenResponse.access_token) {
-                    executarFluxoDrive(tokenResponse.access_token);
+                    executarFluxoDrive(tokenResponse.access_token, silencioso);
                 }
             },
         });
         tokenClient.requestAccessToken();
     }
 
-    async function executarFluxoDrive(accessToken) {
+    async function executarFluxoDrive(accessToken, silencioso = false) {
         gapi.client.setToken({ access_token: accessToken });
-        document.getElementById('statusBackup').innerText = "🔍 A procurar a pasta 'backup Sistema OS'...";
+        
+        if(!silencioso) document.getElementById('statusBackup').innerText = "🔍 A procurar a pasta 'backup Sistema OS'...";
         
         try {
             let response = await fetch('https://www.googleapis.com/drive/v3/files?q=mimeType="application/vnd.google-apps.folder" and name="backup Sistema OS" and trashed=false', {
@@ -813,7 +826,7 @@
             if (result.files && result.files.length > 0) {
                 folderId = result.files[0].id;
             } else {
-                document.getElementById('statusBackup').innerText = "📁 A criar pasta 'backup Sistema OS'...";
+                if(!silencioso) document.getElementById('statusBackup').innerText = "📁 A criar pasta 'backup Sistema OS'...";
                 const folderMetadata = { name: 'backup Sistema OS', mimeType: 'application/vnd.google-apps.folder' };
                 let createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
                     method: 'POST',
@@ -824,13 +837,13 @@
                 folderId = createData.id;
             }
 
-            document.getElementById('statusBackup').innerText = "📦 A preparar dados do sistema...";
+            if(!silencioso) document.getElementById('statusBackup').innerText = "📦 A preparar dados do sistema...";
             const snap = await db.collection("servicos").get();
             let dados = [];
             snap.forEach(doc => dados.push(doc.data()));
             const fileContent = JSON.stringify(dados, null, 2);
             
-            document.getElementById('statusBackup').innerText = "☁️ A enviar para o Drive...";
+            if(!silencioso) document.getElementById('statusBackup').innerText = "☁️ A enviar para o Drive...";
             const metadata = { name: `Backup_OS_${new Date().toISOString().split('T')[0]}.json`, parents: [folderId] };
             const form = new FormData();
             form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
@@ -843,10 +856,21 @@
             });
 
             localStorage.setItem('ultimoBackupData', new Date().toLocaleDateString('pt-BR'));
-            document.getElementById('statusBackup').innerText = "✅ Sucesso! Backup salvo no seu Google Drive.";
+            
+            if(silencioso) {
+                document.getElementById('alertaBackupInteligente').innerHTML = "<strong>✅ Backup Automático:</strong> Sincronizado com sucesso no Google Drive!";
+                setTimeout(() => { document.getElementById('alertaBackupInteligente').style.display = 'none'; }, 5000);
+            } else {
+                document.getElementById('statusBackup').innerText = "✅ Sucesso! Backup salvo no seu Google Drive.";
+            }
+
         } catch (error) {
             console.error(error);
-            document.getElementById('statusBackup').innerText = "❌ Erro ao comunicar com o Drive. (Verifique o Client ID ou permita pop-ups)";
+            if(silencioso) {
+                document.getElementById('alertaBackupInteligente').innerHTML = "<strong>❌ Erro no Backup Automático:</strong> Não foi possível comunicar com o Drive. Faça um backup manual em 'Configs'.";
+            } else {
+                document.getElementById('statusBackup').innerText = "❌ Erro ao comunicar com o Drive. (Verifique as pop-ups do navegador)";
+            }
         }
     }
 </script>
