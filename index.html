@@ -18,8 +18,8 @@
         .login-box input { margin: 15px 0; font-size: 18px; text-align: center; }
 
         /* MENU DE NAVEGAÇÃO */
-        .navbar { background: var(--dark); padding: 15px 20px; display: flex; gap: 15px; color: white; justify-content: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        .navbar button { background: none; border: 1px solid #555; color: white; padding: 10px 20px; border-radius: 6px; cursor: pointer; transition: 0.3s; font-size: 14px; font-weight: bold; flex: none; width: auto; }
+        .navbar { background: var(--dark); padding: 15px 20px; display: flex; gap: 10px; color: white; justify-content: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); flex-wrap: wrap; }
+        .navbar button { background: none; border: 1px solid #555; color: white; padding: 10px 15px; border-radius: 6px; cursor: pointer; transition: 0.3s; font-size: 14px; font-weight: bold; }
         .navbar button:hover, .navbar button.ativo { background: var(--primary); border-color: var(--primary); }
         .navbar .btn-sair { background: var(--danger); border-color: var(--danger); margin-left: auto; }
 
@@ -27,6 +27,7 @@
         
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         .full { grid-column: 1 / -1; }
         
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #555; }
@@ -48,35 +49,33 @@
         .dash-red { background: #dc3545; }
         .dash-green { background: #28a745; }
         
-        /* Avisos */
+        /* Avisos e Abas */
         .alerta-abandono { background: #ffe3e3; border-left: 5px solid #dc3545; padding: 15px; margin-bottom: 20px; border-radius: 4px; display: none; }
         .os-card { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 6px solid #ccc; }
         .aba { display: none; }
         .aba.ativa { display: block; }
 
         /* =========================================================
-           ESTILOS DO DOCUMENTO (VISUALIZAÇÃO NA TELA E IMPRESSÃO)
-           AGORA ESTÃO FORA DO @MEDIA PRINT PARA FUNCIONAREM NA TELA!
+           ESTILOS DO DOCUMENTO (OTIMIZADO PARA 1 PÁGINA)
            ========================================================= */
         #telaDocumento { display: none; background: white; color: #000; font-family: Arial, sans-serif; padding: 30px; border: 1px solid #ccc; box-shadow: 0 5px 15px rgba(0,0,0,0.2); margin: 20px auto; max-width: 800px; }
         
-        .pdf-header { display: flex; justify-content: space-between; margin-bottom: 15px; align-items: flex-start; }
-        .pdf-section { border: 1px solid #000; margin-bottom: 8px; border-radius: 4px; overflow: hidden; }
-        .pdf-title { background: #e0e0e0; padding: 4px 8px; font-weight: bold; font-size: 11px; border-bottom: 1px solid #000; text-transform: uppercase; }
+        .pdf-header { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: flex-start; }
+        .pdf-section { border: 1px solid #000; margin-bottom: 5px; border-radius: 4px; overflow: hidden; }
+        .pdf-title { background: #e0e0e0; padding: 3px 6px; font-weight: bold; font-size: 11px; border-bottom: 1px solid #000; text-transform: uppercase; }
         .pdf-row { display: flex; border-bottom: 1px solid #000; }
         .pdf-row:last-child { border-bottom: none; }
-        .pdf-col { flex: 1; padding: 4px 8px; border-right: 1px solid #000; }
+        .pdf-col { flex: 1; padding: 3px 6px; border-right: 1px solid #000; }
         .pdf-col:last-child { border-right: none; }
-        .pdf-label { font-size: 9px; color: #444; display: block; margin-bottom: 2px; font-weight: bold; text-transform: uppercase; }
-        .pdf-value { font-size: 12px; min-height: 14px; font-weight: normal; }
-        .pdf-textarea { padding: 6px 8px; font-size: 12px; min-height: 20px; border: 1px solid #000; margin-bottom: 6px; border-radius: 3px; }
-        .pdf-assinaturas { margin-top: 25px; display: flex; justify-content: space-around; text-align: center; font-size: 12px; }
-        .termo-juridico { font-size: 8px; text-align: justify; margin-top: 10px; border: 1px solid #000; padding: 6px 8px; background: #f9f9f9; border-radius: 4px; line-height: 1.2; }
+        .pdf-label { font-size: 8px; color: #444; display: block; margin-bottom: 2px; font-weight: bold; text-transform: uppercase; }
+        .pdf-value { font-size: 11px; min-height: 12px; font-weight: normal; }
+        .pdf-textarea { padding: 4px 6px; font-size: 11px; min-height: 15px; border: 1px solid #000; margin-bottom: 4px; border-radius: 3px; }
+        .pdf-assinaturas { margin-top: 15px; display: flex; justify-content: space-around; text-align: center; font-size: 11px; }
+        .termo-juridico { font-size: 8px; text-align: justify; margin-top: 5px; border: 1px solid #000; padding: 4px 6px; background: #f9f9f9; border-radius: 4px; line-height: 1.1; }
 
         @media print {
             body { background: white; padding: 0; margin: 0; }
             .no-print, .navbar { display: none !important; }
-            /* Na impressão, tiramos a sombra e o max-width para usar toda a folha A4 */
             #telaDocumento { display: block !important; padding: 0; border: none; margin: 0; box-shadow: none; max-width: 100%; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
@@ -95,37 +94,21 @@
 </div>
 
 <div class="navbar no-print" id="menuNavegacao" style="display:none;">
-    <button onclick="mudarAba('abaDashboard')" id="btn-abaDashboard" class="ativo">📊 Dashboard & Histórico</button>
-    <button onclick="mudarAba('abaNovaOS')" id="btn-abaNovaOS">📝 Nova OS</button>
-    <button onclick="mudarAba('abaPDV')" id="btn-abaPDV">🛒 Venda Rápida (PDV)</button>
-    <button onclick="mudarAba('abaConfig')" id="btn-abaConfig">⚙️ Configurações</button>
+    <button onclick="mudarAba('abaNovaOS')" id="btn-abaNovaOS" class="ativo">📝 1. Nova OS</button>
+    <button onclick="mudarAba('abaHistorico')" id="btn-abaHistorico">📂 2. Histórico</button>
+    <button onclick="mudarAba('abaPDV')" id="btn-abaPDV">🛒 3. Venda PDV</button>
+    <button onclick="mudarAba('abaFinanceiro')" id="btn-abaFinanceiro">📊 4. Financeiro</button>
+    <button onclick="mudarAba('abaConfig')" id="btn-abaConfig">⚙️ 5. Configurações</button>
     <button class="btn-sair" onclick="sairSistema()">Sair 🚪</button>
 </div>
 
 <div class="container" id="conteinerPrincipal" style="display:none;">
     
-    <div id="abaDashboard" class="aba ativa no-print">
-        <div class="alerta-abandono" id="alertaAbandono">
-            <strong>🚨 ATENÇÃO:</strong> Existem <span id="qtdAbandonados">0</span> equipamento(s) na loja há mais de 180 dias!
-        </div>
-
-        <h3>📊 Painel Financeiro (Concluídos/Entregues)</h3>
-        <div class="dashboard">
-            <div class="dash-card dash-blue"><h4>Total Faturado</h4><h2 id="dashFaturado">R$ 0,00</h2></div>
-            <div class="dash-card dash-red"><h4>Custo Peças/Produtos</h4><h2 id="dashPecas">R$ 0,00</h2></div>
-            <div class="dash-card dash-green"><h4>Lucro Real</h4><h2 id="dashLucro">R$ 0,00</h2></div>
-        </div>
-
-        <h3>📂 Histórico de Serviços e Vendas</h3>
-        <input type="text" id="busca" onkeyup="buscar()" placeholder="🔍 Buscar cliente, OS ou produto..." style="margin-bottom:15px;">
-        <div id="listaHistorico">Carregando registros...</div>
-    </div>
-
-    <div id="abaNovaOS" class="aba no-print">
+    <div id="abaNovaOS" class="aba ativa no-print">
         <div id="avisoEdicao" style="display:none; background: #fff3cd; padding:15px; border-radius:8px; margin-bottom:20px;">
             <div style="display:flex; justify-content: space-between; align-items: center;">
                 <strong style="color: #856404; font-size:16px;">⚠️ MODO DE EDIÇÃO (OS: <span id="idEdicao"></span>)</strong>
-                <button onclick="mudarAba('abaDashboard')" class="btn-red btn-small">❌ CANCELAR EDIÇÃO</button>
+                <button onclick="mudarAba('abaHistorico')" class="btn-red btn-small">❌ CANCELAR EDIÇÃO</button>
             </div>
         </div>
 
@@ -169,11 +152,21 @@
             <div class="full"><label>Serviços / Peças:</label><textarea id="servicos" rows="2"></textarea></div>
         </div>
 
-        <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">4. Fechamento Financeiro</h3>
-        <div class="grid-3">
+        <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">4. Fechamento Financeiro & Pagamento</h3>
+        <div class="grid">
             <div><label>Mão de Obra (R$):</label><input type="number" id="vObra"></div>
             <div><label>Peças (R$):</label><input type="number" id="vPecas"></div>
-            <div><label>Sinal (R$):</label><input type="number" id="vSinal"></div>
+        </div>
+        
+        <label style="margin-top:15px; display:block;"><strong>Métodos de Pagamento (Sinal/Entrada):</strong></label>
+        <div class="grid-4" style="background:#eef8e5; padding:15px; border-radius:8px; border:1px solid #c3e6cb;">
+            <div><label>PIX (R$):</label><input type="number" id="osPix"></div>
+            <div><label>Dinheiro (R$):</label><input type="number" id="osDin"></div>
+            <div><label>C. Crédito (R$):</label><input type="number" id="osCred"></div>
+            <div><label>C. Débito (R$):</label><input type="number" id="osDeb"></div>
+        </div>
+
+        <div class="grid" style="margin-top:15px;">
             <div><label>Garantia Obra:</label><input type="text" id="garObra" value="90 Dias"></div>
             <div><label>Garantia Peças:</label><input type="text" id="garPecas" value="3 meses"></div>
         </div>
@@ -187,18 +180,48 @@
         </div>
     </div>
 
+    <div id="abaHistorico" class="aba no-print">
+        <div class="alerta-abandono" id="alertaAbandono">
+            <strong>🚨 ATENÇÃO:</strong> Existem <span id="qtdAbandonados">0</span> equipamento(s) na loja há mais de 180 dias!
+        </div>
+
+        <h2 style="margin-top: 0;">📂 Histórico de Serviços e Vendas</h2>
+        <input type="text" id="busca" onkeyup="buscar()" placeholder="🔍 Buscar cliente, OS ou produto..." style="margin-bottom:15px;">
+        <div id="listaHistorico">Carregando registros...</div>
+    </div>
+
     <div id="abaPDV" class="aba no-print">
-        <h2 style="margin-top: 0;">🛒 Venda de Balcão</h2>
-        <p style="color:#666; margin-bottom:20px;">Use esta tela para registar vendas de acessórios e peças avulsas (ratos, cabos, etc).</p>
+        <h2 style="margin-top: 0;">🛒 Venda de Balcão (PDV)</h2>
+        <p style="color:#666; margin-bottom:20px;">Use esta tela para registar vendas diretas. O valor do custo foi removido.</p>
         
         <div class="grid">
             <div class="full"><label>Nome do Cliente (Opcional):</label><input type="text" id="pdvCliente" value="CLIENTE BALCÃO"></div>
             <div class="full"><label>Produto(s) Vendido(s):</label><textarea id="pdvProduto" rows="3" placeholder="Ex: 1x Rato sem Fio Logitech, 1x Cabo USB"></textarea></div>
-            <div><label>Valor de Custo do Produto (R$):</label><input type="number" id="pdvCusto" placeholder="Para calcular seu lucro"></div>
-            <div><label>Valor de Venda (Cobrado) (R$):</label><input type="number" id="pdvVenda" placeholder="O que o cliente pagou"></div>
+            <div class="full"><label>Valor Total da Venda (R$):</label><input type="number" id="pdvVenda" placeholder="Total a ser cobrado"></div>
         </div>
         
-        <button class="btn-green" onclick="salvarVendaPDV()" style="width:100%; margin-top:20px;">💰 REGISTAR VENDA RÁPIDA</button>
+        <label style="margin-top:15px; display:block;"><strong>Métodos de Pagamento:</strong></label>
+        <div class="grid-4" style="background:#eef8e5; padding:15px; border-radius:8px; border:1px solid #c3e6cb;">
+            <div><label>PIX (R$):</label><input type="number" id="pdvPix"></div>
+            <div><label>Dinheiro (R$):</label><input type="number" id="pdvDin"></div>
+            <div><label>C. Crédito (R$):</label><input type="number" id="pdvCred"></div>
+            <div><label>C. Débito (R$):</label><input type="number" id="pdvDeb"></div>
+        </div>
+        
+        <div class="btn-group" style="margin-top:20px;">
+            <button class="btn-green" onclick="salvarVendaPDV(false)">💰 APENAS REGISTAR VENDA</button>
+            <button class="btn-dark" onclick="salvarVendaPDV(true)">🖨️ REGISTAR E IMPRIMIR RECIBO</button>
+        </div>
+    </div>
+
+    <div id="abaFinanceiro" class="aba no-print">
+        <h2 style="margin-top: 0;">📊 Painel Financeiro</h2>
+        <p style="color:#666;">Valores referentes às OS marcadas como "Entregue ao Cliente" e Vendas do PDV.</p>
+        <div class="dashboard">
+            <div class="dash-card dash-blue"><h4>Total Faturado</h4><h2 id="dashFaturado">R$ 0,00</h2></div>
+            <div class="dash-card dash-red"><h4>Custo Peças (Apenas OS)</h4><h2 id="dashPecas">R$ 0,00</h2></div>
+            <div class="dash-card dash-green"><h4>Lucro Real</h4><h2 id="dashLucro">R$ 0,00</h2></div>
+        </div>
     </div>
 
     <div id="abaConfig" class="aba no-print">
@@ -217,7 +240,7 @@
 </div>
 
 <div id="telaDocumento">
-    <button class="btn-red no-print" onclick="mudarAba('abaDashboard')" style="margin-bottom:20px; width:100%; font-size:16px; padding:15px;">⬅️ FECHAR IMPRESSÃO E VOLTAR</button>
+    <button class="btn-red no-print" onclick="mudarAba('abaHistorico')" style="margin-bottom:20px; width:100%; font-size:16px; padding:15px;">⬅️ FECHAR IMPRESSÃO E VOLTAR</button>
     
     <div class="pdf-header">
         <div style="width: 30%; text-align: center;">
@@ -228,9 +251,9 @@
             <span id="docEnd"></span><br>Telefone: <span id="docTel"></span>
         </div>
         <div style="width: 30%; text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
-            <h1 style="margin: 0; font-size: 20px;">Nº DA OS</h1>
-            <h2 id="resOS" style="margin: 0 0 5px 0; font-size: 28px; color: #d00;">0000</h2>
-            <img id="qrCode" src="" style="width: 60px; height: 60px;">
+            <h1 style="margin: 0; font-size: 18px;">Nº DOC</h1>
+            <h2 id="resOS" style="margin: 0 0 5px 0; font-size: 24px; color: #d00;">0000</h2>
+            <img id="qrCode" src="" style="width: 50px; height: 50px;">
         </div>
     </div>
 
@@ -266,8 +289,8 @@
     </div>
 
     <div class="pdf-section" style="border:none;" id="secTecnica">
-        <div class="pdf-title" style="border: 1px solid #000; border-radius: 4px; margin-bottom:8px;">3. DETALHES TÉCNICOS DO ATENDIMENTO</div>
-        <span class="pdf-label">3.1. Defeito Relatado / Produto</span>
+        <div class="pdf-title" id="tituloTecnico" style="border: 1px solid #000; border-radius: 4px; margin-bottom:5px;">3. DETALHES TÉCNICOS DO ATENDIMENTO</div>
+        <span class="pdf-label" id="lblDefeito">3.1. Defeito Relatado / Produto</span>
         <div class="pdf-textarea" id="resDefeito"></div>
         <div id="boxLaudo">
             <span class="pdf-label">3.2. Laudo Técnico</span>
@@ -278,23 +301,26 @@
     </div>
 
     <div class="pdf-section">
-        <div class="pdf-title">4. FECHAMENTO FINANCEIRO & GARANTIA</div>
+        <div class="pdf-title">4. FECHAMENTO FINANCEIRO & PAGAMENTO</div>
         <div class="pdf-row">
-            <div class="pdf-col"><span class="pdf-label">Mão de Obra (R$)</span><span class="pdf-value" id="resObra"></span></div>
-            <div class="pdf-col"><span class="pdf-label">Peças (R$)</span><span class="pdf-value" id="resPecas"></span></div>
-            <div class="pdf-col"><span class="pdf-label">Sinal Pago</span><strong class="pdf-value" id="resSinal" style="color:#28a745;"></strong></div>
+            <div class="pdf-col"><span class="pdf-label" id="lblObra">Mão de Obra (R$)</span><span class="pdf-value" id="resObra"></span></div>
+            <div class="pdf-col"><span class="pdf-label" id="lblPecas">Peças (R$)</span><span class="pdf-value" id="resPecas"></span></div>
+            <div class="pdf-col"><span class="pdf-label">Total Pago</span><strong class="pdf-value" id="resSinal" style="color:#28a745;"></strong></div>
+        </div>
+        <div class="pdf-row" id="rowMetodosPagamento" style="background:#eef8e5;">
+            <div class="pdf-col" style="flex:1;"><span class="pdf-label">Meios de Pagamento Utilizados</span><span class="pdf-value" id="resMeiosPag"></span></div>
         </div>
         <div class="pdf-row">
-            <div class="pdf-col" style="background:#f0f0f0;"><span class="pdf-label">TOTAL GERAL</span><strong class="pdf-value" id="resTotal" style="font-size:16px;"></strong></div>
-            <div class="pdf-col" style="flex:2; background:#fff3cd;"><span class="pdf-label" style="color:#856404;">VALOR RESTANTE (FALTA PAGAR)</span><strong class="pdf-value" id="resFaltaPagar" style="font-size:16px; color:#d00;"></strong></div>
+            <div class="pdf-col" style="background:#f0f0f0;"><span class="pdf-label">TOTAL GERAL</span><strong class="pdf-value" id="resTotal" style="font-size:14px;"></strong></div>
+            <div class="pdf-col" style="flex:2; background:#fff3cd;"><span class="pdf-label" style="color:#856404;">VALOR RESTANTE (FALTA PAGAR)</span><strong class="pdf-value" id="resFaltaPagar" style="font-size:14px; color:#d00;"></strong></div>
         </div>
-        <div class="pdf-row">
+        <div class="pdf-row" id="rowGarantias">
             <div class="pdf-col"><span class="pdf-label">Garantia Obra</span><span class="pdf-value" id="resGarO"></span></div>
             <div class="pdf-col"><span class="pdf-label">Garantia Peças</span><span class="pdf-value" id="resGarP"></span></div>
         </div>
     </div>
 
-    <div style="text-align: right; font-size: 12px; margin-top: 5px;">Belém, <span id="resData"></span></div>
+    <div style="text-align: right; font-size: 11px; margin-top: 5px;">Belém, <span id="resData"></span></div>
 
     <div class="termo-juridico" id="termoJuridico">
         <strong>TERMO DE RESPONSABILIDADE E ABANDONO:</strong> O cliente declara estar ciente de que o equipamento deverá ser retirado em até <strong>90 dias (3 meses)</strong>. Após este prazo, será cobrada uma taxa de armazenamento de <strong>R$ 30,00 por mês</strong>. Passados <strong>180 dias (6 meses)</strong>, o equipamento será legalmente considerado como <strong>abandonado e tratado como sucata</strong> para abatimento de custos.
@@ -304,7 +330,7 @@
         <div><p>______________________________________</p><p><strong>Kleber Informática</strong><br>Técnico: Kleber Melo</p></div>
         <div><p>______________________________________</p><p><strong>Assinatura do Cliente</strong></p></div>
     </div>
-    <button class="btn-dark no-print" onclick="window.print()" style="margin-top:20px; width:100%;">🖨️ IMPRIMIR</button>
+    <button class="btn-dark no-print" onclick="window.print()" style="margin-top:15px; width:100%;">🖨️ IMPRIMIR</button>
 </div>
 
 <script>
@@ -316,7 +342,6 @@
     let editandoId = null;
     let tipoDocOriginal = 'ENTRADA';
 
-    // VERIFICAÇÃO DE LOGIN DE FRONTEIRA
     function fazerLogin() {
         const senhaDigitada = document.getElementById('senhaAcesso').value;
         const senhaCorreta = localStorage.getItem('senhaAdmin') || '123456';
@@ -362,7 +387,6 @@
         } else { alert("Configurações Salvas!"); }
     }
 
-    // CALCULAR DIAS E GARANTIA
     function calcularDias(dataStr) {
         if(!dataStr) return 0;
         const partes = dataStr.split('/');
@@ -377,37 +401,58 @@
         return snap.empty ? 1 : snap.docs[0].data().os + 1;
     }
 
-    // SALVAR VENDA PDV (MÓDULO NOVO)
-    async function salvarVendaPDV() {
+    // SALVAR PDV (MULTI PAGAMENTO E SEM CUSTO)
+    async function salvarVendaPDV(imprimirRecibo) {
         const desc = document.getElementById('pdvProduto').value;
-        const custo = parseFloat(document.getElementById('pdvCusto').value) || 0;
         const venda = parseFloat(document.getElementById('pdvVenda').value) || 0;
         
+        const pix = parseFloat(document.getElementById('pdvPix').value) || 0;
+        const din = parseFloat(document.getElementById('pdvDin').value) || 0;
+        const cred = parseFloat(document.getElementById('pdvCred').value) || 0;
+        const deb = parseFloat(document.getElementById('pdvDeb').value) || 0;
+        const totalPago = pix + din + cred + deb;
+
         if(!desc) return alert("Digite o produto vendido.");
         
         const numOS = await obterProximaOS();
         const dados = {
             os: numOS, categoria: 'VENDA_BALCAO', status: 'Entregue ao Cliente',
             cliente: document.getElementById('pdvCliente').value,
-            defeito: "VENDA: " + desc, // Usa campo defeito para mostrar no papel
-            vPecas: custo, vObra: venda - custo, total: venda, faltaPagar: 0, vSinal: venda,
+            defeito: desc, 
+            vPecas: 0, vObra: venda, total: venda, faltaPagar: venda - totalPago, vSinal: totalPago,
+            pagamentos: { pix, din, cred, deb },
             data: new Date().toLocaleDateString('pt-BR'),
             tipo: 'RECIBO'
         };
 
         await db.collection("servicos").add(dados);
         alert("Venda registada com sucesso!");
+        
         document.getElementById('pdvProduto').value = "";
-        document.getElementById('pdvCusto').value = "";
         document.getElementById('pdvVenda').value = "";
-        mudarAba('abaDashboard');
-        carregarHistorico();
+        document.getElementById('pdvPix').value = "";
+        document.getElementById('pdvDin').value = "";
+        document.getElementById('pdvCred').value = "";
+        document.getElementById('pdvDeb').value = "";
+
+        if(imprimirRecibo) {
+            prepararImpressao(dados);
+        } else {
+            carregarHistorico();
+        }
     }
 
+    // SALVAR OS (MULTI PAGAMENTO)
     async function salvarOS(tipoDoc) {
         const vp = parseFloat(document.getElementById('vPecas').value) || 0;
         const vo = parseFloat(document.getElementById('vObra').value) || 0;
-        const vsinal = parseFloat(document.getElementById('vSinal').value) || 0;
+        
+        const pix = parseFloat(document.getElementById('osPix').value) || 0;
+        const din = parseFloat(document.getElementById('osDin').value) || 0;
+        const cred = parseFloat(document.getElementById('osCred').value) || 0;
+        const deb = parseFloat(document.getElementById('osDeb').value) || 0;
+        const totalPago = pix + din + cred + deb;
+
         let numOS = editandoId ? parseInt(document.getElementById('idEdicao').innerText) : await obterProximaOS();
 
         const dados = {
@@ -420,16 +465,17 @@
             chkFonte: document.getElementById('chkFonte').checked ? "Sim" : "Não", chkCapa: document.getElementById('chkCapa').checked ? "Sim" : "Não",
             aces: document.getElementById('aces').value, defeito: document.getElementById('defeito').value,
             laudo: document.getElementById('laudo').value, servicos: document.getElementById('servicos').value,
-            vPecas: vp, vObra: vo, vSinal: vsinal, total: vp + vo, faltaPagar: (vp + vo) - vsinal,
+            vPecas: vp, vObra: vo, vSinal: totalPago, total: vp + vo, faltaPagar: (vp + vo) - totalPago,
+            pagamentos: { pix, din, cred, deb },
             garP: document.getElementById('garPecas').value, garO: document.getElementById('garObra').value,
-            data: editandoId ? undefined : new Date().toLocaleDateString('pt-BR'), // Mantém a data original se for edição
+            data: editandoId ? undefined : new Date().toLocaleDateString('pt-BR'),
             tipo: tipoDoc
         };
 
         if(!dados.cliente) return alert("Digite o nome do cliente!");
 
         if(editandoId) {
-            delete dados.data; // Não atualiza a data de entrada
+            delete dados.data; 
             await db.collection("servicos").doc(editandoId).update(dados);
             limparFormularioOS();
         } else {
@@ -449,7 +495,7 @@
         document.getElementById('botoesCriar').style.display = 'flex';
         document.getElementById('botaoSalvarEdicao').style.display = 'none';
         document.querySelectorAll('#abaNovaOS input[type=text], #abaNovaOS input[type=number], #abaNovaOS textarea').forEach(el => el.value = '');
-        document.getElementById('cliente').value = ''; // Força limpeza
+        document.getElementById('cliente').value = ''; 
     }
 
     function prepararImpressao(d) {
@@ -461,19 +507,32 @@
         document.getElementById('docTel').innerText = localStorage.getItem('tel') || "";
         document.getElementById('resOS').innerText = String(d.os).padStart(4, '0');
         
-        // GERADOR DE QR CODE
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=OS:${d.os}-Cliente:${encodeURIComponent(d.cliente)}`;
         document.getElementById('qrCode').src = qrUrl;
 
-        // Esconde campos irrelevantes se for VENDA DE BALCÃO
+        // ADAPTAÇÃO DO RECIBO PARA PDV x SERVIÇO
         if(d.categoria === 'VENDA_BALCAO') {
             document.getElementById('secEquipamento').style.display = 'none';
+            document.getElementById('tituloTecnico').innerText = "PRODUTOS VENDIDOS";
+            document.getElementById('lblDefeito').innerText = "Descrição dos Itens";
             document.getElementById('boxLaudo').style.display = 'none';
             document.getElementById('termoJuridico').style.display = 'none';
+            document.getElementById('rowGarantias').style.display = 'none';
+            
+            document.getElementById('lblObra').innerText = "Valor da Venda (R$)";
+            document.getElementById('lblPecas').innerText = "Outros Custos";
+            document.getElementById('resPecas').innerText = "-";
         } else {
             document.getElementById('secEquipamento').style.display = 'block';
+            document.getElementById('tituloTecnico').innerText = "3. DETALHES TÉCNICOS DO ATENDIMENTO";
+            document.getElementById('lblDefeito').innerText = "3.1. Defeito Relatado / Produto";
             document.getElementById('boxLaudo').style.display = 'block';
             document.getElementById('termoJuridico').style.display = 'block';
+            document.getElementById('rowGarantias').style.display = 'flex';
+
+            document.getElementById('lblObra').innerText = "Mão de Obra (R$)";
+            document.getElementById('lblPecas').innerText = "Peças (R$)";
+            document.getElementById('resPecas').innerText = d.vPecas ? d.vPecas.toFixed(2) : "0.00";
         }
 
         document.getElementById('resCliente').innerText = d.cliente;
@@ -487,12 +546,27 @@
         document.getElementById('resServicos').innerText = d.servicos || "";
         
         document.getElementById('resObra').innerText = d.vObra ? d.vObra.toFixed(2) : "0.00";
-        document.getElementById('resPecas').innerText = d.vPecas ? d.vPecas.toFixed(2) : "0.00";
         document.getElementById('resTotal').innerText = "R$ " + (d.total ? d.total.toFixed(2) : "0.00");
         document.getElementById('resSinal').innerText = d.vSinal ? "R$ " + d.vSinal.toFixed(2) : "R$ 0.00";
         document.getElementById('resFaltaPagar').innerText = d.faltaPagar ? "R$ " + d.faltaPagar.toFixed(2) : "R$ 0.00";
         document.getElementById('resGarO').innerText = d.garO || ""; document.getElementById('resGarP').innerText = d.garP || "";
         document.getElementById('resData').innerText = d.data || new Date().toLocaleDateString('pt-BR');
+
+        // MONTANDO A STRING MULTI-PAGAMENTOS
+        let pagText = [];
+        if(d.pagamentos) {
+            if(d.pagamentos.pix > 0) pagText.push(`PIX: R$ ${d.pagamentos.pix.toFixed(2)}`);
+            if(d.pagamentos.din > 0) pagText.push(`Dinheiro: R$ ${d.pagamentos.din.toFixed(2)}`);
+            if(d.pagamentos.cred > 0) pagText.push(`Crédito: R$ ${d.pagamentos.cred.toFixed(2)}`);
+            if(d.pagamentos.deb > 0) pagText.push(`Débito: R$ ${d.pagamentos.deb.toFixed(2)}`);
+        }
+        
+        if(pagText.length > 0) {
+            document.getElementById('rowMetodosPagamento').style.display = 'flex';
+            document.getElementById('resMeiosPag').innerText = pagText.join('  |  ');
+        } else {
+            document.getElementById('rowMetodosPagamento').style.display = 'none';
+        }
 
         document.getElementById('conteinerPrincipal').style.display = 'none';
         document.getElementById('telaDocumento').style.display = 'block';
@@ -514,7 +588,7 @@
 
             if(d.status === 'Entregue ao Cliente') {
                 faturado += d.total || 0;
-                custoPecas += d.vPecas || 0;
+                custoPecas += d.vPecas || 0; // Se for PDV, o custo é 0.
             } else if (diasPassados > 180 && d.categoria !== 'VENDA_BALCAO') {
                 abandonados++;
             }
@@ -539,7 +613,6 @@
             let cor = d.status === 'Falta Orçar' ? '#dc3545' : d.status === 'Executando' ? '#ffc107' : d.status === 'Concluída' ? '#17a2b8' : '#28a745';
             const dias = calcularDias(d.data);
             
-            // Lógica de Garantia / Abandono
             let tagExtra = "";
             if(d.categoria === 'VENDA_BALCAO') {
                 tagExtra = `<span style="background:#6c757d; color:white; padding:2px 5px; border-radius:3px; font-size:10px;">🛒 VENDA</span>`;
@@ -557,7 +630,7 @@
                     <small>${d.equip || "Venda Balcão"} | <span style="color:${cor}; font-weight:bold;">${d.status}</span> | ${d.data}</small>
                 </div>
                 <div style="display:flex; gap:5px;">
-                    <button class="btn-dark btn-small" onclick='prepararImpressao(${JSON.stringify(d)})'>🖨️ OS</button>
+                    <button class="btn-dark btn-small" onclick='prepararImpressao(${JSON.stringify(d)})'>🖨️ Doc</button>
                     <button class="btn-blue btn-small" onclick="editarOS('${doc.id}')">✏️ Editar</button>
                     <button class="btn-red btn-small" onclick="excluirOS('${doc.id}')">🗑️</button>
                 </div>
@@ -573,7 +646,7 @@
     async function editarOS(id) {
         const doc = await db.collection("servicos").doc(id).get();
         const d = doc.data();
-        if(d.categoria === 'VENDA_BALCAO') return alert("Vendas de balcão não podem ser editadas, apenas excluídas.");
+        if(d.categoria === 'VENDA_BALCAO') return alert("Vendas de balcão não podem ser editadas, apenas excluídas e regeradas.");
         
         tipoDocOriginal = d.tipo || 'ENTRADA'; editandoId = id;
 
@@ -586,7 +659,13 @@
         document.getElementById('chkCapa').checked = d.chkCapa === "Sim"; document.getElementById('aces').value = d.aces || "";
         document.getElementById('defeito').value = d.defeito || ""; document.getElementById('laudo').value = d.laudo || "";
         document.getElementById('servicos').value = d.servicos || ""; document.getElementById('vPecas').value = d.vPecas || "";
-        document.getElementById('vObra').value = d.vObra || ""; document.getElementById('vSinal').value = d.vSinal || "";
+        document.getElementById('vObra').value = d.vObra || ""; 
+        
+        document.getElementById('osPix').value = d.pagamentos?.pix || "";
+        document.getElementById('osDin').value = d.pagamentos?.din || "";
+        document.getElementById('osCred').value = d.pagamentos?.cred || "";
+        document.getElementById('osDeb').value = d.pagamentos?.deb || "";
+
         document.getElementById('garPecas').value = d.garP || ""; document.getElementById('garObra').value = d.garO || "";
         
         document.getElementById('idEdicao').innerText = String(d.os).padStart(4, '0');
