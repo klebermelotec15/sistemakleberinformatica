@@ -9,7 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     
     <style>
-        :root { --primary: #007bff; --secondary: #28a745; --dark: #333; --danger: #dc3545; }
+        :root { --primary: #007bff; --secondary: #28a745; --dark: #333; --danger: #dc3545; --warning: #ffc107; --info: #17a2b8; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
         .container { max-width: 950px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
@@ -29,6 +29,7 @@
         .btn-green { background: var(--secondary); }
         .btn-dark { background: var(--dark); }
         .btn-red { background: var(--danger); }
+        .btn-warning { background: var(--warning); color: #000; }
         .btn-small { padding: 6px 10px; font-size: 12px; flex: none; width: auto; }
 
         /* Dashboard Financeiro */
@@ -96,9 +97,11 @@
             <button class="btn-dark" onclick="salvarConfig()">SALVAR DADOS</button>
         </details>
 
-        <div id="avisoEdicao" style="display:none; background: #ffc107; padding:15px; border-radius:8px; margin-bottom:20px;">
-            <strong>⚠️ EDITANDO OS: <span id="idEdicao"></span></strong>
-            <button onclick="location.reload()" style="background:red; padding:5px; margin-left:15px; border:none; border-radius:4px; color:white; cursor:pointer;">Cancelar Edição</button>
+        <div id="avisoEdicao" style="display:none; background: #fff3cd; padding:15px; border: 1px solid #ffeeba; border-radius:8px; margin-bottom:20px;">
+            <div style="display:flex; justify-content: space-between; align-items: center;">
+                <strong style="color: #856404; font-size:16px;">⚠️ MODO DE EDIÇÃO (OS: <span id="idEdicao"></span>)</strong>
+                <button onclick="cancelarEdicao()" class="btn-red btn-small">❌ CANCELAR EDIÇÃO</button>
+            </div>
         </div>
 
         <h3 style="margin-top: 30px; border-bottom: 1px solid #ccc;">1. Informações do Cliente</h3>
@@ -130,10 +133,10 @@
             <div class="full">
                 <label>Situação da OS:</label>
                 <select id="status">
-                    <option value="EM ABERTO">🔴 EM ABERTO</option>
-                    <option value="EXECUTANDO">🟡 EXECUTANDO</option>
-                    <option value="CONCLUÍDA">🔵 CONCLUÍDA</option>
-                    <option value="FINALIZADA">🟢 FINALIZADA</option>
+                    <option value="Falta Orçar">🔴 Falta Orçar</option>
+                    <option value="Executando">🟡 Executando</option>
+                    <option value="Concluída">🔵 Concluída</option>
+                    <option value="Entregue ao Cliente">🟢 Entregue ao Cliente</option>
                 </select>
             </div>
             <div class="full"><label>3.1. Defeito Relatado:</label><textarea id="defeito" rows="2"></textarea></div>
@@ -143,19 +146,23 @@
 
         <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">4. Fechamento & Garantia</h3>
         <div class="grid-3">
-            <div><label>Mão de Obra (R$):</label><input type="number" id="vObra" value="0"></div>
-            <div><label>Peças (R$):</label><input type="number" id="vPecas" value="0"></div>
+            <div><label>Mão de Obra (R$):</label><input type="number" id="vObra" placeholder="Vazio"></div>
+            <div><label>Peças (R$):</label><input type="number" id="vPecas" placeholder="Vazio"></div>
             <div><label>Garantia Mão de Obra:</label><input type="text" id="garObra" value="90 Dias"></div>
             <div><label>Garantia Peças:</label><input type="text" id="garPecas" value="3 meses"></div>
         </div>
 
-        <div class="btn-group">
+        <div class="btn-group" id="botoesCriar">
             <button class="btn-blue" onclick="salvarOS('ENTRADA')">GERAR OS / ENTRADA</button>
             <button class="btn-green" onclick="salvarOS('RECIBO')">GERAR OS / SAÍDA</button>
         </div>
 
+        <div class="btn-group" id="botaoSalvarEdicao" style="display:none;">
+            <button class="btn-warning" onclick="salvarEdicao()" style="font-size: 18px;">💾 SALVAR ALTERAÇÕES</button>
+        </div>
+
         <div class="historico" style="margin-top: 40px;">
-            <h3>📊 Resumo Financeiro (OS Finalizadas)</h3>
+            <h3>📊 Resumo Financeiro (OS Entregues ao Cliente)</h3>
             <div class="dashboard">
                 <div class="dash-card dash-blue">
                     <h4>Total Faturado</h4>
@@ -284,7 +291,9 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    
     let editandoId = null;
+    let tipoDocumentoOriginal = 'ENTRADA'; // Guarda qual era o tipo original ao editar
 
     window.onload = function() {
         if(localStorage.getItem('end')) document.getElementById('lojaEnd').value = localStorage.getItem('end');
@@ -302,6 +311,10 @@
     function voltarParaSistema() {
         document.getElementById('telaDocumento').style.display = 'none';
         document.getElementById('telaPrincipal').style.display = 'block';
+    }
+
+    function cancelarEdicao() {
+        location.reload();
     }
 
     async function obterProximaOS() {
@@ -345,12 +358,21 @@
         if(editandoId) {
             await db.collection("servicos").doc(editandoId).update(dados);
             editandoId = null;
+            // Restaura botões
+            document.getElementById('botoesCriar').style.display = 'flex';
+            document.getElementById('botaoSalvarEdicao').style.display = 'none';
+            document.getElementById('avisoEdicao').style.display = 'none';
         } else {
             await db.collection("servicos").add(dados);
         }
         
         prepararImpressao(dados);
         carregarHistorico();
+    }
+
+    // Nova função chamada pelo botão "SALVAR ALTERAÇÕES"
+    function salvarEdicao() {
+        salvarOS(tipoDocumentoOriginal);
     }
 
     function prepararImpressao(d) {
@@ -379,6 +401,7 @@
         document.getElementById('resLaudo').innerText = d.laudo || "";
         document.getElementById('resServicos').innerText = d.servicos || "";
         
+        // Valores (Apresenta 0,00 se estiver vazio no form)
         document.getElementById('resObra').innerText = d.vObra ? d.vObra.toFixed(2) : "0.00";
         document.getElementById('resPecas').innerText = d.vPecas ? d.vPecas.toFixed(2) : "0.00";
         document.getElementById('resTotal').innerText = "R$ " + (d.total ? d.total.toFixed(2) : "0.00");
@@ -405,8 +428,8 @@
 
         snap.forEach(doc => {
             const d = doc.data();
-            // Apenas calcula o lucro das OS marcadas como FINALIZADA
-            if(d.status === 'FINALIZADA') {
+            // Apenas calcula o lucro das OS marcadas como "Entregue ao Cliente"
+            if(d.status === 'Entregue ao Cliente') {
                 faturado += d.total || 0;
                 custoPecas += d.vPecas || 0;
             }
@@ -423,7 +446,10 @@
         let html = "";
         snap.forEach(doc => {
             const d = doc.data();
-            let cor = d.status === 'EM ABERTO' ? '#dc3545' : d.status === 'EXECUTANDO' ? '#ffc107' : d.status === 'CONCLUÍDA' ? '#17a2b8' : '#28a745';
+            let cor = d.status === 'Falta Orçar' ? '#dc3545' : 
+                      d.status === 'Executando' ? '#ffc107' : 
+                      d.status === 'Concluída' ? '#17a2b8' : '#28a745'; // Entregue ao Cliente
+
             html += `
             <div class="os-card" style="border-left-color:${cor}">
                 <div>
@@ -450,6 +476,11 @@
     async function editarOS(id) {
         const doc = await db.collection("servicos").doc(id).get();
         const d = doc.data();
+        
+        tipoDocumentoOriginal = d.tipo || 'ENTRADA'; // Guarda qual era o botão clicado na criação
+        editandoId = id;
+
+        // Preenche o formulário
         document.getElementById('status').value = d.status;
         document.getElementById('cliente').value = d.cliente;
         document.getElementById('cpf').value = d.cpf || "";
@@ -467,14 +498,20 @@
         document.getElementById('defeito').value = d.defeito || "";
         document.getElementById('laudo').value = d.laudo || "";
         document.getElementById('servicos').value = d.servicos || "";
-        document.getElementById('vPecas').value = d.vPecas || 0;
-        document.getElementById('vObra').value = d.vObra || 0;
+        
+        // Se for zero, deixa em branco conforme pedido
+        document.getElementById('vPecas').value = d.vPecas ? d.vPecas : "";
+        document.getElementById('vObra').value = d.vObra ? d.vObra : "";
+        
         document.getElementById('garPecas').value = d.garP || "";
         document.getElementById('garObra').value = d.garO || "";
         
-        editandoId = id;
+        // Mostra o aviso e esconde botões normais
         document.getElementById('idEdicao').innerText = String(d.os).padStart(4, '0');
         document.getElementById('avisoEdicao').style.display = 'block';
+        document.getElementById('botoesCriar').style.display = 'none';
+        document.getElementById('botaoSalvarEdicao').style.display = 'flex';
+
         window.scrollTo(0,0);
     }
 
