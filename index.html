@@ -91,8 +91,8 @@
     <div class="login-box">
         <h2 style="border:none; margin-top:0;">🔒 Área Restrita</h2>
         <input type="password" id="senhaAcesso" placeholder="Senha" onkeypress="if(event.key === 'Enter') fazerLogin()">
-        <button class="btn-blue" onclick="fazerLogin()">ENTRAR</button>
-        <p id="erroLogin" style="color:red; display:none; font-size:12px;">Senha incorreta!</p>
+        <button id="btnLogin" class="btn-blue" onclick="fazerLogin()">ENTRAR</button>
+        <p id="erroLogin" style="color:red; display:none; font-size:12px;">Senha incorreta ou erro de rede!</p>
     </div>
 </div>
 
@@ -235,7 +235,7 @@
         <h2 style="margin-top: 0;">⚙️ Configurações e Segurança</h2>
         
         <h3 style="border-bottom: 1px solid #ccc; padding-bottom:5px;">🛡️ Backup de Segurança</h3>
-        <p style="font-size: 13px; color: #555;">O sistema verifica automaticamente se houve backup após o último Domingo. Você também pode forçar um backup manual a qualquer momento.</p>
+        <p style="font-size: 13px; color: #555;">O sistema verifica automaticamente se houve backup após o último Domingo. Pode também forçar um backup manual a qualquer momento.</p>
         
         <div class="grid">
             <div class="full">
@@ -250,14 +250,14 @@
         </div>
         <p id="statusBackup" style="text-align:center; font-weight:bold; color:var(--primary);"></p>
 
-        <h3 style="border-bottom: 1px solid #ccc; padding-bottom:5px;">🏪 Dados da Loja</h3>
+        <h3 style="border-bottom: 1px solid #ccc; padding-bottom:5px;">🏪 Dados da Loja (Sincronizado na Nuvem)</h3>
         <div class="grid">
-            <div class="full"><label>Senha de Acesso (Login):</label><input type="text" id="configSenha"></div>
+            <div class="full"><label>Palavra-passe de Acesso (Login):</label><input type="text" id="configSenha"></div>
             <div class="full"><label>Sua Logomarca:</label><input type="file" id="inputLogo" accept="image/*"></div>
             <div><label>Telefone da Loja:</label><input type="text" id="lojaTel"></div>
             <div class="full"><label>Endereço Completo:</label><input type="text" id="lojaEnd"></div>
         </div>
-        <button class="btn-dark" onclick="salvarConfig()" style="width:100%; margin-top:20px;">💾 SALVAR CONFIGURAÇÕES</button>
+        <button class="btn-dark" onclick="salvarConfig()" style="width:100%; margin-top:20px;" id="btnSalvarConfigs">💾 SALVAR CONFIGURAÇÕES NA NUVEM</button>
     </div>
 
 </div>
@@ -366,20 +366,33 @@
     let tipoDocOriginal = 'ENTRADA';
     let ultimaAbaAberta = 'abaNovaOS';
 
-    // VERIFICAÇÃO DE LOGIN
-    function fazerLogin() {
+    // VARIÁVEL GLOBAL PARA A NUVEM
+    let configGlobais = { senhaAdmin: "123456", gapiClientId: "", end: "", tel: "", logo: "", ultimoBackupData: "" };
+
+    // VERIFICAÇÃO DE LOGIN NA NUVEM
+    async function fazerLogin() {
+        const btn = document.getElementById('btnLogin');
+        btn.innerText = "A VERIFICAR...";
         const senhaDigitada = document.getElementById('senhaAcesso').value;
-        const senhaCorreta = localStorage.getItem('senhaAdmin') || '123456';
+        
+        try {
+            const doc = await db.collection('configuracoes').doc('gerais').get();
+            if(doc.exists) { configGlobais = doc.data(); }
+        } catch(e) { console.error("Erro a carregar configurações da nuvem", e); }
+
+        const senhaCorreta = configGlobais.senhaAdmin || '123456';
+
         if(senhaDigitada === senhaCorreta) {
             document.getElementById('telaLogin').style.display = 'none';
             document.getElementById('menuNavegacao').style.display = 'flex';
             document.getElementById('conteinerPrincipal').style.display = 'block';
-            carregarConfiguracoes();
+            aplicarConfiguracoesNaTela();
             carregarHistorico();
-            limparFormularioOS(); // Preenche a data de hoje ao logar
+            limparFormularioOS();
             gatilhoInteligenteBackup();
         } else {
             document.getElementById('erroLogin').style.display = 'block';
+            btn.innerText = "ENTRAR";
         }
     }
 
@@ -407,25 +420,52 @@
         mudarAba(ultimaAbaAberta);
     }
 
-    function carregarConfiguracoes() {
-        document.getElementById('lojaEnd').value = localStorage.getItem('end') || "";
-        document.getElementById('lojaTel').value = localStorage.getItem('tel') || "";
-        document.getElementById('configSenha').value = localStorage.getItem('senhaAdmin') || "123456";
-        document.getElementById('configClientId').value = localStorage.getItem('gapiClientId') || "";
+    // APLICAR CONFIGURAÇÕES DA NUVEM NO ECRÃ
+    function aplicarConfiguracoesNaTela() {
+        document.getElementById('lojaEnd').value = configGlobais.end || "";
+        document.getElementById('lojaTel').value = configGlobais.tel || "";
+        document.getElementById('configSenha').value = configGlobais.senhaAdmin || "123456";
+        document.getElementById('configClientId').value = configGlobais.gapiClientId || "";
     }
 
-    function salvarConfig() {
-        localStorage.setItem('end', document.getElementById('lojaEnd').value);
-        localStorage.setItem('tel', document.getElementById('lojaTel').value);
-        localStorage.setItem('senhaAdmin', document.getElementById('configSenha').value);
-        localStorage.setItem('gapiClientId', document.getElementById('configClientId').value);
+    // SALVAR CONFIGURAÇÕES NA NUVEM
+    async function salvarConfig() {
+        const btnSalvar = document.getElementById('btnSalvarConfigs');
+        btnSalvar.innerText = "⏳ A SALVAR NA NUVEM...";
+        
+        const end = document.getElementById('lojaEnd').value;
+        const tel = document.getElementById('lojaTel').value;
+        const senhaAdmin = document.getElementById('configSenha').value;
+        const gapiClientId = document.getElementById('configClientId').value;
         
         const file = document.getElementById('inputLogo').files[0];
+        let logoData = configGlobais.logo || "";
+
         if(file) {
             const reader = new FileReader();
-            reader.onload = (e) => { localStorage.setItem('logo', e.target.result); alert("Configurações e Logo Salvos!"); };
+            reader.onload = async (e) => { 
+                logoData = e.target.result; 
+                await enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, logoData);
+                btnSalvar.innerText = "💾 SALVAR CONFIGURAÇÕES NA NUVEM";
+            };
             reader.readAsDataURL(file);
-        } else { alert("Configurações Salvas!"); }
+        } else { 
+            await enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, logoData);
+            btnSalvar.innerText = "💾 SALVAR CONFIGURAÇÕES NA NUVEM";
+        }
+    }
+
+    async function enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, logoData) {
+        const dados = { end, tel, senhaAdmin, gapiClientId, logo: logoData, ultimoBackupData: configGlobais.ultimoBackupData || "" };
+        await db.collection('configuracoes').doc('gerais').set(dados);
+        configGlobais = dados;
+        alert("Configurações sincronizadas na Nuvem com sucesso!");
+    }
+
+    async function registarDataBackupNuvem() {
+        const dataHoje = new Date().toLocaleDateString('pt-BR');
+        configGlobais.ultimoBackupData = dataHoje;
+        await db.collection('configuracoes').doc('gerais').set(configGlobais);
     }
 
     function calcularDias(dataStr) {
@@ -485,7 +525,7 @@
         if(imprimirRecibo) { prepararImpressao(dados); } else { carregarHistorico(); }
     }
 
-    // SALVAR OS (COM DATA MANUAL)
+    // SALVAR OS
     async function salvarOS(tipoDoc) {
         const vp = parseFloat(document.getElementById('vPecas').value) || 0;
         const vo = parseFloat(document.getElementById('vObra').value) || 0;
@@ -496,7 +536,6 @@
         const deb = parseFloat(document.getElementById('osDeb').value) || 0;
         const totalPago = pix + din + cred + deb;
 
-        // Captura a data digitada (YYYY-MM-DD) e converte para PT-BR (DD/MM/YYYY)
         const dataInput = document.getElementById('dataEntrada').value;
         const dataFormatada = dataInput ? dataInput.split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
 
@@ -515,7 +554,7 @@
             vPecas: vp, vObra: vo, vSinal: totalPago, total: vp + vo, faltaPagar: (vp + vo) - totalPago,
             pagamentos: { pix, din, cred, deb },
             garP: document.getElementById('garPecas').value, garO: document.getElementById('garObra').value,
-            data: dataFormatada, // A nova data entra aqui!
+            data: dataFormatada, 
             tipo: tipoDoc
         };
 
@@ -528,7 +567,7 @@
         } else {
             await db.collection("servicos").add(dados);
             prepararImpressao(dados);
-            limparFormularioOS(); // Prepara a tela limpa e data de hoje para a próxima
+            limparFormularioOS();
         }
         carregarHistorico();
     }
@@ -542,24 +581,21 @@
         document.getElementById('botaoSalvarEdicao').style.display = 'none';
         document.querySelectorAll('#abaNovaOS input[type=text], #abaNovaOS input[type=number], #abaNovaOS textarea').forEach(el => el.value = '');
         
-        // Retorna checkbox e select para padrão
         document.getElementById('chkFonte').checked = false;
         document.getElementById('chkCapa').checked = false;
         document.getElementById('status').value = "Falta Orçar";
         document.getElementById('garObra').value = "90 Dias";
         document.getElementById('garPecas').value = "3 meses";
-        
-        // Define campo data sempre para a data de HOJE
         document.getElementById('dataEntrada').value = new Date().toISOString().split('T')[0];
     }
 
     function prepararImpressao(d) {
-        const logoData = localStorage.getItem('logo');
+        const logoData = configGlobais.logo;
         const imgEl = document.getElementById('docLogo');
         if(logoData) { imgEl.src = logoData; imgEl.style.display = 'inline-block'; }
 
-        document.getElementById('docEnd').innerText = localStorage.getItem('end') || "";
-        document.getElementById('docTel').innerText = localStorage.getItem('tel') || "";
+        document.getElementById('docEnd').innerText = configGlobais.end || "";
+        document.getElementById('docTel').innerText = configGlobais.tel || "";
         document.getElementById('resOS').innerText = String(d.os).padStart(4, '0');
         
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=OS:${d.os}-Cliente:${encodeURIComponent(d.cliente)}`;
@@ -724,7 +760,6 @@
 
         document.getElementById('garPecas').value = d.garP || ""; document.getElementById('garObra').value = d.garO || "";
         
-        // PUXA A DATA PARA EDIÇÃO (Converte de DD/MM/YYYY para YYYY-MM-DD do input)
         if(d.data) {
             const [dia, mes, ano] = d.data.split('/');
             document.getElementById('dataEntrada').value = `${ano}-${mes}-${dia}`;
@@ -745,7 +780,7 @@
     }
 
     function gatilhoInteligenteBackup() {
-        const ultimoBackupStr = localStorage.getItem('ultimoBackupData');
+        const ultimoBackupStr = configGlobais.ultimoBackupData;
         const hoje = new Date();
         const dataHojeStr = hoje.toLocaleDateString('pt-BR');
 
@@ -767,7 +802,7 @@
         }
 
         if (precisaFazer) {
-            const clientId = localStorage.getItem('gapiClientId');
+            const clientId = configGlobais.gapiClientId;
             if(clientId) {
                 document.getElementById('alertaBackupInteligente').style.display = 'block';
                 document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático:</strong> A iniciar o envio de segurança para o Google Drive...";
@@ -793,7 +828,7 @@
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
         
-        localStorage.setItem('ultimoBackupData', new Date().toLocaleDateString('pt-BR'));
+        await registarDataBackupNuvem();
         
         if(!silencioso) {
             document.getElementById('statusBackup').innerText = "✅ Backup Local Concluído com Sucesso!";
@@ -804,7 +839,7 @@
 
     let tokenClient;
     async function iniciarBackupDrive(silencioso = false) {
-        const clientId = localStorage.getItem('gapiClientId');
+        const clientId = configGlobais.gapiClientId;
         if(!clientId) {
             if(!silencioso) alert("Por favor, insira o seu Google Client ID nas Configurações primeiro.");
             return;
@@ -868,7 +903,7 @@
                 body: form
             });
 
-            localStorage.setItem('ultimoBackupData', new Date().toLocaleDateString('pt-BR'));
+            await registarDataBackupNuvem();
             
             if(silencioso) {
                 document.getElementById('alertaBackupInteligente').innerHTML = "<strong>✅ Backup Automático:</strong> Sincronizado com sucesso no Google Drive!";
