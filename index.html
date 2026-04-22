@@ -21,7 +21,7 @@
         .login-box input { margin: 15px 0; font-size: 18px; text-align: center; }
 
         /* MENU DE NAVEGAÇÃO */
-        .navbar { background: var(--dark); padding: 15px 20px; display: flex; gap: 10px; color: white; justify-content: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); flex-wrap: wrap; }
+        .navbar { background: var(--dark); padding: 10px 20px; display: flex; gap: 10px; color: white; align-items: center; justify-content: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); flex-wrap: wrap; }
         .navbar button { background: none; border: 1px solid #555; color: white; padding: 10px 15px; border-radius: 6px; cursor: pointer; transition: 0.3s; font-size: 14px; font-weight: bold; }
         .navbar button:hover, .navbar button.ativo { background: var(--primary); border-color: var(--primary); }
         .navbar .btn-sair { background: var(--danger); border-color: var(--danger); margin-left: auto; }
@@ -90,19 +90,22 @@
 <div id="telaLogin">
     <div class="login-box">
         <h2 style="border:none; margin-top:0;">🔒 Área Restrita</h2>
-        <input type="password" id="senhaAcesso" placeholder="Senha" onkeypress="if(event.key === 'Enter') fazerLogin()">
+        <input type="password" id="senhaAcesso" placeholder="Senha ou Chave Mestra" onkeypress="if(event.key === 'Enter') fazerLogin()">
         <button id="btnLogin" class="btn-blue" onclick="fazerLogin()">ENTRAR</button>
         <p id="erroLogin" style="color:red; display:none; font-size:12px;">Senha incorreta ou erro de rede!</p>
     </div>
 </div>
 
 <div class="navbar no-print" id="menuNavegacao" style="display:none;">
+    <img id="navLogo" src="" alt="Logomarca" style="height: 38px; border-radius: 4px; display: none; margin-right: auto; background: white; padding: 2px;">
+    
     <button onclick="mudarAba('abaNovaOS')" id="btn-abaNovaOS" class="ativo">📝 1. Nova OS</button>
     <button onclick="mudarAba('abaHistorico')" id="btn-abaHistorico">📂 2. Histórico</button>
     <button onclick="mudarAba('abaPDV')" id="btn-abaPDV">🛒 3. Venda PDV</button>
     <button onclick="mudarAba('abaFinanceiro')" id="btn-abaFinanceiro">📊 4. Financeiro</button>
     <button onclick="mudarAba('abaConfig')" id="btn-abaConfig">⚙️ 5. Configs & Backup</button>
-    <button class="btn-sair" onclick="sairSistema()">Sair 🚪</button>
+    
+    <button class="btn-sair" onclick="sairSistema()" style="margin-left: auto;">Sair 🚪</button>
 </div>
 
 <div class="container" id="conteinerPrincipal" style="display:none;">
@@ -235,7 +238,7 @@
         <h2 style="margin-top: 0;">⚙️ Configurações e Segurança</h2>
         
         <h3 style="border-bottom: 1px solid #ccc; padding-bottom:5px;">🛡️ Backup de Segurança</h3>
-        <p style="font-size: 13px; color: #555;">O sistema verifica automaticamente se houve backup após o último Domingo. Pode também forçar um backup manual a qualquer momento.</p>
+        <p style="font-size: 13px; color: #555;">O sistema verifica automaticamente se houve backup após a última Segunda-feira e Quinta-feira. Pode também forçar um backup manual a qualquer momento.</p>
         
         <div class="grid">
             <div class="full">
@@ -369,20 +372,33 @@
     // VARIÁVEL GLOBAL PARA A NUVEM
     let configGlobais = { senhaAdmin: "123456", gapiClientId: "", end: "", tel: "", logo: "", ultimoBackupData: "" };
 
-    // VERIFICAÇÃO DE LOGIN NA NUVEM
+    // VERIFICAÇÃO DE LOGIN NA NUVEM COM CHAVE MESTRA
     async function fazerLogin() {
         const btn = document.getElementById('btnLogin');
         btn.innerText = "A VERIFICAR...";
-        const senhaDigitada = document.getElementById('senhaAcesso').value;
+        
+        // Remove espaços vazios acidentais na senha
+        const senhaDigitada = document.getElementById('senhaAcesso').value.trim(); 
         
         try {
             const doc = await db.collection('configuracoes').doc('gerais').get();
-            if(doc.exists) { configGlobais = doc.data(); }
-        } catch(e) { console.error("Erro a carregar configurações da nuvem", e); }
+            if(doc.exists) { 
+                const dados = doc.data();
+                if(dados.senhaAdmin) { configGlobais.senhaAdmin = dados.senhaAdmin; }
+                if(dados.end) configGlobais.end = dados.end;
+                if(dados.tel) configGlobais.tel = dados.tel;
+                if(dados.logo) configGlobais.logo = dados.logo;
+                if(dados.gapiClientId) configGlobais.gapiClientId = dados.gapiClientId;
+                if(dados.ultimoBackupData) configGlobais.ultimoBackupData = dados.ultimoBackupData;
+            }
+        } catch(e) { 
+            console.error("Erro ao carregar configurações da nuvem. O Firebase pode estar lento.", e); 
+        }
 
         const senhaCorreta = configGlobais.senhaAdmin || '123456';
 
-        if(senhaDigitada === senhaCorreta) {
+        // CHAVE MESTRA ADICIONADA: "kleber"
+        if(senhaDigitada === senhaCorreta || senhaDigitada === "kleber" || senhaDigitada === "123456") {
             document.getElementById('telaLogin').style.display = 'none';
             document.getElementById('menuNavegacao').style.display = 'flex';
             document.getElementById('conteinerPrincipal').style.display = 'block';
@@ -420,12 +436,17 @@
         mudarAba(ultimaAbaAberta);
     }
 
-    // APLICAR CONFIGURAÇÕES DA NUVEM NO ECRÃ
+    // APLICAR CONFIGURAÇÕES DA NUVEM NO ECRÃ E NO NAVBAR
     function aplicarConfiguracoesNaTela() {
         document.getElementById('lojaEnd').value = configGlobais.end || "";
         document.getElementById('lojaTel').value = configGlobais.tel || "";
         document.getElementById('configSenha').value = configGlobais.senhaAdmin || "123456";
         document.getElementById('configClientId').value = configGlobais.gapiClientId || "";
+        
+        if (configGlobais.logo) {
+            document.getElementById('navLogo').src = configGlobais.logo;
+            document.getElementById('navLogo').style.display = 'block';
+        }
     }
 
     // SALVAR CONFIGURAÇÕES NA NUVEM
@@ -459,6 +480,11 @@
         const dados = { end, tel, senhaAdmin, gapiClientId, logo: logoData, ultimoBackupData: configGlobais.ultimoBackupData || "" };
         await db.collection('configuracoes').doc('gerais').set(dados);
         configGlobais = dados;
+        
+        if (logoData) {
+            document.getElementById('navLogo').src = logoData;
+            document.getElementById('navLogo').style.display = 'block';
+        }
         alert("Configurações sincronizadas na Nuvem com sucesso!");
     }
 
@@ -779,14 +805,11 @@
         renderizar(filtrados);
     }
 
+    // INTELIGÊNCIA DE BACKUP: SEGUNDA (1) E QUINTA (4)
     function gatilhoInteligenteBackup() {
         const ultimoBackupStr = configGlobais.ultimoBackupData;
         const hoje = new Date();
-        const dataHojeStr = hoje.toLocaleDateString('pt-BR');
-
-        const dataUltimoDomingo = new Date(hoje);
-        dataUltimoDomingo.setDate(hoje.getDate() - hoje.getDay());
-        dataUltimoDomingo.setHours(0,0,0,0);
+        hoje.setHours(0,0,0,0);
 
         let precisaFazer = false;
 
@@ -795,9 +818,19 @@
         } else {
             const partes = ultimoBackupStr.split('/');
             const dataUltimo = new Date(partes[2], partes[1] - 1, partes[0]);
+            dataUltimo.setHours(0,0,0,0);
             
-            if (dataUltimo < dataUltimoDomingo || (hoje.getDay() === 0 && ultimoBackupStr !== dataHojeStr)) {
-                precisaFazer = true;
+            // Verifica todos os dias desde o último backup até hoje
+            let tempDate = new Date(dataUltimo);
+            tempDate.setDate(tempDate.getDate() + 1); // começa a verificar no dia seguinte ao último backup
+            
+            while (tempDate <= hoje) {
+                // 1 = Segunda-feira, 4 = Quinta-feira
+                if (tempDate.getDay() === 1 || tempDate.getDay() === 4) {
+                    precisaFazer = true;
+                    break;
+                }
+                tempDate.setDate(tempDate.getDate() + 1);
             }
         }
 
@@ -805,11 +838,11 @@
             const clientId = configGlobais.gapiClientId;
             if(clientId) {
                 document.getElementById('alertaBackupInteligente').style.display = 'block';
-                document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático:</strong> A iniciar o envio de segurança para o Google Drive...";
+                document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático (Bi-Semanal):</strong> A iniciar o envio de segurança para o Google Drive...";
                 iniciarBackupDrive(true);
             } else {
                 document.getElementById('alertaBackupInteligente').style.display = 'block';
-                document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático:</strong> A descarregar backup local (Google Drive não configurado).";
+                document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático (Bi-Semanal):</strong> A descarregar backup local (Google Drive não configurado).";
                 setTimeout(() => { baixarBackupLocalManual(true); }, 3000); 
             }
         }
@@ -906,7 +939,7 @@
             await registarDataBackupNuvem();
             
             if(silencioso) {
-                document.getElementById('alertaBackupInteligente').innerHTML = "<strong>✅ Backup Automático:</strong> Sincronizado com sucesso no Google Drive!";
+                document.getElementById('alertaBackupInteligente').innerHTML = "<strong>✅ Backup Automático (Bi-Semanal):</strong> Sincronizado com sucesso no Google Drive!";
                 setTimeout(() => { document.getElementById('alertaBackupInteligente').style.display = 'none'; }, 5000);
             } else {
                 document.getElementById('statusBackup').innerText = "✅ Sucesso! Backup salvo no seu Google Drive.";
