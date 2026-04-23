@@ -8,7 +8,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     
-    <script async defer src="https://apis.google.com/js/api.js"></script>
     <script async defer src="https://accounts.google.com/gsi/client"></script>
 
     <style>
@@ -18,7 +17,7 @@
         /* LOGIN */
         #telaLogin { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #222; display: flex; justify-content: center; align-items: center; z-index: 99999; }
         .login-box { background: white; padding: 40px; border-radius: 12px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 300px; }
-        .login-box input { margin: 15px 0; font-size: 18px; text-align: center; }
+        .login-box input { margin: 15px 0; font-size: 18px; text-align: center; width: 100%; box-sizing: border-box; }
 
         /* MENU DE NAVEGAÇÃO */
         .navbar { background: var(--dark); padding: 10px 20px; display: flex; gap: 10px; color: white; align-items: center; justify-content: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); flex-wrap: wrap; }
@@ -34,7 +33,12 @@
         .full { grid-column: 1 / -1; }
         
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #555; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        
+        /* CORREÇÃO DO ESPAÇAMENTO DOS CAMPOS E CHECKBOXES */
+        input:not([type="checkbox"]):not([type="file"]), select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        input[type="checkbox"] { width: auto; margin: 0; padding: 0; cursor: pointer; transform: scale(1.1); }
+        .checklist-grid { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; }
+        .chk-label { display: flex; align-items: center; gap: 5px; font-weight: normal; margin: 0; font-size: 13px; cursor: pointer; }
         
         .btn-group { display: flex; gap: 10px; margin-top: 20px; }
         button { flex: 1; padding: 15px; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; color: white; transition: 0.3s; }
@@ -131,17 +135,32 @@
             <div><label>CEP:</label><input type="text" id="cep"></div>
         </div>
 
-        <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">2. Dados do Equipamento</h3>
+        <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">2. Dados do Equipamento & Checklist</h3>
         <div class="grid-3">
             <div><label>Equipamento:</label><input type="text" id="equip"></div>
             <div><label>Marca/Modelo:</label><input type="text" id="modelo"></div>
             <div><label>Nº de Série:</label><input type="text" id="serie"></div>
-            <div class="full" style="display:flex; gap:15px;">
-                <label>Checklist:</label>
-                <input type="checkbox" id="chkFonte"> <label for="chkFonte">Fonte</label>
-                <input type="checkbox" id="chkCapa"> <label for="chkCapa">Capa/Case</label>
+            
+            <div class="full" style="background:#f8f9fa; padding:15px; border-radius:8px; border:1px solid #ddd;">
+                <label style="margin-bottom: 5px; color:#333;">Checklist de Acessórios Recebidos:</label>
+                <div class="checklist-grid">
+                    <label class="chk-label"><input type="checkbox" class="chk-item" value="Fonte/Carregador"> Fonte/Carregador</label>
+                    <label class="chk-label"><input type="checkbox" class="chk-item" value="Capa/Case"> Capa/Case</label>
+                    <label class="chk-label"><input type="checkbox" class="chk-item" value="Mouse"> Mouse</label>
+                    
+                    <label class="chk-label"><input type="checkbox" class="chk-item" value="Cabo de Força"> Cabo de Força</label>
+                    <label class="chk-label"><input type="checkbox" class="chk-item" value="Cabo de Vídeo"> Cabo de Vídeo</label>
+                    <label class="chk-label"><input type="checkbox" class="chk-item" value="Teclado"> Teclado</label>
+                    <label class="chk-label"><input type="checkbox" class="chk-item" value="Adaptador Wi-Fi"> Adaptador Wi-Fi</label>
+                    <label class="chk-label"><input type="checkbox" class="chk-item" value="Adaptador Bluetooth"> Adaptador Bluetooth</label>
+                    
+                    <label class="chk-label"><input type="checkbox" class="chk-item" value="Cabo USB"> Cabo USB</label>
+                    <label class="chk-label"><input type="checkbox" class="chk-item" value="Bandeja"> Bandeja</label>
+                    <label class="chk-label"><input type="checkbox" class="chk-item" value="Cartucho/Toner"> Cartucho/Toner</label>
+                </div>
             </div>
-            <div class="full"><label>Outros Acessórios / Estado Físico:</label><input type="text" id="aces"></div>
+            
+            <div class="full"><label>Outros Acessórios / Estado Físico (Ex: Tela trincada, sem bateria...):</label><input type="text" id="aces"></div>
         </div>
 
         <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">3. Detalhes Técnicos</h3>
@@ -308,9 +327,7 @@
             <div class="pdf-col"><span class="pdf-label">Nº Série</span><span class="pdf-value" id="resSerie"></span></div>
         </div>
         <div class="pdf-row">
-            <div class="pdf-col"><span class="pdf-label">Fonte/Cabo</span><span class="pdf-value" id="resFonte"></span></div>
-            <div class="pdf-col"><span class="pdf-label">Capa/Case</span><span class="pdf-value" id="resCapa"></span></div>
-            <div class="pdf-col" style="flex:2"><span class="pdf-label">Outros acessórios:</span><span class="pdf-value" id="resAces"></span></div>
+            <div class="pdf-col" style="flex:1"><span class="pdf-label">Acessórios Recebidos / Estado Físico</span><span class="pdf-value" id="resAcesFull"></span></div>
         </div>
     </div>
 
@@ -372,11 +389,12 @@
     // VARIÁVEL GLOBAL PARA A NUVEM
     let configGlobais = { senhaAdmin: "123456", gapiClientId: "", end: "", tel: "", logo: "", ultimoBackupData: "" };
 
-    // VERIFICAÇÃO DE LOGIN NA NUVEM
+    // VERIFICAÇÃO DE LOGIN NA NUVEM COM CHAVE MESTRA
     async function fazerLogin() {
         const btn = document.getElementById('btnLogin');
         btn.innerText = "A VERIFICAR...";
-        const senhaDigitada = document.getElementById('senhaAcesso').value.trim();
+        
+        const senhaDigitada = document.getElementById('senhaAcesso').value.trim(); 
         
         try {
             const doc = await db.collection('configuracoes').doc('gerais').get();
@@ -389,7 +407,9 @@
                 if(dados.gapiClientId) configGlobais.gapiClientId = dados.gapiClientId;
                 if(dados.ultimoBackupData) configGlobais.ultimoBackupData = dados.ultimoBackupData;
             }
-        } catch(e) { console.error("Erro a carregar configurações da nuvem", e); }
+        } catch(e) { 
+            console.error("Erro ao carregar configurações da nuvem.", e); 
+        }
 
         const senhaCorreta = configGlobais.senhaAdmin || '123456';
 
@@ -546,7 +566,7 @@
         if(imprimirRecibo) { prepararImpressao(dados); } else { carregarHistorico(); }
     }
 
-    // SALVAR OS
+    // SALVAR OS (ATUALIZADO COM O NOVO CHECKLIST + BLUETOOTH)
     async function salvarOS(tipoDoc) {
         const vp = parseFloat(document.getElementById('vPecas').value) || 0;
         const vo = parseFloat(document.getElementById('vObra').value) || 0;
@@ -560,6 +580,10 @@
         const dataInput = document.getElementById('dataEntrada').value;
         const dataFormatada = dataInput ? dataInput.split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
 
+        // RECOLHER CHECKLIST
+        let chkArr = [];
+        document.querySelectorAll('.chk-item:checked').forEach(el => chkArr.push(el.value));
+
         let numOS = editandoId ? parseInt(document.getElementById('idEdicao').innerText) : await obterProximaOS();
 
         const dados = {
@@ -569,8 +593,11 @@
             endCliente: document.getElementById('endCliente').value, bairro: document.getElementById('bairro').value,
             cep: document.getElementById('cep').value, equip: document.getElementById('equip').value,
             modelo: document.getElementById('modelo').value, serie: document.getElementById('serie').value,
-            chkFonte: document.getElementById('chkFonte').checked ? "Sim" : "Não", chkCapa: document.getElementById('chkCapa').checked ? "Sim" : "Não",
-            aces: document.getElementById('aces').value, defeito: document.getElementById('defeito').value,
+            
+            chkList: chkArr.join(', '), // Salva a nova lista dinâmica
+            aces: document.getElementById('aces').value, // Salva os "outros" itens textuais
+            
+            defeito: document.getElementById('defeito').value,
             laudo: document.getElementById('laudo').value, servicos: document.getElementById('servicos').value,
             vPecas: vp, vObra: vo, vSinal: totalPago, total: vp + vo, faltaPagar: (vp + vo) - totalPago,
             pagamentos: { pix, din, cred, deb },
@@ -602,8 +629,7 @@
         document.getElementById('botaoSalvarEdicao').style.display = 'none';
         document.querySelectorAll('#abaNovaOS input[type=text], #abaNovaOS input[type=number], #abaNovaOS textarea').forEach(el => el.value = '');
         
-        document.getElementById('chkFonte').checked = false;
-        document.getElementById('chkCapa').checked = false;
+        document.querySelectorAll('.chk-item').forEach(el => el.checked = false);
         document.getElementById('status').value = "Falta Orçar";
         document.getElementById('garObra').value = "90 Dias";
         document.getElementById('garPecas').value = "3 meses";
@@ -651,8 +677,20 @@
         document.getElementById('resEndCli').innerText = d.endCliente || ""; document.getElementById('resBairro').innerText = d.bairro || "";
         document.getElementById('resCep').innerText = d.cep || ""; document.getElementById('resZap').innerText = d.whatsapp || "";
         document.getElementById('resEquip').innerText = d.equip || ""; document.getElementById('resModelo').innerText = d.modelo || "";
-        document.getElementById('resSerie').innerText = d.serie || ""; document.getElementById('resFonte').innerText = d.chkFonte || "";
-        document.getElementById('resCapa').innerText = d.chkCapa || ""; document.getElementById('resAces').innerText = d.aces || "";
+        document.getElementById('resSerie').innerText = d.serie || ""; 
+        
+        // Juntar tudo do Checklist no PDF
+        let acesArr = [];
+        if (d.chkList) acesArr.push(d.chkList);
+        else {
+            // Suporte legado
+            if (d.chkFonte === "Sim") acesArr.push("Fonte/Carregador");
+            if (d.chkCapa === "Sim") acesArr.push("Capa/Case");
+        }
+        if (d.aces) acesArr.push(d.aces);
+        
+        document.getElementById('resAcesFull').innerText = acesArr.join(' | ') || "Nenhum acessório registado";
+
         document.getElementById('resDefeito').innerText = d.defeito || ""; document.getElementById('resLaudo').innerText = d.laudo || "";
         document.getElementById('resServicos').innerText = d.servicos || "";
         
@@ -770,8 +808,22 @@
         document.getElementById('whatsapp').value = d.whatsapp || ""; document.getElementById('endCliente').value = d.endCliente || "";
         document.getElementById('bairro').value = d.bairro || ""; document.getElementById('cep').value = d.cep || "";
         document.getElementById('equip').value = d.equip; document.getElementById('modelo').value = d.modelo || "";
-        document.getElementById('serie').value = d.serie || ""; document.getElementById('chkFonte').checked = d.chkFonte === "Sim";
-        document.getElementById('chkCapa').checked = d.chkCapa === "Sim"; document.getElementById('aces').value = d.aces || "";
+        document.getElementById('serie').value = d.serie || ""; 
+        
+        // Puxar checklist na edição
+        document.querySelectorAll('.chk-item').forEach(el => el.checked = false);
+        if(d.chkList) {
+            d.chkList.split(', ').forEach(item => {
+                const cb = document.querySelector(`.chk-item[value="${item}"]`);
+                if(cb) cb.checked = true;
+            });
+        }
+        // Suporte legado
+        if(d.chkFonte === "Sim") { const cb = document.querySelector(`.chk-item[value="Fonte/Carregador"]`); if(cb) cb.checked = true; }
+        if(d.chkCapa === "Sim") { const cb = document.querySelector(`.chk-item[value="Capa/Case"]`); if(cb) cb.checked = true; }
+        
+        document.getElementById('aces').value = d.aces || "";
+        
         document.getElementById('defeito').value = d.defeito || ""; document.getElementById('laudo').value = d.laudo || "";
         document.getElementById('servicos').value = d.servicos || ""; document.getElementById('vPecas').value = d.vPecas || "";
         document.getElementById('vObra').value = d.vObra || ""; 
@@ -800,7 +852,7 @@
         renderizar(filtrados);
     }
 
-    // INTELIGÊNCIA DE BACKUP: SEGUNDA (1) E QUINTA (4)
+    // INTELIGÊNCIA DE BACKUP DIRETO VIA FETCH: SEGUNDA (1) E QUINTA (4)
     function gatilhoInteligenteBackup() {
         const ultimoBackupStr = configGlobais.ultimoBackupData;
         const hoje = new Date();
