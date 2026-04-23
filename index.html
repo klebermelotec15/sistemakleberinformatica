@@ -36,6 +36,9 @@
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #555; }
         input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
         
+        .checklist-box { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; }
+        .checklist-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; font-size: 12px; }
+
         .btn-group { display: flex; gap: 10px; margin-top: 20px; }
         button { flex: 1; padding: 15px; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; color: white; transition: 0.3s; }
         .btn-blue { background: var(--primary); }
@@ -46,13 +49,11 @@
         .btn-small { padding: 6px 10px; font-size: 11px; flex: none; width: auto; }
 
         .alerta-backup { background: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 4px; display: none; color: #856404; }
-        .alerta-abandono { background: #ffe3e3; border-left: 5px solid #dc3545; padding: 15px; margin-bottom: 20px; border-radius: 4px; display: none; }
-        
         .os-card { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 6px solid #ccc; }
         .aba { display: none; }
         .aba.ativa { display: block; }
 
-        /* LAYOUT PDF A4 */
+        /* PDF A4 */
         #telaDocumento { display: none; background: white; color: #000; padding: 25px; border: 1px solid #ccc; margin: 20px auto; max-width: 790px; }
         .pdf-header { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: flex-start; }
         .pdf-section { border: 1px solid #000; margin-bottom: 6px; border-radius: 4px; overflow: hidden; }
@@ -62,7 +63,6 @@
         .pdf-label { font-size: 8px; font-weight: bold; display: block; color: #444; }
         .pdf-value { font-size: 11px; }
         .pdf-textarea { min-height: 40px; padding: 5px; font-size: 11px; border-bottom: 1px solid #000; }
-        .termo { font-size: 9px; text-align: justify; margin: 10px 0; border: 1px solid #000; padding: 5px; }
 
         @media print {
             .no-print, .navbar { display: none !important; }
@@ -88,7 +88,7 @@
     <button onclick="mudarAba('abaPDV')" id="btn-abaPDV">🛒 PDV Balcão</button>
     <button onclick="mudarAba('abaFinanceiro')" id="btn-abaFinanceiro">📊 Financeiro</button>
     <button onclick="mudarAba('abaConfig')" id="btn-abaConfig">⚙️ Configurações</button>
-    <button class="btn-sair" onclick="sairSistema()">Sair 🚪</button>
+    <button class="btn-sair" onclick="sairSistema()">Sair</button>
 </div>
 
 <div class="container" id="conteinerPrincipal" style="display:none;">
@@ -97,33 +97,48 @@
     <div id="abaNovaOS" class="aba ativa no-print">
         <div id="avisoEdicao" style="display:none; background: #fff3cd; padding:15px; border-radius:8px; margin-bottom:20px; border: 1px solid #ffeeba;">
             <strong>⚠️ MODO DE EDIÇÃO (OS: <span id="idEdicao"></span>)</strong>
-            <button onclick="cancelarEdicao()" class="btn-red btn-small" style="float:right;">CANCELAR EDIÇÃO</button>
+            <button onclick="cancelarEdicao()" class="btn-red btn-small" style="float:right;">CANCELAR</button>
         </div>
 
-        <h3>1. Informações do Cliente</h3>
+        <h3>1. Dados do Cliente</h3>
         <div class="grid-3">
             <div class="full"><label>Nome Completo:</label><input type="text" id="cliente"></div>
             <div><label>CPF:</label><input type="text" id="cpf"></div>
+            <div><label>RG:</label><input type="text" id="rg"></div>
             <div><label>WhatsApp:</label><input type="text" id="whatsapp"></div>
             <div style="grid-column: span 2;"><label>Endereço:</label><input type="text" id="endCliente"></div>
             <div><label>Bairro:</label><input type="text" id="bairro"></div>
+            <div><label>CEP:</label><input type="text" id="cep"></div>
         </div>
 
-        <h3>2. Dados do Equipamento & Checklist</h3>
+        <h3>2. Equipamento & Checklist de Acessórios</h3>
         <div class="grid-3">
-            <div><label>Equipamento:</label><input type="text" id="equip"></div>
+            <div><label>Equipamento:</label><input type="text" id="equip" placeholder="Notebook, PC, Impressora..."></div>
             <div><label>Marca/Modelo:</label><input type="text" id="modelo"></div>
             <div><label>Nº de Série:</label><input type="text" id="serie"></div>
-            <div class="full" style="background:#f8f9fa; padding:10px; border-radius:6px;">
-                <label>Checklist de Entrada:</label>
-                <input type="checkbox" id="chkFonte"> Fonte/Cabo 
-                <input type="checkbox" id="chkCapa" style="margin-left:20px;"> Capa/Case
+        </div>
+
+        <div class="checklist-box">
+            <label>Checklist de Acessórios Recebidos:</label>
+            <div class="checklist-grid">
+                <div><input type="checkbox" class="chk-item" value="Fonte/Carregador"> Fonte/Carregador</div>
+                <div><input type="checkbox" class="chk-item" value="Capa/Case"> Capa/Case</div>
+                <div><input type="checkbox" class="chk-item" value="Mouse"> Mouse</div>
+                <div><input type="checkbox" class="chk-item" value="Cabo de Força"> Cabo de Força</div>
+                <div><input type="checkbox" class="chk-item" value="Cabo USB/VGA"> Cabo USB/VGA</div>
+                <div><input type="checkbox" class="chk-item" value="Teclado"> Teclado</div>
+                <div><input type="checkbox" class="chk-item" value="Bandeja"> Bandeja</div>
+                <div><input type="checkbox" class="chk-item" value="Cartucho/Toner"> Cartucho/Toner</div>
             </div>
+            <input type="text" id="outrosAces" placeholder="Outros acessórios..." style="margin-top:10px; font-size:12px;">
+        </div>
+
+        <div class="grid">
             <div class="full"><label>Defeito Relatado:</label><textarea id="defeito" rows="2"></textarea></div>
             <div class="full"><label>Laudo Técnico / Peças:</label><textarea id="laudo" rows="2"></textarea></div>
         </div>
 
-        <h3>3. Valores e Pagamento</h3>
+        <h3>3. Fechamento & Status</h3>
         <div class="grid-4">
             <div><label>Mão de Obra (R$):</label><input type="number" id="vObra"></div>
             <div><label>Peças (R$):</label><input type="number" id="vPecas"></div>
@@ -137,6 +152,7 @@
                 </select>
             </div>
         </div>
+
         <div class="grid-4" style="background:#eef8e5; padding:15px; border-radius:8px; border:1px solid #c3e6cb; margin-top:10px;">
             <div><label>PIX (R$):</label><input type="number" id="osPix"></div>
             <div><label>Dinheiro (R$):</label><input type="number" id="osDin"></div>
@@ -154,10 +170,7 @@
     </div>
 
     <div id="abaHistorico" class="aba no-print">
-        <div class="alerta-abandono" id="alertaAbandono">
-            🚨 <strong>Atenção:</strong> Existem equipamentos na loja há mais de 180 dias!
-        </div>
-        <h2>📂 Histórico de Serviços</h2>
+        <h2>📂 Histórico Geral</h2>
         <input type="text" id="busca" onkeyup="buscar()" placeholder="Filtrar por nome, OS ou equipamento...">
         <div id="listaHistorico" style="margin-top:20px;"></div>
     </div>
@@ -165,117 +178,75 @@
     <div id="abaPDV" class="aba no-print">
         <h2>🛒 Venda Rápida de Balcão</h2>
         <div class="grid">
-            <div class="full"><label>Descrição do Produto/Venda:</label><textarea id="pdvProduto" rows="3"></textarea></div>
+            <div class="full"><label>Descrição do Produto:</label><textarea id="pdvProduto" rows="3"></textarea></div>
             <div><label>Valor Total (R$):</label><input type="number" id="pdvVenda"></div>
             <div><label>Valor Pago (R$):</label><input type="number" id="pdvPago"></div>
         </div>
-        <button class="btn-green" onclick="salvarVendaPDV(true)" style="width:100%; margin-top:20px;">💰 FINALIZAR VENDA E IMPRIMIR</button>
+        <button class="btn-green" onclick="salvarVendaPDV(true)" style="width:100%; margin-top:20px;">💰 FINALIZAR E IMPRIMIR</button>
     </div>
 
     <div id="abaFinanceiro" class="aba no-print">
-        <h2>📊 Painel Financeiro Real</h2>
-        <div class="grid-3">
-            <div style="background:var(--primary); color:white; padding:25px; border-radius:12px; text-align:center;">
-                <small>TOTAL FATURADO</small><h2 id="dashFaturado">R$ 0,00</h2>
-            </div>
-            <div style="background:var(--danger); color:white; padding:25px; border-radius:12px; text-align:center;">
-                <small>CUSTO COM PEÇAS</small><h2 id="dashPecas">R$ 0,00</h2>
-            </div>
-            <div style="background:var(--secondary); color:white; padding:25px; border-radius:12px; text-align:center;">
-                <small>LUCRO REAL</small><h2 id="dashLucro">R$ 0,00</h2>
-            </div>
+        <h2>📊 Painel Financeiro</h2>
+        <div class="grid-3" style="text-align:center;">
+            <div style="background:var(--primary); color:white; padding:20px; border-radius:10px;"><small>Faturado</small><h2 id="dashFaturado">R$ 0,00</h2></div>
+            <div style="background:var(--danger); color:white; padding:20px; border-radius:10px;"><small>Peças</small><h2 id="dashPecas">R$ 0,00</h2></div>
+            <div style="background:var(--secondary); color:white; padding:20px; border-radius:10px;"><small>Lucro</small><h2 id="dashLucro">R$ 0,00</h2></div>
         </div>
     </div>
 
     <div id="abaConfig" class="aba no-print">
-        <h2>⚙️ Configurações do Sistema</h2>
-        <div style="background:#f9f9f9; padding:20px; border-radius:10px; border:1px solid #ddd; margin-bottom:25px;">
-            <h3>🛡️ Backup Automático (Google Drive)</h3>
-            <label>Seu Google Client ID:</label>
-            <input type="text" id="configClientId" placeholder="ID do Cliente OAuth">
-            <button class="btn-dark" onclick="iniciarBackupDrive()" style="margin-top:15px;">☁️ TESTAR CONEXÃO COM DRIVE AGORA</button>
-            <p id="statusBackup" style="font-weight:bold; margin-top:10px; color:var(--primary);"></p>
+        <h2>⚙️ Configurações</h2>
+        <div style="background:#f9f9f9; padding:20px; border-radius:10px; border:1px solid #ddd; margin-bottom:20px;">
+            <h3>🛡️ Backup Google Drive</h3>
+            <label>Google Client ID:</label>
+            <input type="text" id="configClientId">
+            <button class="btn-dark" onclick="iniciarBackupDrive()" style="margin-top:10px;">☁️ TESTAR BACKUP DRIVE</button>
+            <p id="statusBackup" style="font-weight:bold; margin-top:10px;"></p>
         </div>
-        <h3>🏪 Dados da Empresa na Nuvem</h3>
+        <h3>🏪 Dados da Loja</h3>
         <div class="grid">
-            <div class="full"><label>Senha de Acesso (Login):</label><input type="text" id="configSenha"></div>
-            <div class="full"><label>Logomarca (Upload):</label><input type="file" id="inputLogo" accept="image/*"></div>
-            <div><label>Telefone da Loja:</label><input type="text" id="lojaTel"></div>
-            <div class="full"><label>Endereço Completo:</label><input type="text" id="lojaEnd"></div>
+            <div class="full"><label>Senha Admin:</label><input type="text" id="configSenha"></div>
+            <div class="full"><label>Logomarca:</label><input type="file" id="inputLogo" accept="image/*"></div>
+            <div><label>Telefone:</label><input type="text" id="lojaTel"></div>
+            <div class="full"><label>Endereço:</label><input type="text" id="lojaEnd"></div>
         </div>
-        <button class="btn-blue" onclick="salvarConfig()" style="width:100%; margin-top:20px;">💾 SALVAR CONFIGURAÇÕES NA NUVEM</button>
+        <button class="btn-blue" onclick="salvarConfig()" style="width:100%; margin-top:20px;">💾 SALVAR NA NUVEM</button>
     </div>
 </div>
 
 <div id="telaDocumento">
-    <button class="btn-red no-print" onclick="fecharImpressao()" style="margin-bottom:20px; width:100%;">⬅️ VOLTAR AO SISTEMA</button>
+    <button class="btn-red no-print" onclick="fecharImpressao()" style="margin-bottom:20px; width:100%;">⬅️ VOLTAR</button>
     <div class="pdf-header">
         <img id="docLogo" src="" style="max-height: 70px;">
-        <div style="text-align: center;">
-            <strong style="font-size:18px;">KLEBER INFORMÁTICA</strong><br>
-            <span id="docEnd"></span><br><span id="docTel"></span>
-        </div>
-        <div style="text-align: right;">
-            <h1 id="resOS" style="margin:0; color:red; font-size:30px;">0000</h1>
-            <span id="resData"></span>
-        </div>
+        <div style="text-align: center;"><strong style="font-size:18px;">KLEBER INFORMÁTICA</strong><br><span id="docEnd"></span><br><span id="docTel"></span></div>
+        <div style="text-align: right;"><h1 id="resOS" style="margin:0; color:red; font-size:30px;">0000</h1><span id="resData"></span></div>
     </div>
-
     <div class="pdf-section">
         <div class="pdf-title">1. Identificação do Cliente</div>
-        <div class="pdf-row">
-            <div class="pdf-col" style="flex:2;"><span class="pdf-label">CLIENTE</span><span id="resCliente" class="pdf-value"></span></div>
-            <div class="pdf-col"><span class="pdf-label">CPF</span><span id="resCpf" class="pdf-value"></span></div>
-        </div>
-        <div class="pdf-row">
-            <div class="pdf-col"><span class="pdf-label">CONTATO</span><span id="resZap" class="pdf-value"></span></div>
-            <div class="pdf-col" style="flex:2;"><span class="pdf-label">ENDEREÇO</span><span id="resEndCli" class="pdf-value"></span></div>
-        </div>
+        <div class="pdf-row"><div class="pdf-col"><span class="pdf-label">CLIENTE</span><span id="resCliente"></span></div><div class="pdf-col"><span class="pdf-label">CPF/RG</span><span id="resCpfRg"></span></div></div>
+        <div class="pdf-row"><div class="pdf-col"><span class="pdf-label">ENDEREÇO</span><span id="resEndCli"></span></div><div class="pdf-col"><span class="pdf-label">CONTATO</span><span id="resZap"></span></div></div>
     </div>
-
     <div class="pdf-section">
         <div class="pdf-title">2. Dados do Equipamento & Checklist</div>
-        <div class="pdf-row">
-            <div class="pdf-col"><span class="pdf-label">EQUIPAMENTO</span><span id="resEquip" class="pdf-value"></span></div>
-            <div class="pdf-col"><span class="pdf-label">MODELO/SÉRIE</span><span id="resModelo" class="pdf-value"></span></div>
-            <div class="pdf-col"><span class="pdf-label">ACESSÓRIOS</span><span id="resCheck" class="pdf-value"></span></div>
-        </div>
+        <div class="pdf-row"><div class="pdf-col"><span class="pdf-label">EQUIPAMENTO</span><span id="resEquip"></span></div><div class="pdf-col"><span class="pdf-label">MODELO/SÉRIE</span><span id="resModelo"></span></div></div>
+        <div style="padding:5px;"><span class="pdf-label">ACESSÓRIOS RECEBIDOS:</span><span id="resCheck" style="font-size:11px;"></span></div>
     </div>
-
     <div class="pdf-section" style="border:none;">
         <div class="pdf-title">3. Detalhes Técnicos</div>
-        <span class="pdf-label">DEFEITO RELATADO:</span>
-        <div id="resDefeito" class="pdf-textarea"></div>
-        <span class="pdf-label">LAUDO TÉCNICO / SERVIÇOS EXECUTADOS:</span>
-        <div id="resLaudo" class="pdf-textarea"></div>
+        <span class="pdf-label">DEFEITO RELATADO:</span><div id="resDefeito" class="pdf-textarea"></div>
+        <span class="pdf-label">LAUDO/SERVIÇOS:</span><div id="resLaudo" class="pdf-textarea"></div>
     </div>
-
     <div class="pdf-section">
-        <div class="pdf-title">4. Valores e Garantia</div>
-        <div class="pdf-row">
-            <div class="pdf-col"><span class="pdf-label">MÃO DE OBRA</span><span id="resObra" class="pdf-value"></span></div>
-            <div class="pdf-col"><span class="pdf-label">PEÇAS</span><span id="resPecas" class="pdf-value"></span></div>
-            <div class="pdf-col" style="background:#eee;"><span class="pdf-label">TOTAL GERAL</span><strong id="resTotal" style="font-size:16px;"></strong></div>
-        </div>
-        <div class="pdf-row">
-            <div class="pdf-col" style="flex:2;"><span class="pdf-label">MÉTODO DE PAGAMENTO</span><span id="resPag" class="pdf-value"></span></div>
-            <div class="pdf-col"><span class="pdf-label">GARANTIA</span><span id="resGar" class="pdf-value"></span></div>
-        </div>
+        <div class="pdf-title">4. Fechamento</div>
+        <div class="pdf-row"><div class="pdf-col"><span class="pdf-label">VALOR TOTAL</span><strong id="resTotal"></strong></div><div class="pdf-col"><span class="pdf-label">GARANTIA</span><span id="resGar"></span></div></div>
     </div>
-
-    <div class="termo">
-        <strong>TERMO DE RESPONSABILIDADE:</strong> O cliente declara estar ciente que o equipamento deve ser retirado em até 90 dias. Após 180 dias sem retirada, o equipamento será legalmente considerado como abandonado para descarte ou venda para abatimento de custos operacionais.
+    <div style="font-size:9px; margin-top:10px; border:1px solid #000; padding:5px; text-align:justify;">
+        <strong>TERMO:</strong> Equipamentos não retirados em 90 dias geram taxas. Após 180 dias são considerados abandonados para descarte ou venda.
     </div>
-
-    <div style="display:flex; justify-content:space-around; margin-top:30px; text-align:center; font-size:12px;">
-        <div>_________________________________<br>Kleber Informática</div>
-        <div>_________________________________<br>Assinatura do Cliente</div>
-    </div>
-    <button class="btn-dark no-print" onclick="window.print()" style="width:100%; margin-top:20px;">🖨️ IMPRIMIR DOCUMENTO</button>
+    <button class="btn-dark no-print" onclick="window.print()" style="width:100%; margin-top:20px;">🖨️ IMPRIMIR</button>
 </div>
 
 <script>
-    // FIREBASE
     const firebaseConfig = { apiKey: "AIzaSyDKxyJBXMgh0Vi6dwOCr7oHthyVaq3hcPE", authDomain: "sistema-kleber-informatica.firebaseapp.com", projectId: "sistema-kleber-informatica", storageBucket: "sistema-kleber-informatica.firebasestorage.app", messagingSenderId: "374020359871", appId: "1:374020359871:web:e0f6c77f0a672e8116749d" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -283,11 +254,10 @@
     let configGlobais = { senhaAdmin: "123456", gapiClientId: "", end: "", tel: "", logo: "", ultimoBackupData: "" };
     let editandoId = null;
 
-    // LOGIN COM CHAVE MESTRA
     async function fazerLogin() {
         const senha = document.getElementById('senhaAcesso').value.trim();
         const btn = document.getElementById('btnLogin');
-        btn.innerText = "Sincronizando Nuvem...";
+        btn.innerText = "Conectando...";
         try {
             const doc = await db.collection('configuracoes').doc('gerais').get();
             if(doc.exists) configGlobais = doc.data();
@@ -296,8 +266,8 @@
                 document.getElementById('menuNavegacao').style.display = 'flex';
                 document.getElementById('conteinerPrincipal').style.display = 'block';
                 aplicarConfigs(); carregarHistorico(); gatilhoBackup();
-            } else { alert("Senha incorreta!"); btn.innerText = "ENTRAR NO SISTEMA"; }
-        } catch(e) { alert("Erro de conexão."); }
+            } else { alert("Acesso negado."); btn.innerText = "ENTRAR NO SISTEMA"; }
+        } catch(e) { alert("Erro de rede."); }
     }
 
     function aplicarConfigs() {
@@ -305,11 +275,7 @@
         document.getElementById('lojaTel').value = configGlobais.tel || "";
         document.getElementById('configSenha').value = configGlobais.senhaAdmin || "123456";
         document.getElementById('configClientId').value = configGlobais.gapiClientId || "";
-        if(configGlobais.logo) {
-            document.getElementById('navLogo').src = configGlobais.logo;
-            document.getElementById('navLogo').style.display = 'block';
-            document.getElementById('docLogo').src = configGlobais.logo;
-        }
+        if(configGlobais.logo) { document.getElementById('navLogo').src = configGlobais.logo; document.getElementById('navLogo').style.display = 'block'; document.getElementById('docLogo').src = configGlobais.logo; }
     }
 
     async function salvarConfig() {
@@ -325,19 +291,12 @@
     async function gravarFirebase(logo) {
         const dados = { senhaAdmin: document.getElementById('configSenha').value, gapiClientId: document.getElementById('configClientId').value, end: document.getElementById('lojaEnd').value, tel: document.getElementById('lojaTel').value, logo: logo, ultimoBackupData: configGlobais.ultimoBackupData };
         await db.collection('configuracoes').doc('gerais').set(dados);
-        configGlobais = dados; aplicarConfigs(); alert("Configs Atualizadas na Nuvem!");
+        configGlobais = dados; aplicarConfigs(); alert("Configurações Salvas na Nuvem!");
     }
 
-    // BACKUP SEGUNDA E QUINTA
     function gatilhoBackup() {
         const hoje = new Date(); const dia = hoje.getDay(); const dataHoje = hoje.toLocaleDateString('pt-BR');
-        if((dia === 1 || dia === 4) && configGlobais.ultimoBackupData !== dataHoje) {
-            if(configGlobais.gapiClientId) {
-                document.getElementById('alertaBackupInteligente').style.display = 'block';
-                document.getElementById('alertaBackupInteligente').innerHTML = "⚙️ <strong>Backup de Segurança:</strong> Sincronizando com Drive...";
-                iniciarBackupDrive(true);
-            }
-        }
+        if((dia === 1 || dia === 4) && configGlobais.ultimoBackupData !== dataHoje) { if(configGlobais.gapiClientId) iniciarBackupDrive(true); }
     }
 
     function iniciarBackupDrive(silencioso = false) {
@@ -349,48 +308,43 @@
         client.requestAccessToken();
     }
 
-    // FUNÇÃO DE BACKUP SEM TRAVAMENTOS (FETCH DIRETO)
     async function executarFluxoDrive(token, silencioso) {
         const status = document.getElementById('statusBackup');
         try {
-            if(!silencioso) status.innerText = "🔍 Localizando pasta no Drive...";
+            if(!silencioso) status.innerText = "🔍 Buscando pasta...";
             let res = await fetch('https://www.googleapis.com/drive/v3/files?q=name="backup Sistema OS" and trashed=false', { headers: { Authorization: `Bearer ${token}` } });
             let fRes = await res.json();
             let folderId = fRes.files && fRes.files.length > 0 ? fRes.files[0].id : null;
-
             if(!folderId) {
                 let cf = await fetch('https://www.googleapis.com/drive/v3/files', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'backup Sistema OS', mimeType: 'application/vnd.google-apps.folder' }) });
                 let fNew = await cf.json(); folderId = fNew.id;
             }
-
             const snap = await db.collection("servicos").get();
             let lista = []; snap.forEach(d => lista.push(d.data()));
             const blob = new Blob([JSON.stringify(lista, null, 2)], {type: 'application/json'});
-
             const meta = { name: `Backup_Kleber_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.json`, parents: [folderId] };
             const form = new FormData();
             form.append('metadata', new Blob([JSON.stringify(meta)], {type: 'application/json'}));
             form.append('file', blob);
-
             let up = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form });
             if(up.ok) {
                 const hoje = new Date().toLocaleDateString('pt-BR');
                 configGlobais.ultimoBackupData = hoje;
                 await db.collection('configuracoes').doc('gerais').update({ ultimoBackupData: hoje });
-                if(silencioso) document.getElementById('alertaBackupInteligente').style.display = 'none';
-                else status.innerText = "✅ Sincronizado com Sucesso!";
+                if(!silencioso) status.innerText = "✅ Sincronizado!";
             }
-        } catch(e) { status.innerText = "❌ Erro de permissão do Google."; }
+        } catch(e) { status.innerText = "❌ Erro de permissão."; }
     }
 
-    // CRUD COMPLETO
     async function salvarOS(tipo) {
         const numOS = editandoId ? parseInt(document.getElementById('idEdicao').innerText) : (await obterProxOS());
+        let checklist = []; document.querySelectorAll('.chk-item:checked').forEach(c => checklist.push(c.value));
         const dados = {
-            os: numOS, cliente: document.getElementById('cliente').value, cpf: document.getElementById('cpf').value, whatsapp: document.getElementById('whatsapp').value,
-            endCliente: document.getElementById('endCliente').value, bairro: document.getElementById('bairro').value,
+            os: numOS, cliente: document.getElementById('cliente').value, cpf: document.getElementById('cpf').value, rg: document.getElementById('rg').value, 
+            whatsapp: document.getElementById('whatsapp').value, endCliente: document.getElementById('endCliente').value, 
+            bairro: document.getElementById('bairro').value, cep: document.getElementById('cep').value,
             equip: document.getElementById('equip').value, modelo: document.getElementById('modelo').value, serie: document.getElementById('serie').value,
-            chk: (document.getElementById('chkFonte').checked ? "Fonte " : "") + (document.getElementById('chkCapa').checked ? "Capa" : ""),
+            chk: checklist.join(", ") + (document.getElementById('outrosAces').value ? " - " + document.getElementById('outrosAces').value : ""),
             defeito: document.getElementById('defeito').value, laudo: document.getElementById('laudo').value,
             vObra: parseFloat(document.getElementById('vObra').value) || 0, vPecas: parseFloat(document.getElementById('vPecas').value) || 0,
             total: (parseFloat(document.getElementById('vObra').value) || 0) + (parseFloat(document.getElementById('vPecas').value) || 0),
@@ -413,25 +367,27 @@
 
     function prepararImpressao(d) {
         document.getElementById('resOS').innerText = String(d.os).padStart(4, '0');
-        document.getElementById('resCliente').innerText = d.cliente; document.getElementById('resCpf').innerText = d.cpf || "-";
-        document.getElementById('resZap').innerText = d.whatsapp || ""; document.getElementById('resEndCli').innerText = (d.endCliente || "") + " " + (d.bairro || "");
-        document.getElementById('resEquip').innerText = d.equip; document.getElementById('resModelo').innerText = (d.modelo || "") + " / " + (d.serie || "");
-        document.getElementById('resCheck').innerText = d.chk || "Nenhum"; document.getElementById('resDefeito').innerText = d.defeito;
-        document.getElementById('resLaudo').innerText = d.laudo; document.getElementById('resObra').innerText = "R$ " + (d.vObra||0).toFixed(2);
-        document.getElementById('resPecas').innerText = "R$ " + (d.vPecas||0).toFixed(2); document.getElementById('resTotal').innerText = "R$ " + (d.total||0).toFixed(2);
-        document.getElementById('resGar').innerText = d.gar; document.getElementById('resData').innerText = d.data;
-        document.getElementById('docEnd').innerText = configGlobais.end; document.getElementById('docTel').innerText = configGlobais.tel;
-        
-        let p = d.pagamentos; 
-        if(p) document.getElementById('resPag').innerText = (p.pix?`PIX: ${p.pix} `:"") + (p.din?`DIN: ${p.din} `:"") + (p.cred?`CRÉD: ${p.cred} `:"");
-        
+        document.getElementById('resCliente').innerText = d.cliente;
+        document.getElementById('resCpfRg').innerText = (d.cpf||"") + " / " + (d.rg||"");
+        document.getElementById('resEndCli').innerText = (d.endCliente||"") + " - " + (d.bairro||"") + " - " + (d.cep||"");
+        document.getElementById('resZap').innerText = d.whatsapp || "";
+        document.getElementById('resEquip').innerText = d.equip;
+        document.getElementById('resModelo').innerText = (d.modelo||"") + " / " + (d.serie||"");
+        document.getElementById('resCheck').innerText = d.chk || "Nenhum acessório";
+        document.getElementById('resDefeito').innerText = d.defeito;
+        document.getElementById('resLaudo').innerText = d.laudo;
+        document.getElementById('resTotal').innerText = "R$ " + (d.total||0).toFixed(2);
+        document.getElementById('resGar').innerText = d.gar;
+        document.getElementById('resData').innerText = d.data;
+        document.getElementById('docEnd').innerText = configGlobais.end;
+        document.getElementById('docTel').innerText = configGlobais.tel;
         document.getElementById('conteinerPrincipal').style.display = 'none';
         document.getElementById('telaDocumento').style.display = 'block';
     }
 
     async function carregarHistorico() {
         const snap = await db.collection("servicos").orderBy("os", "desc").get();
-        let html = "", fat = 0, pec = 0, abandono = false;
+        let html = "", fat = 0, pec = 0;
         snap.forEach(doc => {
             const d = doc.data();
             if(d.status === "Entregue ao Cliente") { fat += d.total; pec += d.vPecas; }
@@ -452,11 +408,9 @@
 
     async function editarOS(id) {
         const doc = await db.collection("servicos").doc(id).get(); const d = doc.data();
-        editandoId = id;
-        document.getElementById('cliente').value = d.cliente; document.getElementById('cpf').value = d.cpf || "";
-        document.getElementById('whatsapp').value = d.whatsapp; document.getElementById('equip').value = d.equip;
-        document.getElementById('vObra').value = d.vObra; document.getElementById('vPecas').value = d.vPecas;
-        document.getElementById('status').value = d.status; document.getElementById('idEdicao').innerText = d.os;
+        editandoId = id; document.getElementById('cliente').value = d.cliente; document.getElementById('cpf').value = d.cpf||""; document.getElementById('rg').value = d.rg||"";
+        document.getElementById('whatsapp').value = d.whatsapp; document.getElementById('equip').value = d.equip; document.getElementById('vObra').value = d.vObra;
+        document.getElementById('vPecas').value = d.vPecas; document.getElementById('status').value = d.status; document.getElementById('idEdicao').innerText = d.os;
         document.getElementById('avisoEdicao').style.display = 'block'; mudarAba('abaNovaOS');
         document.getElementById('botoesCriar').style.display = 'none'; document.getElementById('botaoSalvarEdicao').style.display = 'flex';
     }
