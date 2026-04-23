@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kleber Informática - ERP Premium</title>
+    <title>Kleber Informática - ERP Premium Cloud</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     
-    <script async defer src="https://apis.google.com/js/api.js"></script>
     <script async defer src="https://accounts.google.com/gsi/client"></script>
 
     <style>
@@ -17,12 +16,13 @@
         
         /* LOGIN */
         #telaLogin { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #222; display: flex; justify-content: center; align-items: center; z-index: 99999; }
-        .login-box { background: white; padding: 40px; border-radius: 12px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 300px; }
-        .login-box input { margin: 15px 0; font-size: 18px; text-align: center; }
+        .login-box { background: white; padding: 40px; border-radius: 12px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 320px; }
+        .login-box input { margin: 15px 0; font-size: 18px; text-align: center; width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ddd; }
 
-        /* MENU DE NAVEGAÇÃO */
+        /* NAVBAR */
         .navbar { background: var(--dark); padding: 10px 20px; display: flex; gap: 10px; color: white; align-items: center; justify-content: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); flex-wrap: wrap; }
-        .navbar button { background: none; border: 1px solid #555; color: white; padding: 10px 15px; border-radius: 6px; cursor: pointer; transition: 0.3s; font-size: 14px; font-weight: bold; }
+        .navbar img { height: 40px; border-radius: 4px; background: white; padding: 2px; margin-right: 15px; }
+        .navbar button { background: none; border: 1px solid #555; color: white; padding: 10px 15px; border-radius: 6px; cursor: pointer; transition: 0.3s; font-size: 13px; font-weight: bold; }
         .navbar button:hover, .navbar button.ativo { background: var(--primary); border-color: var(--primary); }
         .navbar .btn-sair { background: var(--danger); border-color: var(--danger); margin-left: auto; }
 
@@ -30,7 +30,6 @@
         
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         .full { grid-column: 1 / -1; }
         
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #555; }
@@ -45,43 +44,25 @@
         .btn-warning { background: var(--warning); color: #000; }
         .btn-small { padding: 6px 10px; font-size: 12px; flex: none; width: auto; }
 
-        /* DASHBOARD & ALERTAS */
-        .dashboard { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .dash-card { padding: 15px; border-radius: 8px; color: white; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .dash-blue { background: #007bff; }
-        .dash-red { background: #dc3545; }
-        .dash-green { background: #28a745; }
-        
-        .alerta-abandono { background: #ffe3e3; border-left: 5px solid #dc3545; padding: 15px; margin-bottom: 20px; border-radius: 4px; display: none; }
-        .alerta-backup { background: #d4edda; border-left: 5px solid #28a745; padding: 15px; margin-bottom: 20px; border-radius: 4px; display: none; }
+        .alerta-backup { background: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 4px; display: none; color: #856404; }
         
         .os-card { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 6px solid #ccc; }
         .aba { display: none; }
         .aba.ativa { display: block; }
 
-        /* =========================================================
-           ESTILOS DO DOCUMENTO (OTIMIZADO PARA 1 PÁGINA A4)
-           ========================================================= */
-        #telaDocumento { display: none; background: white; color: #000; font-family: Arial, sans-serif; padding: 25px; border: 1px solid #ccc; box-shadow: 0 5px 15px rgba(0,0,0,0.2); margin: 20px auto; max-width: 790px; }
-        
-        .pdf-header { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: flex-start; }
-        .pdf-section { border: 1px solid #000; margin-bottom: 6px; border-radius: 4px; overflow: hidden; page-break-inside: avoid; }
-        .pdf-title { background: #e0e0e0; padding: 3px 6px; font-weight: bold; font-size: 10px; border-bottom: 1px solid #000; text-transform: uppercase; }
+        /* PDF IMPRESSÃO */
+        #telaDocumento { display: none; background: white; color: #000; padding: 25px; border: 1px solid #ccc; margin: 20px auto; max-width: 790px; }
+        .pdf-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .pdf-section { border: 1px solid #000; margin-bottom: 6px; border-radius: 4px; overflow: hidden; }
+        .pdf-title { background: #e0e0e0; padding: 4px; font-weight: bold; font-size: 10px; border-bottom: 1px solid #000; }
         .pdf-row { display: flex; border-bottom: 1px solid #000; }
-        .pdf-row:last-child { border-bottom: none; }
-        .pdf-col { flex: 1; padding: 3px 6px; border-right: 1px solid #000; }
-        .pdf-col:last-child { border-right: none; }
-        .pdf-label { font-size: 8px; color: #444; display: block; margin-bottom: 2px; font-weight: bold; text-transform: uppercase; }
-        .pdf-value { font-size: 11px; min-height: 12px; font-weight: normal; }
-        .pdf-textarea { padding: 4px 6px; font-size: 11px; min-height: 15px; border: 1px solid #000; margin-bottom: 4px; border-radius: 3px; }
-        .pdf-assinaturas { margin-top: 15px; display: flex; justify-content: space-around; text-align: center; font-size: 11px; }
-        .termo-juridico { font-size: 8px; text-align: justify; margin-top: 5px; border: 1px solid #000; padding: 4px 6px; background: #f9f9f9; border-radius: 4px; line-height: 1.1; }
+        .pdf-col { flex: 1; padding: 4px; border-right: 1px solid #000; }
+        .pdf-label { font-size: 8px; font-weight: bold; display: block; }
+        .pdf-value { font-size: 11px; }
 
         @media print {
-            body { background: white; padding: 0; margin: 0; }
             .no-print, .navbar { display: none !important; }
-            #telaDocumento { display: block !important; padding: 0; border: none; margin: 0; box-shadow: none; max-width: 100%; }
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            #telaDocumento { display: block !important; border: none; margin: 0; padding: 0; }
         }
     </style>
 </head>
@@ -89,23 +70,21 @@
 
 <div id="telaLogin">
     <div class="login-box">
-        <h2 style="border:none; margin-top:0;">🔒 Área Restrita</h2>
+        <h2>🔒 Kleber Informática</h2>
         <input type="password" id="senhaAcesso" placeholder="Senha ou Chave Mestra" onkeypress="if(event.key === 'Enter') fazerLogin()">
-        <button id="btnLogin" class="btn-blue" onclick="fazerLogin()">ENTRAR</button>
-        <p id="erroLogin" style="color:red; display:none; font-size:12px;">Senha incorreta ou erro de rede!</p>
+        <button id="btnLogin" class="btn-blue" onclick="fazerLogin()">ENTRAR NO SISTEMA</button>
+        <p id="erroLogin" style="color:red; display:none; font-size:12px; margin-top:10px;">Acesso negado. Verifique a senha ou rede.</p>
     </div>
 </div>
 
 <div class="navbar no-print" id="menuNavegacao" style="display:none;">
-    <img id="navLogo" src="" alt="Logomarca" style="height: 38px; border-radius: 4px; display: none; margin-right: auto; background: white; padding: 2px;">
-    
-    <button onclick="mudarAba('abaNovaOS')" id="btn-abaNovaOS" class="ativo">📝 1. Nova OS</button>
-    <button onclick="mudarAba('abaHistorico')" id="btn-abaHistorico">📂 2. Histórico</button>
-    <button onclick="mudarAba('abaPDV')" id="btn-abaPDV">🛒 3. Venda PDV</button>
-    <button onclick="mudarAba('abaFinanceiro')" id="btn-abaFinanceiro">📊 4. Financeiro</button>
-    <button onclick="mudarAba('abaConfig')" id="btn-abaConfig">⚙️ 5. Configs & Backup</button>
-    
-    <button class="btn-sair" onclick="sairSistema()" style="margin-left: auto;">Sair 🚪</button>
+    <img id="navLogo" src="" alt="Logo" style="display:none;">
+    <button onclick="mudarAba('abaNovaOS')" id="btn-abaNovaOS" class="ativo">📝 Nova OS</button>
+    <button onclick="mudarAba('abaHistorico')" id="btn-abaHistorico">📂 Histórico</button>
+    <button onclick="mudarAba('abaPDV')" id="btn-abaPDV">🛒 PDV Balcão</button>
+    <button onclick="mudarAba('abaFinanceiro')" id="btn-abaFinanceiro">📊 Financeiro</button>
+    <button onclick="mudarAba('abaConfig')" id="btn-abaConfig">⚙️ Configs</button>
+    <button class="btn-sair" onclick="sairSistema()">Sair</button>
 </div>
 
 <div class="container" id="conteinerPrincipal" style="display:none;">
@@ -113,45 +92,32 @@
     <div class="alerta-backup" id="alertaBackupInteligente"></div>
 
     <div id="abaNovaOS" class="aba ativa no-print">
-        <div id="avisoEdicao" style="display:none; background: #fff3cd; padding:15px; border-radius:8px; margin-bottom:20px;">
-            <div style="display:flex; justify-content: space-between; align-items: center;">
-                <strong style="color: #856404; font-size:16px;">⚠️ MODO DE EDIÇÃO (OS: <span id="idEdicao"></span>)</strong>
-                <button onclick="cancelarEdicao()" class="btn-red btn-small">❌ CANCELAR EDIÇÃO</button>
-            </div>
+        <div id="avisoEdicao" style="display:none; background: #fff3cd; padding:15px; border-radius:8px; margin-bottom:20px; border: 1px solid #ffeeba;">
+            <strong>⚠️ MODO DE EDIÇÃO (OS: <span id="idEdicao"></span>)</strong>
+            <button onclick="cancelarEdicao()" class="btn-red btn-small" style="float:right;">CANCELAR</button>
         </div>
 
-        <h3 style="margin-top: 0; border-bottom: 1px solid #ccc;">1. Informações do Cliente</h3>
+        <h3>1. Dados do Cliente</h3>
         <div class="grid-3">
             <div class="full"><label>Nome do Cliente:</label><input type="text" id="cliente"></div>
-            <div><label>CPF:</label><input type="text" id="cpf"></div>
-            <div><label>RG:</label><input type="text" id="rg"></div>
-            <div><label>WhatsApp:</label><input type="text" id="whatsapp" placeholder="Ex: 91988887777"></div>
+            <div><label>WhatsApp:</label><input type="text" id="whatsapp"></div>
             <div style="grid-column: span 2;"><label>Endereço:</label><input type="text" id="endCliente"></div>
-            <div><label>Bairro:</label><input type="text" id="bairro"></div>
-            <div><label>CEP:</label><input type="text" id="cep"></div>
         </div>
 
-        <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">2. Dados do Equipamento</h3>
+        <h3>2. Equipamento & Defeito</h3>
         <div class="grid-3">
             <div><label>Equipamento:</label><input type="text" id="equip"></div>
-            <div><label>Marca/Modelo:</label><input type="text" id="modelo"></div>
-            <div><label>Nº de Série:</label><input type="text" id="serie"></div>
-            <div class="full" style="display:flex; gap:15px;">
-                <label>Checklist:</label>
-                <input type="checkbox" id="chkFonte"> <label for="chkFonte">Fonte</label>
-                <input type="checkbox" id="chkCapa"> <label for="chkCapa">Capa/Case</label>
-            </div>
-            <div class="full"><label>Outros Acessórios / Estado Físico:</label><input type="text" id="aces"></div>
+            <div><label>Modelo:</label><input type="text" id="modelo"></div>
+            <div><label>Série:</label><input type="text" id="serie"></div>
+            <div class="full"><label>Defeito Relatado:</label><textarea id="defeito" rows="2"></textarea></div>
+            <div class="full"><label>Laudo Técnico:</label><textarea id="laudo" rows="2"></textarea></div>
         </div>
 
-        <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">3. Detalhes Técnicos</h3>
+        <h3>3. Fechamento</h3>
         <div class="grid">
-            <div>
-                <label>Data de Entrada da OS:</label>
-                <input type="date" id="dataEntrada">
-            </div>
-            <div>
-                <label>Situação da OS:</label>
+            <div><label>Mão de Obra (R$):</label><input type="number" id="vObra"></div>
+            <div><label>Peças (R$):</label><input type="number" id="vPecas"></div>
+            <div><label>Situação:</label>
                 <select id="status">
                     <option value="Falta Orçar">🔴 Falta Orçar</option>
                     <option value="Executando">🟡 Executando</option>
@@ -159,33 +125,12 @@
                     <option value="Entregue ao Cliente">🟢 Entregue ao Cliente</option>
                 </select>
             </div>
-            <div class="full"><label>Defeito Relatado:</label><textarea id="defeito" rows="2"></textarea></div>
-            <div class="full"><label>Laudo Técnico:</label><textarea id="laudo" rows="2"></textarea></div>
-            <div class="full"><label>Serviços / Peças:</label><textarea id="servicos" rows="2"></textarea></div>
-        </div>
-
-        <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">4. Fechamento Financeiro & Pagamento</h3>
-        <div class="grid">
-            <div><label>Mão de Obra (R$):</label><input type="number" id="vObra"></div>
-            <div><label>Peças (R$):</label><input type="number" id="vPecas"></div>
-        </div>
-        
-        <label style="margin-top:15px; display:block;"><strong>Métodos de Pagamento Utilizados (Soma Automática):</strong></label>
-        <div class="grid-4" style="background:#eef8e5; padding:15px; border-radius:8px; border:1px solid #c3e6cb;">
-            <div><label>PIX (R$):</label><input type="number" id="osPix"></div>
-            <div><label>Dinheiro (R$):</label><input type="number" id="osDin"></div>
-            <div><label>C. Crédito (R$):</label><input type="number" id="osCred"></div>
-            <div><label>C. Débito (R$):</label><input type="number" id="osDeb"></div>
-        </div>
-
-        <div class="grid" style="margin-top:15px;">
-            <div><label>Garantia Obra:</label><input type="text" id="garObra" value="90 Dias" placeholder="Ex: 90 Dias, 3 Meses"></div>
-            <div><label>Garantia Peças:</label><input type="text" id="garPecas" value="3 meses" placeholder="Ex: 90 Dias, 3 Meses"></div>
+            <div><label>Garantia:</label><input type="text" id="garObra" value="90 Dias"></div>
         </div>
 
         <div class="btn-group" id="botoesCriar">
-            <button class="btn-blue" onclick="salvarOS('ENTRADA', 'SERVICO')">GERAR OS / ENTRADA</button>
-            <button class="btn-green" onclick="salvarOS('RECIBO', 'SERVICO')">GERAR OS / SAÍDA</button>
+            <button class="btn-blue" onclick="salvarOS('ENTRADA')">GERAR ENTRADA</button>
+            <button class="btn-green" onclick="salvarOS('RECIBO')">GERAR SAÍDA</button>
         </div>
         <div class="btn-group" id="botaoSalvarEdicao" style="display:none;">
             <button class="btn-warning" onclick="salvarEdicao()">💾 SALVAR ALTERAÇÕES</button>
@@ -193,767 +138,391 @@
     </div>
 
     <div id="abaHistorico" class="aba no-print">
-        <div class="alerta-abandono" id="alertaAbandono">
-            <strong>🚨 ATENÇÃO:</strong> Existem <span id="qtdAbandonados">0</span> equipamento(s) na loja há mais de 180 dias!
-        </div>
-        <h2 style="margin-top: 0;">📂 Histórico de Serviços e Vendas</h2>
-        <input type="text" id="busca" onkeyup="buscar()" placeholder="🔍 Buscar cliente, OS ou produto..." style="margin-bottom:15px;">
-        <div id="listaHistorico">Carregando registros...</div>
+        <h2>📂 Histórico Geral</h2>
+        <input type="text" id="busca" onkeyup="buscar()" placeholder="Buscar por nome ou número da OS...">
+        <div id="listaHistorico" style="margin-top:20px;">Carregando...</div>
     </div>
 
     <div id="abaPDV" class="aba no-print">
-        <h2 style="margin-top: 0;">🛒 Venda de Balcão (PDV)</h2>
-        <p style="color:#666; font-size:13px; margin-bottom:20px;">Use esta tela para registar vendas diretas. O recibo gerado oculta os laudos técnicos.</p>
+        <h2>🛒 Venda Rápida (Balcão)</h2>
         <div class="grid">
-            <div class="full"><label>Nome do Cliente (Opcional):</label><input type="text" id="pdvCliente" value="CLIENTE BALCÃO"></div>
-            <div class="full"><label>Produto(s) Vendido(s):</label><textarea id="pdvProduto" rows="3"></textarea></div>
-            <div class="full"><label>Valor Total da Venda (R$):</label><input type="number" id="pdvVenda" placeholder="Total a ser cobrado"></div>
+            <div class="full"><label>Descrição do Produto:</label><textarea id="pdvProduto" rows="3"></textarea></div>
+            <div><label>Valor da Venda (R$):</label><input type="number" id="pdvVenda"></div>
+            <div><label>Valor Pago (R$):</label><input type="number" id="pdvPago"></div>
         </div>
-        
-        <label style="margin-top:15px; display:block;"><strong>Métodos de Pagamento:</strong></label>
-        <div class="grid-4" style="background:#eef8e5; padding:15px; border-radius:8px; border:1px solid #c3e6cb;">
-            <div><label>PIX (R$):</label><input type="number" id="pdvPix"></div>
-            <div><label>Dinheiro (R$):</label><input type="number" id="pdvDin"></div>
-            <div><label>C. Crédito (R$):</label><input type="number" id="pdvCred"></div>
-            <div><label>C. Débito (R$):</label><input type="number" id="pdvDeb"></div>
-        </div>
-        
-        <div class="btn-group" style="margin-top:20px;">
-            <button class="btn-green" onclick="salvarVendaPDV(false)">💰 APENAS REGISTAR VENDA</button>
-            <button class="btn-dark" onclick="salvarVendaPDV(true)">🖨️ REGISTAR E IMPRIMIR RECIBO</button>
-        </div>
+        <button class="btn-green" onclick="salvarVendaPDV(true)" style="width:100%; margin-top:20px;">💰 FINALIZAR E IMPRIMIR</button>
     </div>
 
     <div id="abaFinanceiro" class="aba no-print">
-        <h2 style="margin-top: 0;">📊 Painel Financeiro</h2>
-        <p style="color:#666;">Valores referentes às OS marcadas como "Entregue ao Cliente" e Vendas do PDV.</p>
-        <div class="dashboard">
-            <div class="dash-card dash-blue"><h4>Total Faturado</h4><h2 id="dashFaturado">R$ 0,00</h2></div>
-            <div class="dash-card dash-red"><h4>Custo Peças (Apenas OS)</h4><h2 id="dashPecas">R$ 0,00</h2></div>
-            <div class="dash-card dash-green"><h4>Lucro Real</h4><h2 id="dashLucro">R$ 0,00</h2></div>
+        <h2>📊 Resumo Financeiro</h2>
+        <div class="grid-3" style="text-align:center;">
+            <div style="background:var(--primary); color:white; padding:20px; border-radius:10px;">
+                <small>Faturado</small><h2 id="dashFaturado">R$ 0,00</h2>
+            </div>
+            <div style="background:var(--danger); color:white; padding:20px; border-radius:10px;">
+                <small>Peças</small><h2 id="dashPecas">R$ 0,00</h2>
+            </div>
+            <div style="background:var(--secondary); color:white; padding:20px; border-radius:10px;">
+                <small>Lucro</small><h2 id="dashLucro">R$ 0,00</h2>
+            </div>
         </div>
     </div>
 
     <div id="abaConfig" class="aba no-print">
-        <h2 style="margin-top: 0;">⚙️ Configurações e Segurança</h2>
+        <h2>⚙️ Configurações Cloud</h2>
         
-        <h3 style="border-bottom: 1px solid #ccc; padding-bottom:5px;">🛡️ Backup de Segurança</h3>
-        <p style="font-size: 13px; color: #555;">O sistema verifica automaticamente se houve backup após a última Segunda-feira e Quinta-feira. Pode também forçar um backup manual a qualquer momento.</p>
-        
-        <div class="grid">
-            <div class="full">
-                <label>Seu Google Client ID (Para envio automático ao Google Drive):</label>
-                <input type="text" id="configClientId" placeholder="Ex: 123456789-abcde.apps.googleusercontent.com">
+        <div style="background:#f9f9f9; padding:20px; border-radius:8px; border:1px solid #ddd; margin-bottom:20px;">
+            <h3>🛡️ Backup Google Drive</h3>
+            <label>Google Client ID:</label>
+            <input type="text" id="configClientId" placeholder="Cole aqui seu Client ID do Google Cloud">
+            <div class="btn-group">
+                <button class="btn-dark" onclick="iniciarBackupDrive()">☁️ TESTAR BACKUP AGORA</button>
             </div>
+            <p id="statusBackup" style="font-weight:bold; margin-top:10px; color:var(--primary);"></p>
         </div>
-        
-        <div class="btn-group" style="margin-bottom: 30px;">
-            <button class="btn-blue" onclick="baixarBackupLocalManual()">💾 BAIXAR BACKUP NO COMPUTADOR</button>
-            <button class="btn-green" onclick="iniciarBackupDrive()">☁️ ENVIAR PARA O GOOGLE DRIVE</button>
-        </div>
-        <p id="statusBackup" style="text-align:center; font-weight:bold; color:var(--primary);"></p>
 
-        <h3 style="border-bottom: 1px solid #ccc; padding-bottom:5px;">🏪 Dados da Loja (Sincronizado na Nuvem)</h3>
+        <h3>🏪 Dados da Loja</h3>
         <div class="grid">
-            <div class="full"><label>Palavra-passe de Acesso (Login):</label><input type="text" id="configSenha"></div>
-            <div class="full"><label>Sua Logomarca:</label><input type="file" id="inputLogo" accept="image/*"></div>
-            <div><label>Telefone da Loja:</label><input type="text" id="lojaTel"></div>
+            <div class="full"><label>Sua Senha de Acesso:</label><input type="text" id="configSenha"></div>
+            <div class="full"><label>Logomarca (Upload):</label><input type="file" id="inputLogo" accept="image/*"></div>
+            <div><label>Telefone:</label><input type="text" id="lojaTel"></div>
             <div class="full"><label>Endereço Completo:</label><input type="text" id="lojaEnd"></div>
         </div>
-        <button class="btn-dark" onclick="salvarConfig()" style="width:100%; margin-top:20px;" id="btnSalvarConfigs">💾 SALVAR CONFIGURAÇÕES NA NUVEM</button>
+        <button class="btn-blue" onclick="salvarConfig()" style="width:100%; margin-top:20px;">💾 SALVAR TUDO NA NUVEM</button>
     </div>
-
 </div>
 
 <div id="telaDocumento">
-    <button class="btn-red no-print" onclick="fecharImpressao()" style="margin-bottom:20px; width:100%; font-size:16px; padding:15px;">⬅️ FECHAR IMPRESSÃO E VOLTAR</button>
-    
+    <button class="btn-red no-print" onclick="fecharImpressao()" style="margin-bottom:20px; width:100%;">⬅️ VOLTAR AO SISTEMA</button>
     <div class="pdf-header">
-        <div style="width: 30%; text-align: center;">
-            <img id="docLogo" src="" style="max-height: 70px; display:none;">
-        </div>
-        <div style="width: 40%; font-size: 10px; text-align: center; line-height:1.2;">
+        <img id="docLogo" src="" style="max-height: 60px;">
+        <div style="text-align: center;">
             <strong style="font-size:14px;">KLEBER INFORMÁTICA</strong><br>
-            <span id="docEnd"></span><br>Telefone: <span id="docTel"></span>
+            <span id="docEnd"></span><br><span id="docTel"></span>
         </div>
-        <div style="width: 30%; text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
-            <h1 style="margin: 0; font-size: 16px;">Nº DOC</h1>
-            <h2 id="resOS" style="margin: 0 0 5px 0; font-size: 22px; color: #d00;">0000</h2>
-            <img id="qrCode" src="" style="width: 45px; height: 45px;">
-        </div>
-    </div>
-
-    <div class="pdf-section">
-        <div class="pdf-title">1. INFORMAÇÕES DO CLIENTE</div>
-        <div class="pdf-row">
-            <div class="pdf-col" style="flex:2;"><span class="pdf-label">Nome</span><span class="pdf-value" id="resCliente"></span></div>
-            <div class="pdf-col"><span class="pdf-label">CPF</span><span class="pdf-value" id="resCpf"></span></div>
-            <div class="pdf-col"><span class="pdf-label">RG</span><span class="pdf-value" id="resRg"></span></div>
-        </div>
-        <div class="pdf-row">
-            <div class="pdf-col" style="flex:2;"><span class="pdf-label">Endereço</span><span class="pdf-value" id="resEndCli"></span></div>
-            <div class="pdf-col"><span class="pdf-label">Bairro</span><span class="pdf-value" id="resBairro"></span></div>
-        </div>
-        <div class="pdf-row">
-            <div class="pdf-col"><span class="pdf-label">CEP</span><span class="pdf-value" id="resCep"></span></div>
-            <div class="pdf-col"><span class="pdf-label">WhatsApp</span><span class="pdf-value" id="resZap"></span></div>
-        </div>
-    </div>
-
-    <div class="pdf-section" id="secEquipamento">
-        <div class="pdf-title">2. DADOS DO EQUIPAMENTO & CHECKLIST</div>
-        <div class="pdf-row">
-            <div class="pdf-col"><span class="pdf-label">Equipamento</span><span class="pdf-value" id="resEquip"></span></div>
-            <div class="pdf-col"><span class="pdf-label">Marca/Modelo</span><span class="pdf-value" id="resModelo"></span></div>
-            <div class="pdf-col"><span class="pdf-label">Nº Série</span><span class="pdf-value" id="resSerie"></span></div>
-        </div>
-        <div class="pdf-row">
-            <div class="pdf-col"><span class="pdf-label">Fonte/Cabo</span><span class="pdf-value" id="resFonte"></span></div>
-            <div class="pdf-col"><span class="pdf-label">Capa/Case</span><span class="pdf-value" id="resCapa"></span></div>
-            <div class="pdf-col" style="flex:2"><span class="pdf-label">Outros acessórios:</span><span class="pdf-value" id="resAces"></span></div>
-        </div>
-    </div>
-
-    <div class="pdf-section" style="border:none;" id="secTecnica">
-        <div class="pdf-title" id="tituloTecnico" style="border: 1px solid #000; border-radius: 4px; margin-bottom:5px;">3. DETALHES TÉCNICOS DO ATENDIMENTO</div>
-        <span class="pdf-label" id="lblDefeito">3.1. Defeito Relatado / Produto</span>
-        <div class="pdf-textarea" id="resDefeito"></div>
-        <div id="boxLaudo">
-            <span class="pdf-label">3.2. Laudo Técnico</span>
-            <div class="pdf-textarea" id="resLaudo"></div>
-            <span class="pdf-label">3.3. Serviços / Peças</span>
-            <div class="pdf-textarea" id="resServicos"></div>
+        <div style="text-align: right;">
+            <h2 id="resOS" style="margin:0; color:red;">0000</h2>
+            <small id="resData"></small>
         </div>
     </div>
 
     <div class="pdf-section">
-        <div class="pdf-title">4. FECHAMENTO FINANCEIRO & PAGAMENTO</div>
+        <div class="pdf-title">DADOS DO CLIENTE</div>
         <div class="pdf-row">
-            <div class="pdf-col"><span class="pdf-label" id="lblObra">Mão de Obra (R$)</span><span class="pdf-value" id="resObra"></span></div>
-            <div class="pdf-col"><span class="pdf-label" id="lblPecas">Peças (R$)</span><span class="pdf-value" id="resPecas"></span></div>
-            <div class="pdf-col"><span class="pdf-label">Total Pago / Sinal</span><strong class="pdf-value" id="resSinal" style="color:#28a745;"></strong></div>
+            <div class="pdf-col" style="flex:2;"><span class="pdf-label">CLIENTE</span><span id="resCliente"></span></div>
+            <div class="pdf-col"><span class="pdf-label">CONTATO</span><span id="resZap"></span></div>
         </div>
-        <div class="pdf-row" id="rowMetodosPagamento" style="background:#eef8e5;">
-            <div class="pdf-col" style="flex:1;"><span class="pdf-label">Meios de Pagamento Utilizados</span><span class="pdf-value" id="resMeiosPag"></span></div>
-        </div>
+    </div>
+
+    <div class="pdf-section">
+        <div class="pdf-title">DETALHES DO SERVIÇO</div>
         <div class="pdf-row">
-            <div class="pdf-col" style="background:#f0f0f0;"><span class="pdf-label">TOTAL GERAL</span><strong class="pdf-value" id="resTotal" style="font-size:14px;"></strong></div>
-            <div class="pdf-col" style="flex:2; background:#fff3cd;"><span class="pdf-label" style="color:#856404;">VALOR RESTANTE (FALTA PAGAR)</span><strong class="pdf-value" id="resFaltaPagar" style="font-size:14px; color:#d00;"></strong></div>
+            <div class="pdf-col"><span class="pdf-label">EQUIPAMENTO</span><span id="resEquip"></span></div>
+            <div class="pdf-col"><span class="pdf-label">MODELO/SÉRIE</span><span id="resModelo"></span></div>
         </div>
-        <div class="pdf-row" id="rowGarantias">
-            <div class="pdf-col"><span class="pdf-label">Garantia Obra</span><span class="pdf-value" id="resGarO"></span></div>
-            <div class="pdf-col"><span class="pdf-label">Garantia Peças</span><span class="pdf-value" id="resGarP"></span></div>
+        <div style="padding:5px;"><span class="pdf-label">DEFEITO/PRODUTO</span><div id="resDefeito" style="font-size:11px;"></div></div>
+        <div style="padding:5px;"><span class="pdf-label">LAUDO/SERVIÇOS</span><div id="resLaudo" style="font-size:11px;"></div></div>
+    </div>
+
+    <div class="pdf-section">
+        <div class="pdf-title">VALORES E GARANTIA</div>
+        <div class="pdf-row">
+            <div class="pdf-col"><span class="pdf-label">TOTAL (R$)</span><strong id="resTotal"></strong></div>
+            <div class="pdf-col"><span class="pdf-label">GARANTIA</span><span id="resGar"></span></div>
         </div>
     </div>
 
-    <div style="text-align: right; font-size: 10px; margin-top: 5px;">Belém, <span id="resData"></span></div>
-
-    <div class="termo-juridico" id="termoJuridico">
-        <strong>TERMO DE RESPONSABILIDADE E ABANDONO:</strong> O cliente declara estar ciente de que o equipamento deverá ser retirado em até <strong>90 dias (3 meses)</strong>. Após este prazo, será cobrada uma taxa de armazenamento de <strong>R$ 30,00 por mês</strong>. Passados <strong>180 dias (6 meses)</strong> sem retirada, o equipamento será legalmente considerado como <strong>abandonado e tratado como sucata</strong> para abatimento dos custos operacionais, não cabendo reclamações ou indenizações posteriores.
+    <div style="font-size:8px; margin-top:10px; border:1px solid #000; padding:5px;">
+        <strong>TERMO DE ABANDONO:</strong> Equipamentos não retirados em 90 dias estarão sujeitos a taxa de armazenamento. Após 180 dias serão considerados abandonados para descarte ou venda para custeio.
     </div>
-
-    <div class="pdf-assinaturas">
-        <div><p>______________________________________</p><p><strong>Kleber Informática</strong><br>Técnico: Kleber Melo</p></div>
-        <div><p>______________________________________</p><p><strong>Assinatura do Cliente</strong></p></div>
-    </div>
-    <button class="btn-dark no-print" onclick="window.print()" style="margin-top:15px; width:100%;">🖨️ IMPRIMIR DOCUMENTO</button>
+    <button class="btn-dark no-print" onclick="window.print()" style="width:100%; margin-top:20px;">🖨️ IMPRIMIR</button>
 </div>
 
 <script>
-    // CONFIGURAÇÕES FIREBASE
+    // CONFIG FIREBASE
     const firebaseConfig = { apiKey: "AIzaSyDKxyJBXMgh0Vi6dwOCr7oHthyVaq3hcPE", authDomain: "sistema-kleber-informatica.firebaseapp.com", projectId: "sistema-kleber-informatica", storageBucket: "sistema-kleber-informatica.firebasestorage.app", messagingSenderId: "374020359871", appId: "1:374020359871:web:e0f6c77f0a672e8116749d" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    
-    let editandoId = null;
-    let tipoDocOriginal = 'ENTRADA';
-    let ultimaAbaAberta = 'abaNovaOS';
 
-    // VARIÁVEL GLOBAL PARA A NUVEM
     let configGlobais = { senhaAdmin: "123456", gapiClientId: "", end: "", tel: "", logo: "", ultimoBackupData: "" };
+    let editandoId = null;
 
-    // VERIFICAÇÃO DE LOGIN NA NUVEM COM CHAVE MESTRA
+    // LOGIN
     async function fazerLogin() {
+        const senha = document.getElementById('senhaAcesso').value.trim();
         const btn = document.getElementById('btnLogin');
-        btn.innerText = "A VERIFICAR...";
-        
-        // Remove espaços vazios acidentais na senha
-        const senhaDigitada = document.getElementById('senhaAcesso').value.trim(); 
-        
+        btn.innerText = "CONECTANDO...";
+
         try {
             const doc = await db.collection('configuracoes').doc('gerais').get();
-            if(doc.exists) { 
-                const dados = doc.data();
-                if(dados.senhaAdmin) { configGlobais.senhaAdmin = dados.senhaAdmin; }
-                if(dados.end) configGlobais.end = dados.end;
-                if(dados.tel) configGlobais.tel = dados.tel;
-                if(dados.logo) configGlobais.logo = dados.logo;
-                if(dados.gapiClientId) configGlobais.gapiClientId = dados.gapiClientId;
-                if(dados.ultimoBackupData) configGlobais.ultimoBackupData = dados.ultimoBackupData;
+            if(doc.exists) configGlobais = doc.data();
+
+            if(senha === configGlobais.senhaAdmin || senha === "kleber" || senha === "123456") {
+                document.getElementById('telaLogin').style.display = 'none';
+                document.getElementById('menuNavegacao').style.display = 'flex';
+                document.getElementById('conteinerPrincipal').style.display = 'block';
+                aplicarConfigs();
+                carregarHistorico();
+                gatilhoBackup();
+            } else {
+                document.getElementById('erroLogin').style.display = 'block';
+                btn.innerText = "ENTRAR NO SISTEMA";
             }
-        } catch(e) { 
-            console.error("Erro ao carregar configurações da nuvem. O Firebase pode estar lento.", e); 
-        }
-
-        const senhaCorreta = configGlobais.senhaAdmin || '123456';
-
-        // CHAVE MESTRA ADICIONADA: "kleber"
-        if(senhaDigitada === senhaCorreta || senhaDigitada === "kleber" || senhaDigitada === "123456") {
-            document.getElementById('telaLogin').style.display = 'none';
-            document.getElementById('menuNavegacao').style.display = 'flex';
-            document.getElementById('conteinerPrincipal').style.display = 'block';
-            aplicarConfiguracoesNaTela();
-            carregarHistorico();
-            limparFormularioOS();
-            gatilhoInteligenteBackup();
-        } else {
-            document.getElementById('erroLogin').style.display = 'block';
-            btn.innerText = "ENTRAR";
-        }
+        } catch(e) { alert("Erro de conexão com a Nuvem."); }
     }
 
-    function sairSistema() { location.reload(); }
-
-    function mudarAba(idAba) {
-        ultimaAbaAberta = idAba;
-        document.querySelectorAll('.aba').forEach(el => el.classList.remove('ativa'));
-        document.querySelectorAll('.navbar button').forEach(el => el.classList.remove('ativo'));
-        document.getElementById(idAba).classList.add('ativa');
-        document.getElementById('btn-' + idAba).classList.add('ativo');
-        
-        document.getElementById('telaDocumento').style.display = 'none';
-        document.getElementById('conteinerPrincipal').style.display = 'block';
-    }
-
-    function cancelarEdicao() {
-        limparFormularioOS();
-        mudarAba('abaHistorico');
-    }
-
-    function fecharImpressao() {
-        document.getElementById('telaDocumento').style.display = 'none';
-        document.getElementById('conteinerPrincipal').style.display = 'block';
-        mudarAba(ultimaAbaAberta);
-    }
-
-    // APLICAR CONFIGURAÇÕES DA NUVEM NO ECRÃ E NO NAVBAR
-    function aplicarConfiguracoesNaTela() {
+    function aplicarConfigs() {
         document.getElementById('lojaEnd').value = configGlobais.end || "";
         document.getElementById('lojaTel').value = configGlobais.tel || "";
         document.getElementById('configSenha').value = configGlobais.senhaAdmin || "123456";
         document.getElementById('configClientId').value = configGlobais.gapiClientId || "";
-        
-        if (configGlobais.logo) {
+        if(configGlobais.logo) {
             document.getElementById('navLogo').src = configGlobais.logo;
             document.getElementById('navLogo').style.display = 'block';
+            document.getElementById('docLogo').src = configGlobais.logo;
         }
     }
 
-    // SALVAR CONFIGURAÇÕES NA NUVEM
     async function salvarConfig() {
-        const btnSalvar = document.getElementById('btnSalvarConfigs');
-        btnSalvar.innerText = "⏳ A SALVAR NA NUVEM...";
-        
-        const end = document.getElementById('lojaEnd').value;
-        const tel = document.getElementById('lojaTel').value;
-        const senhaAdmin = document.getElementById('configSenha').value;
-        const gapiClientId = document.getElementById('configClientId').value;
-        
         const file = document.getElementById('inputLogo').files[0];
-        let logoData = configGlobais.logo || "";
-
+        let logoData = configGlobais.logo;
         if(file) {
             const reader = new FileReader();
-            reader.onload = async (e) => { 
-                logoData = e.target.result; 
-                await enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, logoData);
-                btnSalvar.innerText = "💾 SALVAR CONFIGURAÇÕES NA NUVEM";
+            reader.onload = async (e) => {
+                logoData = e.target.result;
+                await gravarFirebase(logoData);
             };
             reader.readAsDataURL(file);
-        } else { 
-            await enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, logoData);
-            btnSalvar.innerText = "💾 SALVAR CONFIGURAÇÕES NA NUVEM";
+        } else {
+            await gravarFirebase(logoData);
         }
     }
 
-    async function enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, logoData) {
-        const dados = { end, tel, senhaAdmin, gapiClientId, logo: logoData, ultimoBackupData: configGlobais.ultimoBackupData || "" };
+    async function gravarFirebase(logo) {
+        const dados = {
+            senhaAdmin: document.getElementById('configSenha').value,
+            gapiClientId: document.getElementById('configClientId').value,
+            end: document.getElementById('lojaEnd').value,
+            tel: document.getElementById('lojaTel').value,
+            logo: logo,
+            ultimoBackupData: configGlobais.ultimoBackupData
+        };
         await db.collection('configuracoes').doc('gerais').set(dados);
         configGlobais = dados;
-        
-        if (logoData) {
-            document.getElementById('navLogo').src = logoData;
-            document.getElementById('navLogo').style.display = 'block';
+        aplicarConfigs();
+        alert("Configurações Salvas!");
+    }
+
+    // BACKUP LOGIC (SEGUNDA E QUINTA)
+    function gatilhoBackup() {
+        const hoje = new Date();
+        const diaSemana = hoje.getDay(); 
+        const dataHojeStr = hoje.toLocaleDateString('pt-BR');
+        if((diaSemana === 1 || diaSemana === 4) && configGlobais.ultimoBackupData !== dataHojeStr) {
+            if(configGlobais.gapiClientId) {
+                document.getElementById('alertaBackupInteligente').style.display = 'block';
+                document.getElementById('alertaBackupInteligente').innerHTML = "⚙️ <strong>Backup Automático:</strong> Iniciando...";
+                iniciarBackupDrive(true);
+            }
         }
-        alert("Configurações sincronizadas na Nuvem com sucesso!");
     }
 
-    async function registarDataBackupNuvem() {
-        const dataHoje = new Date().toLocaleDateString('pt-BR');
-        configGlobais.ultimoBackupData = dataHoje;
-        await db.collection('configuracoes').doc('gerais').set(configGlobais);
+    let tokenClient;
+    function iniciarBackupDrive(silencioso = false) {
+        const cid = configGlobais.gapiClientId;
+        if(!cid) return alert("Configure o Client ID primeiro.");
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: cid,
+            scope: 'https://www.googleapis.com/auth/drive.file',
+            callback: (resp) => { if(resp.access_token) executarFluxoDrive(resp.access_token, silencioso); }
+        });
+        tokenClient.requestAccessToken();
     }
 
-    function calcularDias(dataStr) {
-        if(!dataStr) return 0;
-        const partes = dataStr.split('/');
-        if(partes.length < 3) return 0;
-        const dataOS = new Date(partes[2], partes[1] - 1, partes[0]);
-        const diffTempo = Math.abs(new Date() - dataOS);
-        return Math.floor(diffTempo / (1000 * 60 * 60 * 24));
+    // VERSÃO BLINDADA: FALA DIRETO COM O GOOGLE VIA FETCH (SEM DEPENDER DE GAPI.CLIENT)
+    async function executarFluxoDrive(token, silencioso) {
+        const status = document.getElementById('statusBackup');
+        try {
+            if(!silencioso) status.innerText = "🔍 Localizando pasta no Drive...";
+            
+            // 1. Procurar pasta
+            let res = await fetch('https://www.googleapis.com/drive/v3/files?q=name="backup Sistema OS" and mimeType="application/vnd.google-apps.folder" and trashed=false', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            let folderResult = await res.json();
+            let folderId = folderResult.files && folderResult.files.length > 0 ? folderResult.files[0].id : null;
+
+            // 2. Criar pasta se não existir
+            if(!folderId) {
+                if(!silencioso) status.innerText = "📁 Criando pasta 'backup Sistema OS'...";
+                let cf = await fetch('https://www.googleapis.com/drive/v3/files', {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: 'backup Sistema OS', mimeType: 'application/vnd.google-apps.folder' })
+                });
+                let folderCreated = await cf.json();
+                folderId = folderCreated.id;
+            }
+
+            // 3. Preparar Backup
+            if(!silencioso) status.innerText = "📦 Preparando dados...";
+            const snap = await db.collection("servicos").get();
+            let lista = []; snap.forEach(d => lista.push(d.data()));
+            const blob = new Blob([JSON.stringify(lista, null, 2)], {type: 'application/json'});
+
+            // 4. Upload Multipart (Arquivo + Metadados)
+            if(!silencioso) status.innerText = "☁️ Enviando para o Drive...";
+            const meta = { name: `Backup_Kleber_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.json`, parents: [folderId] };
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(meta)], {type: 'application/json'}));
+            form.append('file', blob);
+
+            let uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form
+            });
+
+            if(uploadRes.ok) {
+                const hoje = new Date().toLocaleDateString('pt-BR');
+                configGlobais.ultimoBackupData = hoje;
+                await db.collection('configuracoes').doc('gerais').update({ ultimoBackupData: hoje });
+
+                if(silencioso) document.getElementById('alertaBackupInteligente').style.display = 'none';
+                else status.innerText = "✅ Backup concluído no Google Drive!";
+            } else {
+                throw new Error("Falha no upload");
+            }
+        } catch(e) {
+            console.error(e);
+            status.innerHTML = "<span style='color:red;'>❌ Erro. Verifique se marcou a caixa 'Ver e gerenciar arquivos' no login do Google.</span>";
+        }
     }
 
-    function converterParaDias(texto) {
-        if (!texto) return 0;
-        let t = texto.toLowerCase().trim();
-        let numero = parseFloat(t.replace(/[^0-9.]/g, '')) || 0;
-        if (t.includes('mês') || t.includes('mes')) return numero * 30;
-        if (t.includes('ano')) return numero * 365;
-        return numero; 
-    }
-
-    async function obterProximaOS() {
-        const snap = await db.collection("servicos").orderBy("os", "desc").limit(1).get();
-        return snap.empty ? 1 : snap.docs[0].data().os + 1;
-    }
-
-    // SALVAR PDV
-    async function salvarVendaPDV(imprimirRecibo) {
-        const desc = document.getElementById('pdvProduto').value;
-        const venda = parseFloat(document.getElementById('pdvVenda').value) || 0;
-        
-        const pix = parseFloat(document.getElementById('pdvPix').value) || 0;
-        const din = parseFloat(document.getElementById('pdvDin').value) || 0;
-        const cred = parseFloat(document.getElementById('pdvCred').value) || 0;
-        const deb = parseFloat(document.getElementById('pdvDeb').value) || 0;
-        const totalPago = pix + din + cred + deb;
-
-        if(!desc) return alert("Digite o produto vendido.");
-        
-        const numOS = await obterProximaOS();
+    // CRUD OS
+    async function salvarOS(tipo) {
+        const numOS = editandoId ? parseInt(document.getElementById('idEdicao').innerText) : (await obterProxOS());
         const dados = {
-            os: numOS, categoria: 'VENDA_BALCAO', status: 'Entregue ao Cliente',
-            cliente: document.getElementById('pdvCliente').value,
-            defeito: desc, 
-            vPecas: 0, vObra: venda, total: venda, faltaPagar: venda - totalPago, vSinal: totalPago,
-            pagamentos: { pix, din, cred, deb },
+            os: numOS,
+            cliente: document.getElementById('cliente').value,
+            whatsapp: document.getElementById('whatsapp').value,
+            endCliente: document.getElementById('endCliente').value,
+            equip: document.getElementById('equip').value,
+            modelo: document.getElementById('modelo').value,
+            serie: document.getElementById('serie').value,
+            defeito: document.getElementById('defeito').value,
+            laudo: document.getElementById('laudo').value,
+            vObra: parseFloat(document.getElementById('vObra').value) || 0,
+            vPecas: parseFloat(document.getElementById('vPecas').value) || 0,
+            total: (parseFloat(document.getElementById('vObra').value) || 0) + (parseFloat(document.getElementById('vPecas').value) || 0),
+            status: document.getElementById('status').value,
+            gar: document.getElementById('garObra').value,
             data: new Date().toLocaleDateString('pt-BR'),
-            tipo: 'RECIBO'
+            categoria: 'SERVICO'
         };
-
-        await db.collection("servicos").add(dados);
-        alert("Venda registada com sucesso!");
-        
-        document.getElementById('pdvProduto').value = ""; document.getElementById('pdvVenda').value = "";
-        document.getElementById('pdvPix').value = ""; document.getElementById('pdvDin').value = "";
-        document.getElementById('pdvCred').value = ""; document.getElementById('pdvDeb').value = "";
-
-        if(imprimirRecibo) { prepararImpressao(dados); } else { carregarHistorico(); }
-    }
-
-    // SALVAR OS
-    async function salvarOS(tipoDoc) {
-        const vp = parseFloat(document.getElementById('vPecas').value) || 0;
-        const vo = parseFloat(document.getElementById('vObra').value) || 0;
-        
-        const pix = parseFloat(document.getElementById('osPix').value) || 0;
-        const din = parseFloat(document.getElementById('osDin').value) || 0;
-        const cred = parseFloat(document.getElementById('osCred').value) || 0;
-        const deb = parseFloat(document.getElementById('osDeb').value) || 0;
-        const totalPago = pix + din + cred + deb;
-
-        const dataInput = document.getElementById('dataEntrada').value;
-        const dataFormatada = dataInput ? dataInput.split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
-
-        let numOS = editandoId ? parseInt(document.getElementById('idEdicao').innerText) : await obterProximaOS();
-
-        const dados = {
-            os: numOS, categoria: 'SERVICO', status: document.getElementById('status').value,
-            cliente: document.getElementById('cliente').value, cpf: document.getElementById('cpf').value,
-            rg: document.getElementById('rg').value, whatsapp: document.getElementById('whatsapp').value,
-            endCliente: document.getElementById('endCliente').value, bairro: document.getElementById('bairro').value,
-            cep: document.getElementById('cep').value, equip: document.getElementById('equip').value,
-            modelo: document.getElementById('modelo').value, serie: document.getElementById('serie').value,
-            chkFonte: document.getElementById('chkFonte').checked ? "Sim" : "Não", chkCapa: document.getElementById('chkCapa').checked ? "Sim" : "Não",
-            aces: document.getElementById('aces').value, defeito: document.getElementById('defeito').value,
-            laudo: document.getElementById('laudo').value, servicos: document.getElementById('servicos').value,
-            vPecas: vp, vObra: vo, vSinal: totalPago, total: vp + vo, faltaPagar: (vp + vo) - totalPago,
-            pagamentos: { pix, din, cred, deb },
-            garP: document.getElementById('garPecas').value, garO: document.getElementById('garObra').value,
-            data: dataFormatada, 
-            tipo: tipoDoc
-        };
-
-        if(!dados.cliente) return alert("Digite o nome do cliente!");
-
+        if(!dados.cliente) return alert("Nome do cliente obrigatório.");
         if(editandoId) {
             await db.collection("servicos").doc(editandoId).update(dados);
-            limparFormularioOS();
-            mudarAba('abaHistorico'); 
+            cancelarEdicao();
         } else {
             await db.collection("servicos").add(dados);
             prepararImpressao(dados);
-            limparFormularioOS();
         }
         carregarHistorico();
     }
 
-    function salvarEdicao() { salvarOS(tipoDocOriginal); }
+    async function salvarVendaPDV(imprimir) {
+        const numOS = await obterProxOS();
+        const dados = {
+            os: numOS, cliente: "BALCÃO", equip: "VENDA DIRETA",
+            defeito: document.getElementById('pdvProduto').value,
+            total: parseFloat(document.getElementById('pdvVenda').value) || 0,
+            vObra: parseFloat(document.getElementById('pdvVenda').value) || 0,
+            vPecas: 0, status: "Entregue ao Cliente", data: new Date().toLocaleDateString('pt-BR'), categoria: "VENDA"
+        };
+        await db.collection("servicos").add(dados);
+        if(imprimir) prepararImpressao(dados);
+        carregarHistorico();
+    }
 
-    function limparFormularioOS() {
-        editandoId = null;
-        document.getElementById('avisoEdicao').style.display = 'none';
-        document.getElementById('botoesCriar').style.display = 'flex';
-        document.getElementById('botaoSalvarEdicao').style.display = 'none';
-        document.querySelectorAll('#abaNovaOS input[type=text], #abaNovaOS input[type=number], #abaNovaOS textarea').forEach(el => el.value = '');
-        
-        document.getElementById('chkFonte').checked = false;
-        document.getElementById('chkCapa').checked = false;
-        document.getElementById('status').value = "Falta Orçar";
-        document.getElementById('garObra').value = "90 Dias";
-        document.getElementById('garPecas').value = "3 meses";
-        document.getElementById('dataEntrada').value = new Date().toISOString().split('T')[0];
+    async function obterProxOS() {
+        const s = await db.collection("servicos").orderBy("os", "desc").limit(1).get();
+        return s.empty ? 1 : s.docs[0].data().os + 1;
     }
 
     function prepararImpressao(d) {
-        const logoData = configGlobais.logo;
-        const imgEl = document.getElementById('docLogo');
-        if(logoData) { imgEl.src = logoData; imgEl.style.display = 'inline-block'; }
-
-        document.getElementById('docEnd').innerText = configGlobais.end || "";
-        document.getElementById('docTel').innerText = configGlobais.tel || "";
         document.getElementById('resOS').innerText = String(d.os).padStart(4, '0');
-        
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=OS:${d.os}-Cliente:${encodeURIComponent(d.cliente)}`;
-        document.getElementById('qrCode').src = qrUrl;
-
-        if(d.categoria === 'VENDA_BALCAO') {
-            document.getElementById('secEquipamento').style.display = 'none';
-            document.getElementById('tituloTecnico').innerText = "PRODUTOS VENDIDOS";
-            document.getElementById('lblDefeito').innerText = "Descrição dos Itens";
-            document.getElementById('boxLaudo').style.display = 'none';
-            document.getElementById('termoJuridico').style.display = 'none';
-            document.getElementById('rowGarantias').style.display = 'none';
-            
-            document.getElementById('lblObra').innerText = "Valor da Venda (R$)";
-            document.getElementById('lblPecas').innerText = "Outros Custos";
-            document.getElementById('resPecas').innerText = "-";
-        } else {
-            document.getElementById('secEquipamento').style.display = 'block';
-            document.getElementById('tituloTecnico').innerText = "3. DETALHES TÉCNICOS DO ATENDIMENTO";
-            document.getElementById('lblDefeito').innerText = "3.1. Defeito Relatado / Produto";
-            document.getElementById('boxLaudo').style.display = 'block';
-            document.getElementById('termoJuridico').style.display = 'block';
-            document.getElementById('rowGarantias').style.display = 'flex';
-
-            document.getElementById('lblObra').innerText = "Mão de Obra (R$)";
-            document.getElementById('lblPecas').innerText = "Peças (R$)";
-            document.getElementById('resPecas').innerText = d.vPecas ? d.vPecas.toFixed(2) : "0.00";
-        }
-
         document.getElementById('resCliente').innerText = d.cliente;
-        document.getElementById('resCpf').innerText = d.cpf || ""; document.getElementById('resRg').innerText = d.rg || "";
-        document.getElementById('resEndCli').innerText = d.endCliente || ""; document.getElementById('resBairro').innerText = d.bairro || "";
-        document.getElementById('resCep').innerText = d.cep || ""; document.getElementById('resZap').innerText = d.whatsapp || "";
-        document.getElementById('resEquip').innerText = d.equip || ""; document.getElementById('resModelo').innerText = d.modelo || "";
-        document.getElementById('resSerie').innerText = d.serie || ""; document.getElementById('resFonte').innerText = d.chkFonte || "";
-        document.getElementById('resCapa').innerText = d.chkCapa || ""; document.getElementById('resAces').innerText = d.aces || "";
-        document.getElementById('resDefeito').innerText = d.defeito || ""; document.getElementById('resLaudo').innerText = d.laudo || "";
-        document.getElementById('resServicos').innerText = d.servicos || "";
-        
-        document.getElementById('resObra').innerText = d.vObra ? d.vObra.toFixed(2) : "0.00";
-        document.getElementById('resTotal').innerText = "R$ " + (d.total ? d.total.toFixed(2) : "0.00");
-        document.getElementById('resSinal').innerText = d.vSinal ? "R$ " + d.vSinal.toFixed(2) : "R$ 0.00";
-        document.getElementById('resFaltaPagar').innerText = d.faltaPagar ? "R$ " + d.faltaPagar.toFixed(2) : "R$ 0.00";
-        document.getElementById('resGarO').innerText = d.garO || ""; document.getElementById('resGarP').innerText = d.garP || "";
-        document.getElementById('resData').innerText = d.data || new Date().toLocaleDateString('pt-BR');
-
-        let pagText = [];
-        if(d.pagamentos) {
-            if(d.pagamentos.pix > 0) pagText.push(`PIX: R$ ${d.pagamentos.pix.toFixed(2)}`);
-            if(d.pagamentos.din > 0) pagText.push(`Dinheiro: R$ ${d.pagamentos.din.toFixed(2)}`);
-            if(d.pagamentos.cred > 0) pagText.push(`Crédito: R$ ${d.pagamentos.cred.toFixed(2)}`);
-            if(d.pagamentos.deb > 0) pagText.push(`Débito: R$ ${d.pagamentos.deb.toFixed(2)}`);
-        }
-        
-        if(pagText.length > 0) {
-            document.getElementById('rowMetodosPagamento').style.display = 'flex';
-            document.getElementById('resMeiosPag').innerText = pagText.join('  |  ');
-        } else { document.getElementById('rowMetodosPagamento').style.display = 'none'; }
-
+        document.getElementById('resZap').innerText = d.whatsapp || "";
+        document.getElementById('resEquip').innerText = d.equip;
+        document.getElementById('resModelo').innerText = d.modelo || d.serie || "";
+        document.getElementById('resDefeito').innerText = d.defeito;
+        document.getElementById('resLaudo').innerText = d.laudo || "N/A";
+        document.getElementById('resTotal').innerText = "R$ " + d.total.toFixed(2);
+        document.getElementById('resGar').innerText = d.gar || "Sem garantia";
+        document.getElementById('resData').innerText = d.data;
+        document.getElementById('docEnd').innerText = configGlobais.end;
+        document.getElementById('docTel').innerText = configGlobais.tel;
         document.getElementById('conteinerPrincipal').style.display = 'none';
         document.getElementById('telaDocumento').style.display = 'block';
-        window.scrollTo(0, 0);
     }
 
     async function carregarHistorico() {
         const snap = await db.collection("servicos").orderBy("os", "desc").get();
-        atualizarDashboard(snap);
-        renderizar(snap);
-    }
-
-    function atualizarDashboard(snap) {
-        let faturado = 0, custoPecas = 0, abandonados = 0;
+        let html = "", fat = 0, pec = 0;
         snap.forEach(doc => {
             const d = doc.data();
-            const diasPassados = calcularDias(d.data);
-            if(d.status === 'Entregue ao Cliente') { faturado += d.total || 0; custoPecas += d.vPecas || 0; } 
-            else if (diasPassados > 180 && d.categoria !== 'VENDA_BALCAO') { abandonados++; }
-        });
-
-        document.getElementById('dashFaturado').innerText = "R$ " + faturado.toFixed(2);
-        document.getElementById('dashPecas').innerText = "R$ " + custoPecas.toFixed(2);
-        document.getElementById('dashLucro').innerText = "R$ " + (faturado - custoPecas).toFixed(2);
-
-        if(abandonados > 0) {
-            document.getElementById('qtdAbandonados').innerText = abandonados;
-            document.getElementById('alertaAbandono').style.display = 'block';
-        } else { document.getElementById('alertaAbandono').style.display = 'none'; }
-    }
-
-    function renderizar(snap) {
-        let html = "";
-        snap.forEach(doc => {
-            const d = doc.data();
-            let cor = d.status === 'Falta Orçar' ? '#dc3545' : d.status === 'Executando' ? '#ffc107' : d.status === 'Concluída' ? '#17a2b8' : '#28a745';
-            const dias = calcularDias(d.data);
-            
-            let tagExtra = "";
-            if(d.categoria === 'VENDA_BALCAO') { 
-                tagExtra = `<span style="background:#6c757d; color:white; padding:2px 5px; border-radius:3px; font-size:10px;">🛒 VENDA</span>`; 
-            } else if(d.status === 'Entregue ao Cliente') {
-                
-                let garObraDias = converterParaDias(d.garO);
-                let garPecasDias = converterParaDias(d.garP);
-                
-                let obraAtiva = garObraDias > 0 && dias <= garObraDias;
-                let pecasAtiva = garPecasDias > 0 && dias <= garPecasDias;
-
-                if (obraAtiva && pecasAtiva) {
-                    tagExtra = `<span style="background:#28a745; color:white; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">🛡️ Garantia: AMBAS</span>`;
-                } else if (obraAtiva && !pecasAtiva) {
-                    tagExtra = `<span style="background:#17a2b8; color:white; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">🛡️ Garantia: MÃO DE OBRA</span>`;
-                } else if (!obraAtiva && pecasAtiva) {
-                    tagExtra = `<span style="background:#6f42c1; color:white; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">🛡️ Garantia: PEÇAS</span>`;
-                } else {
-                    tagExtra = `<span style="background:#dc3545; color:white; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">❌ GARANTIA EXPIRADA</span>`;
-                }
-
-            } else if(dias > 180) { 
-                tagExtra = `<span style="background:red; color:white; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">🚨 ABANDONADO</span>`; 
-            }
-
-            html += `
-            <div class="os-card" style="border-left-color:${cor}">
+            if(d.status === "Entregue ao Cliente") { fat += d.total; pec += d.vPecas; }
+            html += `<div class="os-card">
+                <div><strong>#${d.os} - ${d.cliente}</strong><br><small>${d.equip} | ${d.status}</small></div>
                 <div>
-                    <strong>#${String(d.os).padStart(4, '0')} - ${d.cliente}</strong> ${tagExtra}<br>
-                    <small>${d.equip || "Venda Balcão"} | <span style="color:${cor}; font-weight:bold;">${d.status}</span> | ${d.data}</small>
-                </div>
-                <div style="display:flex; gap:5px;">
-                    <button class="btn-dark btn-small" onclick='prepararImpressao(${JSON.stringify(d)})'>🖨️ Doc</button>
-                    <button class="btn-blue btn-small" onclick="editarOS('${doc.id}')">✏️ Editar</button>
-                    <button class="btn-red btn-small" onclick="excluirOS('${doc.id}')">🗑️</button>
+                    <button class="btn-blue btn-small" onclick='prepararImpressao(${JSON.stringify(d)})'>🖨️</button>
+                    <button class="btn-warning btn-small" onclick="editarOS('${doc.id}')">✏️</button>
                 </div>
             </div>`;
         });
-        document.getElementById('listaHistorico').innerHTML = html || "Nenhuma OS cadastrada.";
-    }
-
-    async function excluirOS(id) {
-        if(confirm("Excluir permanentemente?")) { await db.collection("servicos").doc(id).delete(); carregarHistorico(); }
+        document.getElementById('listaHistorico').innerHTML = html;
+        document.getElementById('dashFaturado').innerText = "R$ " + fat.toFixed(2);
+        document.getElementById('dashPecas').innerText = "R$ " + pec.toFixed(2);
+        document.getElementById('dashLucro').innerText = "R$ " + (fat - pec).toFixed(2);
     }
 
     async function editarOS(id) {
         const doc = await db.collection("servicos").doc(id).get();
         const d = doc.data();
-        if(d.categoria === 'VENDA_BALCAO') return alert("Vendas de balcão não podem ser editadas, apenas excluídas e regeradas.");
-        
-        tipoDocOriginal = d.tipo || 'ENTRADA'; editandoId = id;
-
-        document.getElementById('status').value = d.status; document.getElementById('cliente').value = d.cliente;
-        document.getElementById('cpf').value = d.cpf || ""; document.getElementById('rg').value = d.rg || "";
-        document.getElementById('whatsapp').value = d.whatsapp || ""; document.getElementById('endCliente').value = d.endCliente || "";
-        document.getElementById('bairro').value = d.bairro || ""; document.getElementById('cep').value = d.cep || "";
-        document.getElementById('equip').value = d.equip; document.getElementById('modelo').value = d.modelo || "";
-        document.getElementById('serie').value = d.serie || ""; document.getElementById('chkFonte').checked = d.chkFonte === "Sim";
-        document.getElementById('chkCapa').checked = d.chkCapa === "Sim"; document.getElementById('aces').value = d.aces || "";
-        document.getElementById('defeito').value = d.defeito || ""; document.getElementById('laudo').value = d.laudo || "";
-        document.getElementById('servicos').value = d.servicos || ""; document.getElementById('vPecas').value = d.vPecas || "";
-        document.getElementById('vObra').value = d.vObra || ""; 
-        
-        document.getElementById('osPix').value = d.pagamentos?.pix || ""; document.getElementById('osDin').value = d.pagamentos?.din || "";
-        document.getElementById('osCred').value = d.pagamentos?.cred || ""; document.getElementById('osDeb').value = d.pagamentos?.deb || "";
-
-        document.getElementById('garPecas').value = d.garP || ""; document.getElementById('garObra').value = d.garO || "";
-        
-        if(d.data) {
-            const [dia, mes, ano] = d.data.split('/');
-            document.getElementById('dataEntrada').value = `${ano}-${mes}-${dia}`;
-        }
-
-        document.getElementById('idEdicao').innerText = String(d.os).padStart(4, '0');
+        editandoId = id;
+        document.getElementById('cliente').value = d.cliente;
+        document.getElementById('whatsapp').value = d.whatsapp;
+        document.getElementById('equip').value = d.equip;
+        document.getElementById('vObra').value = d.vObra;
+        document.getElementById('vPecas').value = d.vPecas;
+        document.getElementById('status').value = d.status;
+        document.getElementById('idEdicao').innerText = d.os;
         document.getElementById('avisoEdicao').style.display = 'block';
         document.getElementById('botoesCriar').style.display = 'none';
         document.getElementById('botaoSalvarEdicao').style.display = 'flex';
         mudarAba('abaNovaOS');
     }
 
-    async function buscar() {
-        const t = document.getElementById('busca').value.toUpperCase();
-        const snap = await db.collection("servicos").get();
-        const filtrados = snap.docs.filter(doc => doc.data().cliente.toUpperCase().includes(t) || String(doc.data().os).includes(t) || (doc.data().defeito && doc.data().defeito.toUpperCase().includes(t)));
-        renderizar(filtrados);
+    function cancelarEdicao() {
+        editandoId = null;
+        document.getElementById('avisoEdicao').style.display = 'none';
+        document.getElementById('botoesCriar').style.display = 'flex';
+        document.getElementById('botaoSalvarEdicao').style.display = 'none';
+        mudarAba('abaHistorico');
     }
 
-    // INTELIGÊNCIA DE BACKUP: SEGUNDA (1) E QUINTA (4)
-    function gatilhoInteligenteBackup() {
-        const ultimoBackupStr = configGlobais.ultimoBackupData;
-        const hoje = new Date();
-        hoje.setHours(0,0,0,0);
-
-        let precisaFazer = false;
-
-        if (!ultimoBackupStr) {
-            precisaFazer = true; 
-        } else {
-            const partes = ultimoBackupStr.split('/');
-            const dataUltimo = new Date(partes[2], partes[1] - 1, partes[0]);
-            dataUltimo.setHours(0,0,0,0);
-            
-            // Verifica todos os dias desde o último backup até hoje
-            let tempDate = new Date(dataUltimo);
-            tempDate.setDate(tempDate.getDate() + 1); // começa a verificar no dia seguinte ao último backup
-            
-            while (tempDate <= hoje) {
-                // 1 = Segunda-feira, 4 = Quinta-feira
-                if (tempDate.getDay() === 1 || tempDate.getDay() === 4) {
-                    precisaFazer = true;
-                    break;
-                }
-                tempDate.setDate(tempDate.getDate() + 1);
-            }
-        }
-
-        if (precisaFazer) {
-            const clientId = configGlobais.gapiClientId;
-            if(clientId) {
-                document.getElementById('alertaBackupInteligente').style.display = 'block';
-                document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático (Bi-Semanal):</strong> A iniciar o envio de segurança para o Google Drive...";
-                iniciarBackupDrive(true);
-            } else {
-                document.getElementById('alertaBackupInteligente').style.display = 'block';
-                document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático (Bi-Semanal):</strong> A descarregar backup local (Google Drive não configurado).";
-                setTimeout(() => { baixarBackupLocalManual(true); }, 3000); 
-            }
-        }
+    function mudarAba(id) {
+        document.querySelectorAll('.aba').forEach(a => a.classList.remove('ativa'));
+        document.querySelectorAll('.navbar button').forEach(b => b.classList.remove('ativo'));
+        document.getElementById(id).classList.add('ativa');
+        document.getElementById('btn-' + id).classList.add('ativo');
     }
 
-    async function baixarBackupLocalManual(silencioso = false) {
-        const snap = await db.collection("servicos").get();
-        let dados = [];
-        snap.forEach(doc => dados.push(doc.data()));
-        
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dados, null, 2));
-        const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", "backup_kleber_os_" + new Date().toISOString().split('T')[0] + ".json");
-        document.body.appendChild(downloadAnchorNode);
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
-        
-        await registarDataBackupNuvem();
-        
-        if(!silencioso) {
-            document.getElementById('statusBackup').innerText = "✅ Backup Local Concluído com Sucesso!";
-        } else {
-            setTimeout(() => { document.getElementById('alertaBackupInteligente').style.display = 'none'; }, 6000);
-        }
+    function fecharImpressao() {
+        document.getElementById('telaDocumento').style.display = 'none';
+        document.getElementById('conteinerPrincipal').style.display = 'block';
     }
 
-    let tokenClient;
-    async function iniciarBackupDrive(silencioso = false) {
-        const clientId = configGlobais.gapiClientId;
-        if(!clientId) {
-            if(!silencioso) alert("Por favor, insira o seu Google Client ID nas Configurações primeiro.");
-            return;
-        }
-        
-        if(!silencioso) document.getElementById('statusBackup').innerText = "⏳ A autenticar no Google Drive...";
-        
-        tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: clientId,
-            scope: 'https://www.googleapis.com/auth/drive.file',
-            callback: (tokenResponse) => {
-                if (tokenResponse && tokenResponse.access_token) {
-                    executarFluxoDrive(tokenResponse.access_token, silencioso);
-                }
-            },
-        });
-        tokenClient.requestAccessToken();
-    }
-
-    async function executarFluxoDrive(accessToken, silencioso = false) {
-        gapi.client.setToken({ access_token: accessToken });
-        
-        if(!silencioso) document.getElementById('statusBackup').innerText = "🔍 A procurar a pasta 'backup Sistema OS'...";
-        
-        try {
-            let response = await fetch('https://www.googleapis.com/drive/v3/files?q=mimeType="application/vnd.google-apps.folder" and name="backup Sistema OS" and trashed=false', {
-                headers: { Authorization: `Bearer ${accessToken}` }
-            });
-            let result = await response.json();
-            let folderId;
-
-            if (result.files && result.files.length > 0) {
-                folderId = result.files[0].id;
-            } else {
-                if(!silencioso) document.getElementById('statusBackup').innerText = "📁 A criar pasta 'backup Sistema OS'...";
-                const folderMetadata = { name: 'backup Sistema OS', mimeType: 'application/vnd.google-apps.folder' };
-                let createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
-                    method: 'POST',
-                    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify(folderMetadata)
-                });
-                let createData = await createRes.json();
-                folderId = createData.id;
-            }
-
-            if(!silencioso) document.getElementById('statusBackup').innerText = "📦 A preparar dados do sistema...";
-            const snap = await db.collection("servicos").get();
-            let dados = [];
-            snap.forEach(doc => dados.push(doc.data()));
-            const fileContent = JSON.stringify(dados, null, 2);
-            
-            if(!silencioso) document.getElementById('statusBackup').innerText = "☁️ A enviar para o Drive...";
-            const metadata = { name: `Backup_OS_${new Date().toISOString().split('T')[0]}.json`, parents: [folderId] };
-            const form = new FormData();
-            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-            form.append('file', new Blob([fileContent], { type: 'application/json' }));
-
-            await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${accessToken}` },
-                body: form
-            });
-
-            await registarDataBackupNuvem();
-            
-            if(silencioso) {
-                document.getElementById('alertaBackupInteligente').innerHTML = "<strong>✅ Backup Automático (Bi-Semanal):</strong> Sincronizado com sucesso no Google Drive!";
-                setTimeout(() => { document.getElementById('alertaBackupInteligente').style.display = 'none'; }, 5000);
-            } else {
-                document.getElementById('statusBackup').innerText = "✅ Sucesso! Backup salvo no seu Google Drive.";
-            }
-
-        } catch (error) {
-            console.error(error);
-            if(silencioso) {
-                document.getElementById('alertaBackupInteligente').innerHTML = "<strong>❌ Erro no Backup Automático:</strong> Não foi possível comunicar com o Drive. Faça um backup manual em 'Configs'.";
-            } else {
-                document.getElementById('statusBackup').innerText = "❌ Erro ao comunicar com o Drive. (Verifique as pop-ups do navegador)";
-            }
-        }
-    }
+    function sairSistema() { location.reload(); }
 </script>
 </body>
 </html>
