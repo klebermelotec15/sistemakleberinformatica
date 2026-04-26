@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kleber Informática - ERP Premium</title>
+    <title>Kleber Informática - ERP Premium Cloud</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
@@ -11,7 +11,7 @@
     <script async defer src="https://accounts.google.com/gsi/client"></script>
 
     <style>
-        :root { --primary: #007bff; --secondary: #28a745; --dark: #333; --danger: #dc3545; --warning: #ffc107; --info: #17a2b8; }
+        :root { --primary: #007bff; --secondary: #28a745; --dark: #333; --danger: #dc3545; --warning: #ffc107; --info: #17a2b8; --light-blue: #e3f2fd; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
         
         /* LOGIN */
@@ -19,13 +19,13 @@
         .login-box { background: white; padding: 40px; border-radius: 12px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 300px; }
         .login-box input { margin: 15px 0; font-size: 18px; text-align: center; width: 100%; box-sizing: border-box; }
 
-        /* MENU DE NAVEGAÇÃO */
+        /* NAVBAR */
         .navbar { background: var(--dark); padding: 10px 20px; display: flex; gap: 10px; color: white; align-items: center; justify-content: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); flex-wrap: wrap; }
         .navbar button { background: none; border: 1px solid #555; color: white; padding: 10px 15px; border-radius: 6px; cursor: pointer; transition: 0.3s; font-size: 14px; font-weight: bold; }
         .navbar button:hover, .navbar button.ativo { background: var(--primary); border-color: var(--primary); }
         .navbar .btn-sair { background: var(--danger); border-color: var(--danger); margin-left: auto; }
 
-        .container { max-width: 950px; margin: 30px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .container { max-width: 980px; margin: 30px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
@@ -33,15 +33,13 @@
         .full { grid-column: 1 / -1; }
         
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #555; }
-        
-        /* CORREÇÃO DO ESPAÇAMENTO DOS CAMPOS E CHECKBOXES */
         input:not([type="checkbox"]):not([type="file"]), select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
         input[type="checkbox"] { width: auto; margin: 0; padding: 0; cursor: pointer; transform: scale(1.1); }
+        
         .checklist-grid { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; }
         .chk-label { display: flex; align-items: center; gap: 5px; font-weight: normal; margin: 0; font-size: 13px; cursor: pointer; }
         
-        /* ESTILO DA CAIXA DE INSPEÇÃO RÁPIDA */
-        .inspecao-box { background: #e3f2fd; padding: 15px; border-radius: 8px; border: 1px solid #90caf9; margin-top: 15px; }
+        .inspecao-box { background: var(--light-blue); padding: 15px; border-radius: 8px; border: 1px solid #90caf9; margin-top: 15px; }
         .inspecao-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
         .inspecao-grid label { font-size: 12px; color: #0056b3; }
         .inspecao-grid select { padding: 6px; font-size: 13px; border-color: #b8daff; }
@@ -55,25 +53,22 @@
         .btn-warning { background: var(--warning); color: #000; }
         .btn-small { padding: 6px 10px; font-size: 12px; flex: none; width: auto; }
 
-        /* DASHBOARD & ALERTAS */
+        /* KANBAN BOARD */
+        .kanban-board { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; align-items: flex-start; }
+        .kanban-col { flex: 1; min-width: 250px; background: #f4f5f7; border-radius: 8px; padding: 10px; border: 1px solid #e1e4e8; }
+        .kanban-header { font-weight: bold; text-align: center; padding-bottom: 10px; border-bottom: 2px solid #ddd; margin-bottom: 10px; font-size: 14px; }
+        .os-card { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 6px solid #ccc; font-size: 13px; }
+        .tag { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-top: 3px; }
+        
         .dashboard { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .dash-card { padding: 15px; border-radius: 8px; color: white; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .dash-blue { background: #007bff; }
-        .dash-red { background: #dc3545; }
-        .dash-green { background: #28a745; }
+        .dash-blue { background: #007bff; } .dash-red { background: #dc3545; } .dash-green { background: #28a745; }
         
-        .alerta-abandono { background: #ffe3e3; border-left: 5px solid #dc3545; padding: 15px; margin-bottom: 20px; border-radius: 4px; display: none; }
-        .alerta-backup { background: #d4edda; border-left: 5px solid #28a745; padding: 15px; margin-bottom: 20px; border-radius: 4px; display: none; }
-        
-        .os-card { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 6px solid #ccc; }
         .aba { display: none; }
         .aba.ativa { display: block; }
 
-        /* =========================================================
-           ESTILOS DO DOCUMENTO (OTIMIZADO PARA 1 PÁGINA A4)
-           ========================================================= */
+        /* PDF A4 OTIMIZADO */
         #telaDocumento { display: none; background: white; color: #000; font-family: Arial, sans-serif; padding: 25px; border: 1px solid #ccc; box-shadow: 0 5px 15px rgba(0,0,0,0.2); margin: 20px auto; max-width: 790px; }
-        
         .pdf-header { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: flex-start; }
         .pdf-section { border: 1px solid #000; margin-bottom: 6px; border-radius: 4px; overflow: hidden; page-break-inside: avoid; }
         .pdf-title { background: #e0e0e0; padding: 3px 6px; font-weight: bold; font-size: 10px; border-bottom: 1px solid #000; text-transform: uppercase; }
@@ -108,19 +103,17 @@
 
 <div class="navbar no-print" id="menuNavegacao" style="display:none;">
     <img id="navLogo" src="" alt="Logomarca" style="height: 38px; border-radius: 4px; display: none; margin-right: auto; background: white; padding: 2px;">
-    
     <button onclick="mudarAba('abaNovaOS')" id="btn-abaNovaOS" class="ativo">📝 1. Nova OS</button>
-    <button onclick="mudarAba('abaHistorico')" id="btn-abaHistorico">📂 2. Histórico</button>
+    <button onclick="mudarAba('abaHistorico')" id="btn-abaHistorico">📂 2. Kanban & Histórico</button>
     <button onclick="mudarAba('abaPDV')" id="btn-abaPDV">🛒 3. Venda PDV</button>
     <button onclick="mudarAba('abaFinanceiro')" id="btn-abaFinanceiro">📊 4. Financeiro</button>
     <button onclick="mudarAba('abaConfig')" id="btn-abaConfig">⚙️ 5. Configs & Backup</button>
-    
     <button class="btn-sair" onclick="sairSistema()" style="margin-left: auto;">Sair 🚪</button>
 </div>
 
 <div class="container" id="conteinerPrincipal" style="display:none;">
     
-    <div class="alerta-backup" id="alertaBackupInteligente"></div>
+    <div id="alertaBackupInteligente" style="background: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 4px; display: none; color: #856404;"></div>
 
     <div id="abaNovaOS" class="aba ativa no-print">
         <div id="avisoEdicao" style="display:none; background: #fff3cd; padding:15px; border-radius:8px; margin-bottom:20px;">
@@ -132,13 +125,13 @@
 
         <h3 style="margin-top: 0; border-bottom: 1px solid #ccc;">1. Informações do Cliente</h3>
         <div class="grid-3">
-            <div class="full"><label>Nome do Cliente:</label><input type="text" id="cliente"></div>
+            <div><label>CEP (Busca Auto):</label><input type="text" id="cep" placeholder="Ex: 66000-000" onblur="buscarCEP()"></div>
+            <div style="grid-column: span 2;"><label>Nome do Cliente:</label><input type="text" id="cliente"></div>
+            <div><label>WhatsApp:</label><input type="text" id="whatsapp" placeholder="Ex: 91988887777"></div>
             <div><label>CPF:</label><input type="text" id="cpf"></div>
             <div><label>RG:</label><input type="text" id="rg"></div>
-            <div><label>WhatsApp:</label><input type="text" id="whatsapp" placeholder="Ex: 91988887777"></div>
             <div style="grid-column: span 2;"><label>Endereço:</label><input type="text" id="endCliente"></div>
             <div><label>Bairro:</label><input type="text" id="bairro"></div>
-            <div><label>CEP:</label><input type="text" id="cep"></div>
         </div>
 
         <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">2. Dados do Equipamento & Checklist</h3>
@@ -153,13 +146,11 @@
                     <label class="chk-label"><input type="checkbox" class="chk-item" value="Fonte/Carregador"> Fonte/Carregador</label>
                     <label class="chk-label"><input type="checkbox" class="chk-item" value="Capa/Case"> Capa/Case</label>
                     <label class="chk-label"><input type="checkbox" class="chk-item" value="Mouse"> Mouse</label>
-                    
                     <label class="chk-label"><input type="checkbox" class="chk-item" value="Cabo de Força"> Cabo de Força</label>
                     <label class="chk-label"><input type="checkbox" class="chk-item" value="Cabo de Vídeo"> Cabo de Vídeo</label>
                     <label class="chk-label"><input type="checkbox" class="chk-item" value="Teclado"> Teclado</label>
                     <label class="chk-label"><input type="checkbox" class="chk-item" value="Adaptador Wi-Fi"> Adaptador Wi-Fi</label>
                     <label class="chk-label"><input type="checkbox" class="chk-item" value="Adaptador Bluetooth"> Adaptador Bluetooth</label>
-                    
                     <label class="chk-label"><input type="checkbox" class="chk-item" value="Cabo USB"> Cabo USB</label>
                     <label class="chk-label"><input type="checkbox" class="chk-item" value="Bandeja"> Bandeja</label>
                     <label class="chk-label"><input type="checkbox" class="chk-item" value="Cartucho/Toner"> Cartucho/Toner</label>
@@ -169,60 +160,22 @@
             <div class="full inspecao-box">
                 <label style="color:#0056b3; margin-bottom:10px; font-size:14px;">🔍 Inspeção Rápida de Balcão (Pré-Diagnóstico)</label>
                 <div class="inspecao-grid">
-                    <div>
-                        <label>Liga?</label>
-                        <select id="insLiga">
-                            <option value="-">-</option>
-                            <option value="Sim">Sim</option>
-                            <option value="Não">Não</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Dá Imagem?</label>
-                        <select id="insImagem">
-                            <option value="-">-</option>
-                            <option value="Sim">Sim</option>
-                            <option value="Não">Não</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Barulho Estranho?</label>
-                        <select id="insBarulho">
-                            <option value="-">-</option>
-                            <option value="Sim">Sim</option>
-                            <option value="Não">Não</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Temp. Alta?</label>
-                        <select id="insTemp">
-                            <option value="-">-</option>
-                            <option value="Sim">Sim</option>
-                            <option value="Não">Não</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>LED Piscando?</label>
-                        <select id="insLed">
-                            <option value="-">-</option>
-                            <option value="Sim">Sim</option>
-                            <option value="Não">Não</option>
-                        </select>
-                    </div>
+                    <div><label>Liga?</label><select id="insLiga"><option value="-">-</option><option value="Sim">Sim</option><option value="Não">Não</option></select></div>
+                    <div><label>Dá Imagem?</label><select id="insImagem"><option value="-">-</option><option value="Sim">Sim</option><option value="Não">Não</option></select></div>
+                    <div><label>Barulho Estranho?</label><select id="insBarulho"><option value="-">-</option><option value="Sim">Sim</option><option value="Não">Não</option></select></div>
+                    <div><label>Temp. Alta?</label><select id="insTemp"><option value="-">-</option><option value="Sim">Sim</option><option value="Não">Não</option></select></div>
+                    <div><label>LED Piscando?</label><select id="insLed"><option value="-">-</option><option value="Sim">Sim</option><option value="Não">Não</option></select></div>
                 </div>
             </div>
-            
-            <div class="full"><label>Outros Acessórios / Estado Físico Detalhado (Ex: Tela trincada, dobradiça quebrada...):</label><input type="text" id="aces"></div>
+            <div class="full"><label>Outros Acessórios / Estado Físico:</label><input type="text" id="aces"></div>
         </div>
 
-        <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">3. Detalhes Técnicos</h3>
+        <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">3. Prazos e Detalhes Técnicos</h3>
         <div class="grid">
-            <div>
-                <label>Data de Entrada da OS:</label>
-                <input type="date" id="dataEntrada">
-            </div>
-            <div>
-                <label>Situação da OS:</label>
+            <div><label>Data de Entrada:</label><input type="date" id="dataEntrada"></div>
+            <div><label>Previsão de Entrega (Opcional):</label><input type="date" id="dataPrev"></div>
+            <div class="full"><label>Equipamento Cedido por Empréstimo ao Cliente (Opcional):</label><input type="text" id="emprestimo" placeholder="Ex: Fonte HP Backup, Teclado USB..."></div>
+            <div class="full"><label>Situação da OS:</label>
                 <select id="status">
                     <option value="Falta Orçar">🔴 Falta Orçar</option>
                     <option value="Executando">🟡 Executando</option>
@@ -241,8 +194,7 @@
             <div><label>Peças (R$):</label><input type="number" id="vPecas"></div>
         </div>
         
-        <label style="margin-top:15px; display:block;"><strong>Métodos de Pagamento Utilizados (Soma Automática):</strong></label>
-        <div class="grid-4" style="background:#eef8e5; padding:15px; border-radius:8px; border:1px solid #c3e6cb;">
+        <div class="grid-4" style="background:#eef8e5; padding:15px; border-radius:8px; border:1px solid #c3e6cb; margin-top:10px;">
             <div><label>PIX (R$):</label><input type="number" id="osPix"></div>
             <div><label>Dinheiro (R$):</label><input type="number" id="osDin"></div>
             <div><label>C. Crédito (R$):</label><input type="number" id="osCred"></div>
@@ -250,8 +202,8 @@
         </div>
 
         <div class="grid" style="margin-top:15px;">
-            <div><label>Garantia Obra:</label><input type="text" id="garObra" value="90 Dias" placeholder="Ex: 90 Dias, 3 Meses"></div>
-            <div><label>Garantia Peças:</label><input type="text" id="garPecas" value="3 meses" placeholder="Ex: 90 Dias, 3 Meses"></div>
+            <div><label>Garantia Obra:</label><input type="text" id="garObra" value="90 Dias"></div>
+            <div><label>Garantia Peças:</label><input type="text" id="garPecas" value="3 meses"></div>
         </div>
 
         <div class="btn-group" id="botoesCriar">
@@ -264,31 +216,42 @@
     </div>
 
     <div id="abaHistorico" class="aba no-print">
-        <div class="alerta-abandono" id="alertaAbandono">
-            <strong>🚨 ATENÇÃO:</strong> Existem <span id="qtdAbandonados">0</span> equipamento(s) na loja há mais de 180 dias!
+        <h2 style="margin-top: 0;">📂 Quadro Kanban & Histórico</h2>
+        <input type="text" id="busca" onkeyup="buscar()" placeholder="🔍 Buscar cliente, OS ou equipamento..." style="margin-bottom:15px;">
+        
+        <div class="kanban-board" id="kanbanBoard">
+            <div class="kanban-col">
+                <div class="kanban-header" style="color:#dc3545;">🔴 Falta Orçar (<span id="countOrcar">0</span>)</div>
+                <div id="kb-orcar"></div>
+            </div>
+            <div class="kanban-col">
+                <div class="kanban-header" style="color:#ffc107;">🟡 Executando (<span id="countExec">0</span>)</div>
+                <div id="kb-exec"></div>
+            </div>
+            <div class="kanban-col">
+                <div class="kanban-header" style="color:#17a2b8;">🔵 Concluída (<span id="countConc">0</span>)</div>
+                <div id="kb-conc"></div>
+            </div>
+            <div class="kanban-col">
+                <div class="kanban-header" style="color:#28a745;">🟢 Entregue (<span id="countEntr">0</span>)</div>
+                <div id="kb-entr"></div>
+            </div>
         </div>
-        <h2 style="margin-top: 0;">📂 Histórico de Serviços e Vendas</h2>
-        <input type="text" id="busca" onkeyup="buscar()" placeholder="🔍 Buscar cliente, OS ou produto..." style="margin-bottom:15px;">
-        <div id="listaHistorico">Carregando registros...</div>
     </div>
 
     <div id="abaPDV" class="aba no-print">
         <h2 style="margin-top: 0;">🛒 Venda de Balcão (PDV)</h2>
-        <p style="color:#666; font-size:13px; margin-bottom:20px;">Use esta tela para registar vendas diretas. O recibo gerado oculta os laudos técnicos.</p>
         <div class="grid">
             <div class="full"><label>Nome do Cliente (Opcional):</label><input type="text" id="pdvCliente" value="CLIENTE BALCÃO"></div>
             <div class="full"><label>Produto(s) Vendido(s):</label><textarea id="pdvProduto" rows="3"></textarea></div>
             <div class="full"><label>Valor Total da Venda (R$):</label><input type="number" id="pdvVenda" placeholder="Total a ser cobrado"></div>
         </div>
-        
-        <label style="margin-top:15px; display:block;"><strong>Métodos de Pagamento:</strong></label>
-        <div class="grid-4" style="background:#eef8e5; padding:15px; border-radius:8px; border:1px solid #c3e6cb;">
+        <div class="grid-4" style="background:#eef8e5; padding:15px; border-radius:8px; border:1px solid #c3e6cb; margin-top:10px;">
             <div><label>PIX (R$):</label><input type="number" id="pdvPix"></div>
             <div><label>Dinheiro (R$):</label><input type="number" id="pdvDin"></div>
             <div><label>C. Crédito (R$):</label><input type="number" id="pdvCred"></div>
             <div><label>C. Débito (R$):</label><input type="number" id="pdvDeb"></div>
         </div>
-        
         <div class="btn-group" style="margin-top:20px;">
             <button class="btn-green" onclick="salvarVendaPDV(false)">💰 APENAS REGISTAR VENDA</button>
             <button class="btn-dark" onclick="salvarVendaPDV(true)">🖨️ REGISTAR E IMPRIMIR RECIBO</button>
@@ -297,7 +260,6 @@
 
     <div id="abaFinanceiro" class="aba no-print">
         <h2 style="margin-top: 0;">📊 Painel Financeiro</h2>
-        <p style="color:#666;">Valores referentes às OS marcadas como "Entregue ao Cliente" e Vendas do PDV.</p>
         <div class="dashboard">
             <div class="dash-card dash-blue"><h4>Total Faturado</h4><h2 id="dashFaturado">R$ 0,00</h2></div>
             <div class="dash-card dash-red"><h4>Custo Peças (Apenas OS)</h4><h2 id="dashPecas">R$ 0,00</h2></div>
@@ -306,48 +268,44 @@
     </div>
 
     <div id="abaConfig" class="aba no-print">
-        <h2 style="margin-top: 0;">⚙️ Configurações e Segurança</h2>
+        <h2 style="margin-top: 0;">⚙️ Configurações, Backup e Lembretes</h2>
         
-        <h3 style="border-bottom: 1px solid #ccc; padding-bottom:5px;">🛡️ Backup de Segurança</h3>
-        <p style="font-size: 13px; color: #555;">O sistema verifica automaticamente se houve backup após a última Segunda-feira e Quinta-feira. Pode também forçar um backup manual a qualquer momento.</p>
-        
-        <div style="background:#e8f4fd; padding:15px; border-radius:8px; border:1px solid #b8daff; margin-bottom: 20px;">
-            <strong style="color:#0056b3;">📅 Próximo Backup Automático na Nuvem:</strong>
-            <p id="dataProximoBackup" style="margin: 5px 0 0 0; font-size: 15px;">A calcular...</p>
+        <div class="grid">
+            <div class="full" style="background:#fff3cd; padding:15px; border-radius:8px; border:1px solid #ffeeba;">
+                <label style="color:#856404;">📌 Mural de Lembretes da Loja (Salvo na Nuvem):</label>
+                <textarea id="configLembretes" rows="4" placeholder="Ex: Ligar para D. Maria; Comprar pasta térmica..."></textarea>
+            </div>
         </div>
 
-        <div class="grid">
-            <div class="full">
-                <label>Seu Google Client ID (Para envio automático ao Google Drive):</label>
-                <input type="text" id="configClientId" placeholder="Ex: 123456789-abcde.apps.googleusercontent.com">
-            </div>
+        <div style="background:#e8f4fd; padding:15px; border-radius:8px; border:1px solid #b8daff; margin: 20px 0;">
+            <strong style="color:#0056b3;">📅 Próximo Backup Automático no Google Drive:</strong>
+            <p id="dataProximoBackup" style="margin: 5px 0 0 0; font-size: 15px;">A calcular...</p>
+            <label style="margin-top:15px;">Google Client ID:</label>
+            <input type="text" id="configClientId" placeholder="ID do Drive API">
         </div>
         
         <div class="btn-group" style="margin-bottom: 30px;">
             <button class="btn-blue" onclick="baixarBackupLocalManual()">💾 BAIXAR BACKUP NO COMPUTADOR</button>
-            <button class="btn-green" onclick="iniciarBackupDrive()">☁️ ENVIAR PARA O GOOGLE DRIVE AGORA</button>
+            <button class="btn-green" onclick="iniciarBackupDrive()">☁️ FORÇAR BACKUP GOOGLE DRIVE</button>
         </div>
         <p id="statusBackup" style="text-align:center; font-weight:bold; color:var(--primary);"></p>
 
-        <h3 style="border-bottom: 1px solid #ccc; padding-bottom:5px;">🏪 Dados da Loja (Sincronizado na Nuvem)</h3>
+        <h3 style="border-bottom: 1px solid #ccc; padding-bottom:5px;">🏪 Dados da Loja</h3>
         <div class="grid">
             <div class="full"><label>Palavra-passe de Acesso (Login):</label><input type="text" id="configSenha"></div>
             <div class="full"><label>Sua Logomarca:</label><input type="file" id="inputLogo" accept="image/*"></div>
             <div><label>Telefone da Loja:</label><input type="text" id="lojaTel"></div>
             <div class="full"><label>Endereço Completo:</label><input type="text" id="lojaEnd"></div>
         </div>
-        <button class="btn-dark" onclick="salvarConfig()" style="width:100%; margin-top:20px;" id="btnSalvarConfigs">💾 SALVAR CONFIGURAÇÕES NA NUVEM</button>
+        <button class="btn-dark" onclick="salvarConfig()" style="width:100%; margin-top:20px;" id="btnSalvarConfigs">💾 SALVAR TUDO NA NUVEM</button>
     </div>
-
 </div>
 
 <div id="telaDocumento">
     <button class="btn-red no-print" onclick="fecharImpressao()" style="margin-bottom:20px; width:100%; font-size:16px; padding:15px;">⬅️ FECHAR IMPRESSÃO E VOLTAR</button>
     
     <div class="pdf-header">
-        <div style="width: 30%; text-align: center;">
-            <img id="docLogo" src="" style="max-height: 70px; display:none;">
-        </div>
+        <div style="width: 30%; text-align: center;"><img id="docLogo" src="" style="max-height: 70px; display:none;"></div>
         <div style="width: 40%; font-size: 10px; text-align: center; line-height:1.2;">
             <strong style="font-size:14px;">KLEBER INFORMÁTICA</strong><br>
             <span id="docEnd"></span><br>Telefone: <span id="docTel"></span>
@@ -386,13 +344,15 @@
         <div class="pdf-row">
             <div class="pdf-col" style="flex:1"><span class="pdf-label">Acessórios Recebidos / Estado Físico</span><span class="pdf-value" id="resAcesFull"></span></div>
         </div>
-        
         <div class="pdf-row" id="rowInspecao" style="background:#e3f2fd;">
             <div class="pdf-col"><span class="pdf-label" style="color:#0056b3;">Inspeção: Liga?</span><span class="pdf-value" id="resInsLiga"></span></div>
             <div class="pdf-col"><span class="pdf-label" style="color:#0056b3;">Dá Imagem?</span><span class="pdf-value" id="resInsImagem"></span></div>
             <div class="pdf-col"><span class="pdf-label" style="color:#0056b3;">Barulho Estranho?</span><span class="pdf-value" id="resInsBarulho"></span></div>
             <div class="pdf-col"><span class="pdf-label" style="color:#0056b3;">Temp. Alta?</span><span class="pdf-value" id="resInsTemp"></span></div>
             <div class="pdf-col"><span class="pdf-label" style="color:#0056b3;">LED Piscando?</span><span class="pdf-value" id="resInsLed"></span></div>
+        </div>
+        <div class="pdf-row" id="rowEmprestimo" style="background:#fff3cd; display:none;">
+            <div class="pdf-col" style="flex:1"><span class="pdf-label" style="color:#856404;">⚠️ EQUIPAMENTO CEDIDO POR EMPRÉSTIMO AO CLIENTE (COMODATO)</span><span class="pdf-value" id="resEmprestimo"></span></div>
         </div>
     </div>
 
@@ -425,13 +385,14 @@
         <div class="pdf-row" id="rowGarantias">
             <div class="pdf-col"><span class="pdf-label">Garantia Obra</span><span class="pdf-value" id="resGarO"></span></div>
             <div class="pdf-col"><span class="pdf-label">Garantia Peças</span><span class="pdf-value" id="resGarP"></span></div>
+            <div class="pdf-col"><span class="pdf-label">Previsão de Entrega</span><span class="pdf-value" id="resDataPrev"></span></div>
         </div>
     </div>
 
     <div style="text-align: right; font-size: 10px; margin-top: 5px;">Belém, <span id="resData"></span></div>
 
     <div class="termo-juridico" id="termoJuridico">
-        <strong>TERMO DE RESPONSABILIDADE E ABANDONO:</strong> O cliente declara estar ciente de que o equipamento deverá ser retirado em até <strong>90 dias (3 meses)</strong>. Após este prazo, será cobrada uma taxa de armazenamento de <strong>R$ 30,00 por mês</strong>. Passados <strong>180 dias (6 meses)</strong> sem retirada, o equipamento será legalmente considerado como <strong>abandonado e tratado como sucata</strong> para abatimento dos custos operacionais, não cabendo reclamações ou indenizações posteriores.
+        <strong>TERMO DE RESPONSABILIDADE E ABANDONO:</strong> O cliente declara estar ciente de que o equipamento deve ser retirado em até <strong>90 dias (3 meses)</strong>. Após este prazo, será cobrada uma taxa de armazenamento de <strong>R$ 30,00 por mês</strong>. Passados <strong>180 dias (6 meses)</strong> sem retirada, o equipamento será legalmente considerado como <strong>abandonado e tratado como sucata</strong>. Os equipamentos marcados como "Empréstimo/Comodato" devem ser devolvidos no ato da entrega, sob pena de cobrança do valor de mercado.
     </div>
 
     <div class="pdf-assinaturas">
@@ -442,7 +403,7 @@
 </div>
 
 <script>
-    // CONFIGURAÇÕES FIREBASE
+    // FIREBASE
     const firebaseConfig = { apiKey: "AIzaSyDKxyJBXMgh0Vi6dwOCr7oHthyVaq3hcPE", authDomain: "sistema-kleber-informatica.firebaseapp.com", projectId: "sistema-kleber-informatica", storageBucket: "sistema-kleber-informatica.firebasestorage.app", messagingSenderId: "374020359871", appId: "1:374020359871:web:e0f6c77f0a672e8116749d" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -450,34 +411,47 @@
     let editandoId = null;
     let tipoDocOriginal = 'ENTRADA';
     let ultimaAbaAberta = 'abaNovaOS';
+    let configGlobais = { senhaAdmin: "123456", gapiClientId: "", end: "", tel: "", logo: "", ultimoBackupData: "", lembretes: "" };
+    
+    // VARIÁVEIS DE INTELIGÊNCIA (FIDELIDADE E GARANTIA)
+    let clientesFieis = new Map();
+    let mapaGarantias = new Map(); // Guarda a série e a data da OS mais recente
 
-    // VARIÁVEL GLOBAL PARA A NUVEM
-    let configGlobais = { senhaAdmin: "123456", gapiClientId: "", end: "", tel: "", logo: "", ultimoBackupData: "" };
+    // BUSCA DE CEP AUTOMÁTICA
+    async function buscarCEP() {
+        let cep = document.getElementById('cep').value.replace(/\D/g, '');
+        if (cep.length === 8) {
+            try {
+                let res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                let data = await res.json();
+                if (!data.erro) {
+                    document.getElementById('endCliente').value = data.logradouro;
+                    document.getElementById('bairro').value = data.bairro;
+                }
+            } catch(e) { console.log("Erro na busca de CEP"); }
+        }
+    }
 
-    // VERIFICAÇÃO DE LOGIN NA NUVEM COM CHAVE MESTRA
     async function fazerLogin() {
         const btn = document.getElementById('btnLogin');
         btn.innerText = "A VERIFICAR...";
-        
         const senhaDigitada = document.getElementById('senhaAcesso').value.trim(); 
         
         try {
             const doc = await db.collection('configuracoes').doc('gerais').get();
             if(doc.exists) { 
                 const dados = doc.data();
-                if(dados.senhaAdmin) { configGlobais.senhaAdmin = dados.senhaAdmin; }
+                if(dados.senhaAdmin) configGlobais.senhaAdmin = dados.senhaAdmin;
                 if(dados.end) configGlobais.end = dados.end;
                 if(dados.tel) configGlobais.tel = dados.tel;
                 if(dados.logo) configGlobais.logo = dados.logo;
                 if(dados.gapiClientId) configGlobais.gapiClientId = dados.gapiClientId;
                 if(dados.ultimoBackupData) configGlobais.ultimoBackupData = dados.ultimoBackupData;
+                if(dados.lembretes) configGlobais.lembretes = dados.lembretes;
             }
-        } catch(e) { 
-            console.error("Erro ao carregar configurações da nuvem.", e); 
-        }
+        } catch(e) { console.error("Erro na nuvem.", e); }
 
         const senhaCorreta = configGlobais.senhaAdmin || '123456';
-
         if(senhaDigitada === senhaCorreta || senhaDigitada === "kleber" || senhaDigitada === "123456") {
             document.getElementById('telaLogin').style.display = 'none';
             document.getElementById('menuNavegacao').style.display = 'flex';
@@ -501,49 +475,31 @@
         document.querySelectorAll('.navbar button').forEach(el => el.classList.remove('ativo'));
         document.getElementById(idAba).classList.add('ativa');
         document.getElementById('btn-' + idAba).classList.add('ativo');
-        
         document.getElementById('telaDocumento').style.display = 'none';
         document.getElementById('conteinerPrincipal').style.display = 'block';
-        
-        if(idAba === 'abaConfig') {
-            atualizarPainelProximoBackup();
-        }
+        if(idAba === 'abaConfig') atualizarPainelProximoBackup();
     }
 
-    function cancelarEdicao() {
-        limparFormularioOS();
-        mudarAba('abaHistorico');
-    }
+    function cancelarEdicao() { limparFormularioOS(); mudarAba('abaHistorico'); }
+    function fecharImpressao() { document.getElementById('telaDocumento').style.display = 'none'; document.getElementById('conteinerPrincipal').style.display = 'block'; mudarAba(ultimaAbaAberta); }
 
-    function fecharImpressao() {
-        document.getElementById('telaDocumento').style.display = 'none';
-        document.getElementById('conteinerPrincipal').style.display = 'block';
-        mudarAba(ultimaAbaAberta);
-    }
-
-    // APLICAR CONFIGURAÇÕES DA NUVEM NO ECRÃ E NO NAVBAR
     function aplicarConfiguracoesNaTela() {
         document.getElementById('lojaEnd').value = configGlobais.end || "";
         document.getElementById('lojaTel').value = configGlobais.tel || "";
         document.getElementById('configSenha').value = configGlobais.senhaAdmin || "123456";
         document.getElementById('configClientId').value = configGlobais.gapiClientId || "";
-        
-        if (configGlobais.logo) {
-            document.getElementById('navLogo').src = configGlobais.logo;
-            document.getElementById('navLogo').style.display = 'block';
-        }
+        document.getElementById('configLembretes').value = configGlobais.lembretes || "";
+        if (configGlobais.logo) { document.getElementById('navLogo').src = configGlobais.logo; document.getElementById('navLogo').style.display = 'block'; }
     }
 
-    // SALVAR CONFIGURAÇÕES NA NUVEM
     async function salvarConfig() {
         const btnSalvar = document.getElementById('btnSalvarConfigs');
-        btnSalvar.innerText = "⏳ A SALVAR NA NUVEM...";
-        
+        btnSalvar.innerText = "⏳ A SALVAR...";
         const end = document.getElementById('lojaEnd').value;
         const tel = document.getElementById('lojaTel').value;
         const senhaAdmin = document.getElementById('configSenha').value;
         const gapiClientId = document.getElementById('configClientId').value;
-        
+        const lembretes = document.getElementById('configLembretes').value;
         const file = document.getElementById('inputLogo').files[0];
         let logoData = configGlobais.logo || "";
 
@@ -551,80 +507,41 @@
             const reader = new FileReader();
             reader.onload = async (e) => { 
                 logoData = e.target.result; 
-                await enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, logoData);
-                btnSalvar.innerText = "💾 SALVAR CONFIGURAÇÕES NA NUVEM";
+                await enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, lembretes, logoData);
+                btnSalvar.innerText = "💾 SALVAR TUDO NA NUVEM";
             };
             reader.readAsDataURL(file);
         } else { 
-            await enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, logoData);
-            btnSalvar.innerText = "💾 SALVAR CONFIGURAÇÕES NA NUVEM";
+            await enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, lembretes, logoData);
+            btnSalvar.innerText = "💾 SALVAR TUDO NA NUVEM";
         }
     }
 
-    async function enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, logoData) {
-        const dados = { end, tel, senhaAdmin, gapiClientId, logo: logoData, ultimoBackupData: configGlobais.ultimoBackupData || "" };
+    async function enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, lembretes, logoData) {
+        const dados = { end, tel, senhaAdmin, gapiClientId, lembretes, logo: logoData, ultimoBackupData: configGlobais.ultimoBackupData || "" };
         await db.collection('configuracoes').doc('gerais').set(dados);
         configGlobais = dados;
-        
-        if (logoData) {
-            document.getElementById('navLogo').src = logoData;
-            document.getElementById('navLogo').style.display = 'block';
-        }
-        alert("Configurações sincronizadas na Nuvem com sucesso!");
+        if (logoData) { document.getElementById('navLogo').src = logoData; document.getElementById('navLogo').style.display = 'block'; }
+        alert("Configurações sincronizadas!");
     }
 
-    async function registarDataBackupNuvem() {
-        const dataHoje = new Date().toLocaleDateString('pt-BR');
-        configGlobais.ultimoBackupData = dataHoje;
-        await db.collection('configuracoes').doc('gerais').set(configGlobais);
-        atualizarPainelProximoBackup();
+    function converterParaDataObj(dataStr) {
+        if(!dataStr) return null;
+        const [d, m, y] = dataStr.split('/');
+        if(!d || !m || !y) return null;
+        return new Date(y, m - 1, d);
     }
-
-    // LÓGICA DO PRÓXIMO BACKUP NO PAINEL
-    function atualizarPainelProximoBackup() {
-        const hoje = new Date();
-        hoje.setHours(0,0,0,0);
-        const dataHojeStr = hoje.toLocaleDateString('pt-BR');
-        const ultimoBackupStr = configGlobais.ultimoBackupData;
-
-        let diaAtual = hoje.getDay(); // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sab
-
-        // Se hoje for dia de backup e ainda não foi feito
-        if ((diaAtual === 1 || diaAtual === 4) && ultimoBackupStr !== dataHojeStr) {
-            document.getElementById('dataProximoBackup').innerHTML = "<strong style='color: #28a745;'>Hoje (Automático)</strong>";
-            return;
-        }
-
-        // Calcula a próxima Segunda (1) ou Quinta (4)
-        let proximo = new Date(hoje);
-        proximo.setDate(proximo.getDate() + 1);
-        while (proximo.getDay() !== 1 && proximo.getDay() !== 4) {
-            proximo.setDate(proximo.getDate() + 1);
-        }
-
-        const diasSemana = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
-        const dataFormatada = proximo.toLocaleDateString('pt-BR');
-        const nomeDia = diasSemana[proximo.getDay()];
-
-        document.getElementById('dataProximoBackup').innerHTML = `<strong>${nomeDia}, ${dataFormatada}</strong>`;
-    }
-
     function calcularDias(dataStr) {
-        if(!dataStr) return 0;
-        const partes = dataStr.split('/');
-        if(partes.length < 3) return 0;
-        const dataOS = new Date(partes[2], partes[1] - 1, partes[0]);
-        const diffTempo = Math.abs(new Date() - dataOS);
-        return Math.floor(diffTempo / (1000 * 60 * 60 * 24));
+        let obj = converterParaDataObj(dataStr);
+        if(!obj) return 0;
+        return Math.floor(Math.abs(new Date() - obj) / (1000 * 60 * 60 * 24));
     }
-
     function converterParaDias(texto) {
         if (!texto) return 0;
-        let t = texto.toLowerCase().trim();
-        let numero = parseFloat(t.replace(/[^0-9.]/g, '')) || 0;
-        if (t.includes('mês') || t.includes('mes')) return numero * 30;
-        if (t.includes('ano')) return numero * 365;
-        return numero; 
+        let t = texto.toLowerCase().trim(); let n = parseFloat(t.replace(/[^0-9.]/g, '')) || 0;
+        if (t.includes('mês') || t.includes('mes')) return n * 30;
+        if (t.includes('ano')) return n * 365;
+        return n; 
     }
 
     async function obterProximaOS() {
@@ -632,499 +549,354 @@
         return snap.empty ? 1 : snap.docs[0].data().os + 1;
     }
 
-    // SALVAR PDV
     async function salvarVendaPDV(imprimirRecibo) {
         const desc = document.getElementById('pdvProduto').value;
         const venda = parseFloat(document.getElementById('pdvVenda').value) || 0;
-        
-        const pix = parseFloat(document.getElementById('pdvPix').value) || 0;
-        const din = parseFloat(document.getElementById('pdvDin').value) || 0;
-        const cred = parseFloat(document.getElementById('pdvCred').value) || 0;
-        const deb = parseFloat(document.getElementById('pdvDeb').value) || 0;
+        const pix = parseFloat(document.getElementById('pdvPix').value) || 0; const din = parseFloat(document.getElementById('pdvDin').value) || 0;
+        const cred = parseFloat(document.getElementById('pdvCred').value) || 0; const deb = parseFloat(document.getElementById('pdvDeb').value) || 0;
         const totalPago = pix + din + cred + deb;
 
         if(!desc) return alert("Digite o produto vendido.");
-        
         const numOS = await obterProximaOS();
         const dados = {
             os: numOS, categoria: 'VENDA_BALCAO', status: 'Entregue ao Cliente',
-            cliente: document.getElementById('pdvCliente').value,
-            defeito: desc, 
+            cliente: document.getElementById('pdvCliente').value, defeito: desc, 
             vPecas: 0, vObra: venda, total: venda, faltaPagar: venda - totalPago, vSinal: totalPago,
-            pagamentos: { pix, din, cred, deb },
-            data: new Date().toLocaleDateString('pt-BR'),
-            tipo: 'RECIBO'
+            pagamentos: { pix, din, cred, deb }, data: new Date().toLocaleDateString('pt-BR'), tipo: 'RECIBO'
         };
-
-        await db.collection("servicos").add(dados);
-        alert("Venda registada com sucesso!");
-        
-        document.getElementById('pdvProduto').value = ""; document.getElementById('pdvVenda').value = "";
-        document.getElementById('pdvPix').value = ""; document.getElementById('pdvDin').value = "";
-        document.getElementById('pdvCred').value = ""; document.getElementById('pdvDeb').value = "";
-
+        await db.collection("servicos").add(dados); alert("Venda registada!");
+        document.querySelectorAll('#abaPDV input[type=number], #abaPDV textarea').forEach(el => el.value = '');
         if(imprimirRecibo) { prepararImpressao(dados); } else { carregarHistorico(); }
     }
 
-    // SALVAR OS
     async function salvarOS(tipoDoc) {
-        const vp = parseFloat(document.getElementById('vPecas').value) || 0;
-        const vo = parseFloat(document.getElementById('vObra').value) || 0;
-        
-        const pix = parseFloat(document.getElementById('osPix').value) || 0;
-        const din = parseFloat(document.getElementById('osDin').value) || 0;
-        const cred = parseFloat(document.getElementById('osCred').value) || 0;
-        const deb = parseFloat(document.getElementById('osDeb').value) || 0;
+        const vp = parseFloat(document.getElementById('vPecas').value) || 0; const vo = parseFloat(document.getElementById('vObra').value) || 0;
+        const pix = parseFloat(document.getElementById('osPix').value) || 0; const din = parseFloat(document.getElementById('osDin').value) || 0;
+        const cred = parseFloat(document.getElementById('osCred').value) || 0; const deb = parseFloat(document.getElementById('osDeb').value) || 0;
         const totalPago = pix + din + cred + deb;
+        
+        let dataFormatada = document.getElementById('dataEntrada').value ? document.getElementById('dataEntrada').value.split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
+        let dataPrevFormatada = document.getElementById('dataPrev').value ? document.getElementById('dataPrev').value.split('-').reverse().join('/') : "";
 
-        const dataInput = document.getElementById('dataEntrada').value;
-        const dataFormatada = dataInput ? dataInput.split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
-
-        // RECOLHER CHECKLIST E INSPEÇÃO
-        let chkArr = [];
-        document.querySelectorAll('.chk-item:checked').forEach(el => chkArr.push(el.value));
-
+        let chkArr = []; document.querySelectorAll('.chk-item:checked').forEach(el => chkArr.push(el.value));
         let numOS = editandoId ? parseInt(document.getElementById('idEdicao').innerText) : await obterProximaOS();
 
         const dados = {
             os: numOS, categoria: 'SERVICO', status: document.getElementById('status').value,
-            cliente: document.getElementById('cliente').value, cpf: document.getElementById('cpf').value,
-            rg: document.getElementById('rg').value, whatsapp: document.getElementById('whatsapp').value,
-            endCliente: document.getElementById('endCliente').value, bairro: document.getElementById('bairro').value,
-            cep: document.getElementById('cep').value, equip: document.getElementById('equip').value,
-            modelo: document.getElementById('modelo').value, serie: document.getElementById('serie').value,
+            cliente: document.getElementById('cliente').value, cpf: document.getElementById('cpf').value, rg: document.getElementById('rg').value,
+            whatsapp: document.getElementById('whatsapp').value, endCliente: document.getElementById('endCliente').value,
+            bairro: document.getElementById('bairro').value, cep: document.getElementById('cep').value,
+            equip: document.getElementById('equip').value, modelo: document.getElementById('modelo').value, serie: document.getElementById('serie').value,
             
-            chkList: chkArr.join(', '), 
-            aces: document.getElementById('aces').value,
+            chkList: chkArr.join(', '), aces: document.getElementById('aces').value,
+            inspecao: { liga: document.getElementById('insLiga').value, imagem: document.getElementById('insImagem').value, barulho: document.getElementById('insBarulho').value, temp: document.getElementById('insTemp').value, led: document.getElementById('insLed').value },
             
-            // Dados da Inspeção Rápida
-            inspecao: {
-                liga: document.getElementById('insLiga').value,
-                imagem: document.getElementById('insImagem').value,
-                barulho: document.getElementById('insBarulho').value,
-                temp: document.getElementById('insTemp').value,
-                led: document.getElementById('insLed').value
-            },
-            
-            defeito: document.getElementById('defeito').value,
-            laudo: document.getElementById('laudo').value, servicos: document.getElementById('servicos').value,
+            defeito: document.getElementById('defeito').value, laudo: document.getElementById('laudo').value, servicos: document.getElementById('servicos').value,
+            emprestimo: document.getElementById('emprestimo').value,
             vPecas: vp, vObra: vo, vSinal: totalPago, total: vp + vo, faltaPagar: (vp + vo) - totalPago,
-            pagamentos: { pix, din, cred, deb },
-            garP: document.getElementById('garPecas').value, garO: document.getElementById('garObra').value,
-            data: dataFormatada, 
-            tipo: tipoDoc
+            pagamentos: { pix, din, cred, deb }, garP: document.getElementById('garPecas').value, garO: document.getElementById('garObra').value,
+            data: dataFormatada, dataPrev: dataPrevFormatada, tipo: tipoDoc
         };
 
         if(!dados.cliente) return alert("Digite o nome do cliente!");
 
-        if(editandoId) {
-            await db.collection("servicos").doc(editandoId).update(dados);
-            limparFormularioOS();
-            mudarAba('abaHistorico'); 
-        } else {
-            await db.collection("servicos").add(dados);
-            prepararImpressao(dados);
-            limparFormularioOS();
-        }
+        if(editandoId) { await db.collection("servicos").doc(editandoId).update(dados); limparFormularioOS(); mudarAba('abaHistorico'); } 
+        else { await db.collection("servicos").add(dados); prepararImpressao(dados); limparFormularioOS(); }
         carregarHistorico();
     }
 
     function salvarEdicao() { salvarOS(tipoDocOriginal); }
 
     function limparFormularioOS() {
-        editandoId = null;
-        document.getElementById('avisoEdicao').style.display = 'none';
-        document.getElementById('botoesCriar').style.display = 'flex';
-        document.getElementById('botaoSalvarEdicao').style.display = 'none';
-        document.querySelectorAll('#abaNovaOS input[type=text], #abaNovaOS input[type=number], #abaNovaOS textarea').forEach(el => el.value = '');
-        
+        editandoId = null; document.getElementById('avisoEdicao').style.display = 'none';
+        document.getElementById('botoesCriar').style.display = 'flex'; document.getElementById('botaoSalvarEdicao').style.display = 'none';
+        document.querySelectorAll('#abaNovaOS input[type=text], #abaNovaOS input[type=number], #abaNovaOS input[type=date], #abaNovaOS textarea').forEach(el => el.value = '');
         document.querySelectorAll('.chk-item').forEach(el => el.checked = false);
-        
-        // Reset Inspecao
-        document.getElementById('insLiga').value = "-";
-        document.getElementById('insImagem').value = "-";
-        document.getElementById('insBarulho').value = "-";
-        document.getElementById('insTemp').value = "-";
-        document.getElementById('insLed').value = "-";
-
-        document.getElementById('status').value = "Falta Orçar";
-        document.getElementById('garObra').value = "90 Dias";
-        document.getElementById('garPecas').value = "3 meses";
+        ['insLiga','insImagem','insBarulho','insTemp','insLed'].forEach(id => document.getElementById(id).value = "-");
+        document.getElementById('status').value = "Falta Orçar"; document.getElementById('garObra').value = "90 Dias"; document.getElementById('garPecas').value = "3 meses";
         document.getElementById('dataEntrada').value = new Date().toISOString().split('T')[0];
     }
 
     function prepararImpressao(d) {
-        const logoData = configGlobais.logo;
-        const imgEl = document.getElementById('docLogo');
-        if(logoData) { imgEl.src = logoData; imgEl.style.display = 'inline-block'; }
-
-        document.getElementById('docEnd').innerText = configGlobais.end || "";
-        document.getElementById('docTel').innerText = configGlobais.tel || "";
+        if(configGlobais.logo) { document.getElementById('docLogo').src = configGlobais.logo; document.getElementById('docLogo').style.display = 'inline-block'; }
+        document.getElementById('docEnd').innerText = configGlobais.end || ""; document.getElementById('docTel').innerText = configGlobais.tel || "";
         document.getElementById('resOS').innerText = String(d.os).padStart(4, '0');
-        
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=OS:${d.os}-Cliente:${encodeURIComponent(d.cliente)}`;
-        document.getElementById('qrCode').src = qrUrl;
+        document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=OS:${d.os}-Cliente:${encodeURIComponent(d.cliente)}`;
 
         if(d.categoria === 'VENDA_BALCAO') {
-            document.getElementById('secEquipamento').style.display = 'none';
-            document.getElementById('tituloTecnico').innerText = "PRODUTOS VENDIDOS";
-            document.getElementById('lblDefeito').innerText = "Descrição dos Itens";
-            document.getElementById('boxLaudo').style.display = 'none';
-            document.getElementById('termoJuridico').style.display = 'none';
-            document.getElementById('rowGarantias').style.display = 'none';
-            
-            document.getElementById('lblObra').innerText = "Valor da Venda (R$)";
-            document.getElementById('lblPecas').innerText = "Outros Custos";
-            document.getElementById('resPecas').innerText = "-";
+            document.getElementById('secEquipamento').style.display = 'none'; document.getElementById('tituloTecnico').innerText = "PRODUTOS VENDIDOS";
+            document.getElementById('lblDefeito').innerText = "Descrição dos Itens"; document.getElementById('boxLaudo').style.display = 'none';
+            document.getElementById('termoJuridico').style.display = 'none'; document.getElementById('rowGarantias').style.display = 'none';
+            document.getElementById('lblObra').innerText = "Valor da Venda (R$)"; document.getElementById('lblPecas').innerText = "Outros Custos"; document.getElementById('resPecas').innerText = "-";
         } else {
-            document.getElementById('secEquipamento').style.display = 'block';
-            document.getElementById('tituloTecnico').innerText = "3. DETALHES TÉCNICOS DO ATENDIMENTO";
-            document.getElementById('lblDefeito').innerText = "3.1. Defeito Relatado / Produto";
-            document.getElementById('boxLaudo').style.display = 'block';
-            document.getElementById('termoJuridico').style.display = 'block';
-            document.getElementById('rowGarantias').style.display = 'flex';
-
-            document.getElementById('lblObra').innerText = "Mão de Obra (R$)";
-            document.getElementById('lblPecas').innerText = "Peças (R$)";
+            document.getElementById('secEquipamento').style.display = 'block'; document.getElementById('tituloTecnico').innerText = "3. DETALHES TÉCNICOS DO ATENDIMENTO";
+            document.getElementById('lblDefeito').innerText = "3.1. Defeito Relatado / Produto"; document.getElementById('boxLaudo').style.display = 'block';
+            document.getElementById('termoJuridico').style.display = 'block'; document.getElementById('rowGarantias').style.display = 'flex';
+            document.getElementById('lblObra').innerText = "Mão de Obra (R$)"; document.getElementById('lblPecas').innerText = "Peças (R$)";
             document.getElementById('resPecas').innerText = d.vPecas ? d.vPecas.toFixed(2) : "0.00";
         }
 
-        document.getElementById('resCliente').innerText = d.cliente;
-        document.getElementById('resCpf').innerText = d.cpf || ""; document.getElementById('resRg').innerText = d.rg || "";
+        document.getElementById('resCliente').innerText = d.cliente; document.getElementById('resCpf').innerText = d.cpf || ""; document.getElementById('resRg').innerText = d.rg || "";
         document.getElementById('resEndCli').innerText = d.endCliente || ""; document.getElementById('resBairro').innerText = d.bairro || "";
         document.getElementById('resCep').innerText = d.cep || ""; document.getElementById('resZap').innerText = d.whatsapp || "";
-        document.getElementById('resEquip').innerText = d.equip || ""; document.getElementById('resModelo').innerText = d.modelo || "";
-        document.getElementById('resSerie').innerText = d.serie || ""; 
+        document.getElementById('resEquip').innerText = d.equip || ""; document.getElementById('resModelo').innerText = d.modelo || ""; document.getElementById('resSerie').innerText = d.serie || ""; 
         
-        // Juntar tudo do Checklist no PDF
-        let acesArr = [];
-        if (d.chkList) acesArr.push(d.chkList);
-        else {
-            if (d.chkFonte === "Sim") acesArr.push("Fonte/Carregador");
-            if (d.chkCapa === "Sim") acesArr.push("Capa/Case");
-        }
-        if (d.aces) acesArr.push(d.aces);
-        
-        document.getElementById('resAcesFull').innerText = acesArr.join(' | ') || "Nenhum acessório registado";
+        let acesArr = []; if (d.chkList) acesArr.push(d.chkList); else { if (d.chkFonte === "Sim") acesArr.push("Fonte"); if (d.chkCapa === "Sim") acesArr.push("Capa"); }
+        if (d.aces) acesArr.push(d.aces); document.getElementById('resAcesFull').innerText = acesArr.join(' | ') || "Nenhum acessório";
 
-        // Inspeção no PDF
-        document.getElementById('resInsLiga').innerText = d.inspecao?.liga || "-";
-        document.getElementById('resInsImagem').innerText = d.inspecao?.imagem || "-";
-        document.getElementById('resInsBarulho').innerText = d.inspecao?.barulho || "-";
-        document.getElementById('resInsTemp').innerText = d.inspecao?.temp || "-";
-        document.getElementById('resInsLed').innerText = d.inspecao?.led || "-";
+        document.getElementById('resInsLiga').innerText = d.inspecao?.liga || "-"; document.getElementById('resInsImagem').innerText = d.inspecao?.imagem || "-";
+        document.getElementById('resInsBarulho').innerText = d.inspecao?.barulho || "-"; document.getElementById('resInsTemp').innerText = d.inspecao?.temp || "-"; document.getElementById('resInsLed').innerText = d.inspecao?.led || "-";
 
-        document.getElementById('resDefeito').innerText = d.defeito || ""; document.getElementById('resLaudo').innerText = d.laudo || "";
-        document.getElementById('resServicos').innerText = d.servicos || "";
-        
-        document.getElementById('resObra').innerText = d.vObra ? d.vObra.toFixed(2) : "0.00";
-        document.getElementById('resTotal').innerText = "R$ " + (d.total ? d.total.toFixed(2) : "0.00");
-        document.getElementById('resSinal').innerText = d.vSinal ? "R$ " + d.vSinal.toFixed(2) : "R$ 0.00";
-        document.getElementById('resFaltaPagar').innerText = d.faltaPagar ? "R$ " + d.faltaPagar.toFixed(2) : "R$ 0.00";
-        document.getElementById('resGarO').innerText = d.garO || ""; document.getElementById('resGarP').innerText = d.garP || "";
+        if(d.emprestimo) { document.getElementById('rowEmprestimo').style.display = 'flex'; document.getElementById('resEmprestimo').innerText = d.emprestimo; } 
+        else { document.getElementById('rowEmprestimo').style.display = 'none'; }
+
+        document.getElementById('resDefeito').innerText = d.defeito || ""; document.getElementById('resLaudo').innerText = d.laudo || ""; document.getElementById('resServicos').innerText = d.servicos || "";
+        document.getElementById('resObra').innerText = d.vObra ? d.vObra.toFixed(2) : "0.00"; document.getElementById('resTotal').innerText = "R$ " + (d.total ? d.total.toFixed(2) : "0.00");
+        document.getElementById('resSinal').innerText = d.vSinal ? "R$ " + d.vSinal.toFixed(2) : "R$ 0.00"; document.getElementById('resFaltaPagar').innerText = d.faltaPagar ? "R$ " + d.faltaPagar.toFixed(2) : "R$ 0.00";
+        document.getElementById('resGarO').innerText = d.garO || ""; document.getElementById('resGarP').innerText = d.garP || ""; document.getElementById('resDataPrev').innerText = d.dataPrev || "Sem previsão";
         document.getElementById('resData').innerText = d.data || new Date().toLocaleDateString('pt-BR');
 
         let pagText = [];
         if(d.pagamentos) {
-            if(d.pagamentos.pix > 0) pagText.push(`PIX: R$ ${d.pagamentos.pix.toFixed(2)}`);
-            if(d.pagamentos.din > 0) pagText.push(`Dinheiro: R$ ${d.pagamentos.din.toFixed(2)}`);
-            if(d.pagamentos.cred > 0) pagText.push(`Crédito: R$ ${d.pagamentos.cred.toFixed(2)}`);
-            if(d.pagamentos.deb > 0) pagText.push(`Débito: R$ ${d.pagamentos.deb.toFixed(2)}`);
+            if(d.pagamentos.pix > 0) pagText.push(`PIX: R$ ${d.pagamentos.pix.toFixed(2)}`); if(d.pagamentos.din > 0) pagText.push(`DIN: R$ ${d.pagamentos.din.toFixed(2)}`);
+            if(d.pagamentos.cred > 0) pagText.push(`CRÉD: R$ ${d.pagamentos.cred.toFixed(2)}`); if(d.pagamentos.deb > 0) pagText.push(`DÉB: R$ ${d.pagamentos.deb.toFixed(2)}`);
         }
-        
-        if(pagText.length > 0) {
-            document.getElementById('rowMetodosPagamento').style.display = 'flex';
-            document.getElementById('resMeiosPag').innerText = pagText.join('  |  ');
-        } else { document.getElementById('rowMetodosPagamento').style.display = 'none'; }
+        if(pagText.length > 0) { document.getElementById('rowMetodosPagamento').style.display = 'flex'; document.getElementById('resMeiosPag').innerText = pagText.join(' | '); } 
+        else { document.getElementById('rowMetodosPagamento').style.display = 'none'; }
 
-        document.getElementById('conteinerPrincipal').style.display = 'none';
-        document.getElementById('telaDocumento').style.display = 'block';
-        window.scrollTo(0, 0);
+        document.getElementById('conteinerPrincipal').style.display = 'none'; document.getElementById('telaDocumento').style.display = 'block'; window.scrollTo(0, 0);
     }
 
     async function carregarHistorico() {
         const snap = await db.collection("servicos").orderBy("os", "desc").get();
-        atualizarDashboard(snap);
-        renderizar(snap);
+        processarInteligencia(snap); // Processa fidelidade e garantia
+        renderizarKanban(snap);
     }
 
-    function atualizarDashboard(snap) {
+    function processarInteligencia(snap) {
+        clientesFieis.clear(); mapaGarantias.clear();
         let faturado = 0, custoPecas = 0, abandonados = 0;
-        snap.forEach(doc => {
-            const d = doc.data();
-            const diasPassados = calcularDias(d.data);
+        
+        let docs = []; snap.forEach(d => docs.push(d.data()));
+        
+        // ORDENA DO MAIS VELHO PARA O MAIS NOVO PARA MONTAR MAPA DE GARANTIA CORRETO
+        let docsCronologicos = [...docs].reverse(); 
+        
+        docsCronologicos.forEach(d => {
+            if(d.categoria !== 'VENDA_BALCAO' && d.serie) {
+                mapaGarantias.set(d.serie, { os: d.os, data: d.data });
+            }
+            if(d.status === 'Entregue ao Cliente' && d.cliente) {
+                let nomeKey = d.cliente.toUpperCase().trim();
+                clientesFieis.set(nomeKey, (clientesFieis.get(nomeKey) || 0) + 1);
+            }
+        });
+
+        // DASHBOARD
+        docs.forEach(d => {
             if(d.status === 'Entregue ao Cliente') { faturado += d.total || 0; custoPecas += d.vPecas || 0; } 
-            else if (diasPassados > 180 && d.categoria !== 'VENDA_BALCAO') { abandonados++; }
+            else if (calcularDias(d.data) > 180 && d.categoria !== 'VENDA_BALCAO') { abandonados++; }
         });
 
         document.getElementById('dashFaturado').innerText = "R$ " + faturado.toFixed(2);
         document.getElementById('dashPecas').innerText = "R$ " + custoPecas.toFixed(2);
         document.getElementById('dashLucro').innerText = "R$ " + (faturado - custoPecas).toFixed(2);
-
-        if(abandonados > 0) {
-            document.getElementById('qtdAbandonados').innerText = abandonados;
-            document.getElementById('alertaAbandono').style.display = 'block';
-        } else { document.getElementById('alertaAbandono').style.display = 'none'; }
+        if(abandonados > 0) { document.getElementById('qtdAbandonados').innerText = abandonados; document.getElementById('alertaAbandono').style.display = 'block'; } 
+        else { document.getElementById('alertaAbandono').style.display = 'none'; }
     }
 
-    function renderizar(snap) {
-        let html = "";
+    function renderizarKanban(snap, filtroText = "") {
+        let htmlOrcar = "", htmlExec = "", htmlConc = "", htmlEntr = "";
+        let cOrcar = 0, cExec = 0, cConc = 0, cEntr = 0;
+
         snap.forEach(doc => {
             const d = doc.data();
-            let cor = d.status === 'Falta Orçar' ? '#dc3545' : d.status === 'Executando' ? '#ffc107' : d.status === 'Concluída' ? '#17a2b8' : '#28a745';
-            const dias = calcularDias(d.data);
+            let searchTarget = `${d.cliente} ${d.os} ${d.equip} ${d.defeito}`.toUpperCase();
+            if (filtroText && !searchTarget.includes(filtroText)) return;
+
+            let tagExtra = "", garantiaTag = "", fidelidadeTag = "";
+            let dias = calcularDias(d.data);
             
-            let tagExtra = "";
-            if(d.categoria === 'VENDA_BALCAO') { 
-                tagExtra = `<span style="background:#6c757d; color:white; padding:2px 5px; border-radius:3px; font-size:10px;">🛒 VENDA</span>`; 
-            } else if(d.status === 'Entregue ao Cliente') {
-                
-                let garObraDias = converterParaDias(d.garO);
-                let garPecasDias = converterParaDias(d.garP);
-                
-                let obraAtiva = garObraDias > 0 && dias <= garObraDias;
-                let pecasAtiva = garPecasDias > 0 && dias <= garPecasDias;
-
-                if (obraAtiva && pecasAtiva) {
-                    tagExtra = `<span style="background:#28a745; color:white; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">🛡️ Garantia: AMBAS</span>`;
-                } else if (obraAtiva && !pecasAtiva) {
-                    tagExtra = `<span style="background:#17a2b8; color:white; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">🛡️ Garantia: MÃO DE OBRA</span>`;
-                } else if (!obraAtiva && pecasAtiva) {
-                    tagExtra = `<span style="background:#6f42c1; color:white; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">🛡️ Garantia: PEÇAS</span>`;
-                } else {
-                    tagExtra = `<span style="background:#dc3545; color:white; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">❌ GARANTIA EXPIRADA</span>`;
-                }
-
-            } else if(dias > 180) { 
-                tagExtra = `<span style="background:red; color:white; padding:3px 6px; border-radius:4px; font-size:10px; font-weight:bold;">🚨 ABANDONADO</span>`; 
+            // INTELIGÊNCIA: FIDELIDADE
+            if(d.cliente && clientesFieis.get(d.cliente.toUpperCase().trim()) >= 5) {
+                fidelidadeTag = `<span class="tag" style="background:#ffc107; color:#000;">⭐ Fiel</span>`;
             }
 
-            html += `
-            <div class="os-card" style="border-left-color:${cor}">
-                <div>
-                    <strong>#${String(d.os).padStart(4, '0')} - ${d.cliente}</strong> ${tagExtra}<br>
-                    <small>${d.equip || "Venda Balcão"} | <span style="color:${cor}; font-weight:bold;">${d.status}</span> | ${d.data}</small>
+            // INTELIGÊNCIA: ALERTA DE GARANTIA (Se existe OS anterior com a mesma série há menos de 90 dias)
+            if(d.serie && d.categoria !== 'VENDA_BALCAO') {
+                let ultimaDaSerie = mapaGarantias.get(d.serie);
+                // Se esta OS NÃO é a última registada para esta série e a OS atual foi aberta recentemente
+                if(ultimaDaSerie && ultimaDaSerie.os !== d.os) {
+                     let diffDiasAnterior = calcularDias(ultimaDaSerie.data);
+                     // Se a última vez que passou na loja foi há menos de 90 dias
+                     if(diffDiasAnterior <= 90 && d.status !== 'Entregue ao Cliente') {
+                         garantiaTag = `<br><span class="tag" style="background:#dc3545;">⚠️ POSSÍVEL RETORNO/GARANTIA</span>`;
+                     }
+                }
+            }
+
+            if(d.categoria === 'VENDA_BALCAO') { tagExtra = `<span class="tag" style="background:#6c757d;">🛒 VENDA</span>`; } 
+            else if(d.status === 'Entregue ao Cliente') {
+                let gO = converterParaDias(d.garO); let gP = converterParaDias(d.garP);
+                if ((gO > 0 && dias <= gO) || (gP > 0 && dias <= gP)) tagExtra = `<span class="tag" style="background:#28a745;">🛡️ GARANTIA ATIVA</span>`;
+                else tagExtra = `<span class="tag" style="background:#6c757d;">❌ S/ GARANTIA</span>`;
+            } else if(dias > 180) { tagExtra = `<span class="tag" style="background:red;">🚨 ABANDONADO</span>`; }
+            
+            // PREVISÃO
+            let previsaoTag = "";
+            if(d.dataPrev && d.status !== 'Concluída' && d.status !== 'Entregue ao Cliente') {
+                let diasParaEntrega = Math.floor((converterParaDataObj(d.dataPrev) - new Date()) / (1000 * 60 * 60 * 24));
+                if(diasParaEntrega < 0) previsaoTag = `<span class="tag" style="background:#dc3545;">⏰ ATRASADO!</span>`;
+                else if(diasParaEntrega === 0) previsaoTag = `<span class="tag" style="background:#ffc107; color:black;">⏰ ENTREGA HOJE</span>`;
+                else previsaoTag = `<span class="tag" style="background:#17a2b8;">⏳ Prev: ${d.dataPrev}</span>`;
+            }
+
+            let card = `
+            <div class="os-card">
+                <div style="margin-bottom:8px;">
+                    <strong style="font-size:14px;">#${String(d.os).padStart(4, '0')} - ${d.cliente}</strong> ${fidelidadeTag} <br>
+                    <span style="color:#666;">${d.equip || "Balcão"} | ${d.data}</span>
+                    <div>${tagExtra} ${previsaoTag} ${garantiaTag}</div>
                 </div>
-                <div style="display:flex; gap:5px;">
-                    <button class="btn-dark btn-small" onclick='prepararImpressao(${JSON.stringify(d)})'>🖨️ Doc</button>
-                    <button class="btn-blue btn-small" onclick="editarOS('${doc.id}')">✏️ Editar</button>
-                    <button class="btn-red btn-small" onclick="excluirOS('${doc.id}')">🗑️</button>
+                <div style="display:flex; gap:5px; margin-top:10px;">
+                    <button class="btn-dark btn-small" style="padding:4px;" onclick='prepararImpressao(${JSON.stringify(d)})'>🖨️ PDF</button>
+                    <button class="btn-blue btn-small" style="padding:4px;" onclick="editarOS('${doc.id}')">✏️ Editar</button>
+                    <button class="btn-red btn-small" style="padding:4px; flex:none;" onclick="excluirOS('${doc.id}')">🗑️</button>
                 </div>
             </div>`;
+
+            if (d.status === 'Falta Orçar') { htmlOrcar += card; cOrcar++; }
+            else if (d.status === 'Executando') { htmlExec += card; cExec++; }
+            else if (d.status === 'Concluída') { htmlConc += card; cConc++; }
+            else { htmlEntr += card; cEntr++; }
         });
-        document.getElementById('listaHistorico').innerHTML = html || "Nenhuma OS cadastrada.";
-    }
 
-    async function excluirOS(id) {
-        if(confirm("Excluir permanentemente?")) { await db.collection("servicos").doc(id).delete(); carregarHistorico(); }
-    }
-
-    async function editarOS(id) {
-        const doc = await db.collection("servicos").doc(id).get();
-        const d = doc.data();
-        if(d.categoria === 'VENDA_BALCAO') return alert("Vendas de balcão não podem ser editadas, apenas excluídas e regeradas.");
-        
-        tipoDocOriginal = d.tipo || 'ENTRADA'; editandoId = id;
-
-        document.getElementById('status').value = d.status; document.getElementById('cliente').value = d.cliente;
-        document.getElementById('cpf').value = d.cpf || ""; document.getElementById('rg').value = d.rg || "";
-        document.getElementById('whatsapp').value = d.whatsapp || ""; document.getElementById('endCliente').value = d.endCliente || "";
-        document.getElementById('bairro').value = d.bairro || ""; document.getElementById('cep').value = d.cep || "";
-        document.getElementById('equip').value = d.equip; document.getElementById('modelo').value = d.modelo || "";
-        document.getElementById('serie').value = d.serie || ""; 
-        
-        // Puxar checklist na edição
-        document.querySelectorAll('.chk-item').forEach(el => el.checked = false);
-        if(d.chkList) {
-            d.chkList.split(', ').forEach(item => {
-                const cb = document.querySelector(`.chk-item[value="${item}"]`);
-                if(cb) cb.checked = true;
-            });
-        }
-        if(d.chkFonte === "Sim") { const cb = document.querySelector(`.chk-item[value="Fonte/Carregador"]`); if(cb) cb.checked = true; }
-        if(d.chkCapa === "Sim") { const cb = document.querySelector(`.chk-item[value="Capa/Case"]`); if(cb) cb.checked = true; }
-        
-        document.getElementById('aces').value = d.aces || "";
-        
-        // Puxar Inspecao
-        document.getElementById('insLiga').value = d.inspecao?.liga || "-";
-        document.getElementById('insImagem').value = d.inspecao?.imagem || "-";
-        document.getElementById('insBarulho').value = d.inspecao?.barulho || "-";
-        document.getElementById('insTemp').value = d.inspecao?.temp || "-";
-        document.getElementById('insLed').value = d.inspecao?.led || "-";
-        
-        document.getElementById('defeito').value = d.defeito || ""; document.getElementById('laudo').value = d.laudo || "";
-        document.getElementById('servicos').value = d.servicos || ""; document.getElementById('vPecas').value = d.vPecas || "";
-        document.getElementById('vObra').value = d.vObra || ""; 
-        
-        document.getElementById('osPix').value = d.pagamentos?.pix || ""; document.getElementById('osDin').value = d.pagamentos?.din || "";
-        document.getElementById('osCred').value = d.pagamentos?.cred || ""; document.getElementById('osDeb').value = d.pagamentos?.deb || "";
-
-        document.getElementById('garPecas').value = d.garP || ""; document.getElementById('garObra').value = d.garO || "";
-        
-        if(d.data) {
-            const [dia, mes, ano] = d.data.split('/');
-            document.getElementById('dataEntrada').value = `${ano}-${mes}-${dia}`;
-        }
-
-        document.getElementById('idEdicao').innerText = String(d.os).padStart(4, '0');
-        document.getElementById('avisoEdicao').style.display = 'block';
-        document.getElementById('botoesCriar').style.display = 'none';
-        document.getElementById('botaoSalvarEdicao').style.display = 'flex';
-        mudarAba('abaNovaOS');
+        document.getElementById('kb-orcar').innerHTML = htmlOrcar; document.getElementById('countOrcar').innerText = cOrcar;
+        document.getElementById('kb-exec').innerHTML = htmlExec; document.getElementById('countExec').innerText = cExec;
+        document.getElementById('kb-conc').innerHTML = htmlConc; document.getElementById('countConc').innerText = cConc;
+        document.getElementById('kb-entr').innerHTML = htmlEntr; document.getElementById('countEntr').innerText = cEntr;
     }
 
     async function buscar() {
         const t = document.getElementById('busca').value.toUpperCase();
-        const snap = await db.collection("servicos").get();
-        const filtrados = snap.docs.filter(doc => doc.data().cliente.toUpperCase().includes(t) || String(doc.data().os).includes(t) || (doc.data().defeito && doc.data().defeito.toUpperCase().includes(t)));
-        renderizar(filtrados);
+        const snap = await db.collection("servicos").orderBy("os", "desc").get();
+        renderizarKanban(snap, t);
     }
 
-    // INTELIGÊNCIA DE BACKUP DIRETO VIA FETCH: SEGUNDA (1) E QUINTA (4)
+    async function excluirOS(id) { if(confirm("Excluir permanentemente?")) { await db.collection("servicos").doc(id).delete(); carregarHistorico(); } }
+
+    async function editarOS(id) {
+        const doc = await db.collection("servicos").doc(id).get(); const d = doc.data();
+        if(d.categoria === 'VENDA_BALCAO') return alert("Vendas de balcão não podem ser editadas, exclua e refaça.");
+        tipoDocOriginal = d.tipo || 'ENTRADA'; editandoId = id;
+        document.getElementById('status').value = d.status; document.getElementById('cliente').value = d.cliente;
+        document.getElementById('cpf').value = d.cpf || ""; document.getElementById('rg').value = d.rg || "";
+        document.getElementById('whatsapp').value = d.whatsapp || ""; document.getElementById('endCliente').value = d.endCliente || "";
+        document.getElementById('bairro').value = d.bairro || ""; document.getElementById('cep').value = d.cep || "";
+        document.getElementById('equip').value = d.equip; document.getElementById('modelo').value = d.modelo || ""; document.getElementById('serie').value = d.serie || ""; 
+        
+        document.querySelectorAll('.chk-item').forEach(el => el.checked = false);
+        if(d.chkList) { d.chkList.split(', ').forEach(item => { const cb = document.querySelector(`.chk-item[value="${item}"]`); if(cb) cb.checked = true; }); }
+        if(d.chkFonte === "Sim") { const cb = document.querySelector(`.chk-item[value="Fonte/Carregador"]`); if(cb) cb.checked = true; }
+        if(d.chkCapa === "Sim") { const cb = document.querySelector(`.chk-item[value="Capa/Case"]`); if(cb) cb.checked = true; }
+        
+        document.getElementById('aces').value = d.aces || "";
+        document.getElementById('insLiga').value = d.inspecao?.liga || "-"; document.getElementById('insImagem').value = d.inspecao?.imagem || "-";
+        document.getElementById('insBarulho').value = d.inspecao?.barulho || "-"; document.getElementById('insTemp').value = d.inspecao?.temp || "-"; document.getElementById('insLed').value = d.inspecao?.led || "-";
+        
+        document.getElementById('defeito').value = d.defeito || ""; document.getElementById('laudo').value = d.laudo || ""; document.getElementById('servicos').value = d.servicos || "";
+        document.getElementById('emprestimo').value = d.emprestimo || "";
+        document.getElementById('vPecas').value = d.vPecas || ""; document.getElementById('vObra').value = d.vObra || ""; 
+        document.getElementById('osPix').value = d.pagamentos?.pix || ""; document.getElementById('osDin').value = d.pagamentos?.din || "";
+        document.getElementById('osCred').value = d.pagamentos?.cred || ""; document.getElementById('osDeb').value = d.pagamentos?.deb || "";
+        document.getElementById('garPecas').value = d.garP || ""; document.getElementById('garObra').value = d.garO || "";
+        
+        if(d.data) { const [dia, mes, ano] = d.data.split('/'); document.getElementById('dataEntrada').value = `${ano}-${mes}-${dia}`; }
+        if(d.dataPrev) { const [dp, mp, yp] = d.dataPrev.split('/'); document.getElementById('dataPrev').value = `${yp}-${mp}-${dp}`; } else { document.getElementById('dataPrev').value = ""; }
+
+        document.getElementById('idEdicao').innerText = String(d.os).padStart(4, '0');
+        document.getElementById('avisoEdicao').style.display = 'block'; document.getElementById('botoesCriar').style.display = 'none';
+        document.getElementById('botaoSalvarEdicao').style.display = 'flex'; mudarAba('abaNovaOS');
+    }
+
+    // LÓGICA DO BACKUP AUTOMÁTICO
+    function atualizarPainelProximoBackup() {
+        const hoje = new Date(); hoje.setHours(0,0,0,0); const dataHojeStr = hoje.toLocaleDateString('pt-BR');
+        const ultimoBackupStr = configGlobais.ultimoBackupData; let diaAtual = hoje.getDay(); 
+        if ((diaAtual === 1 || diaAtual === 4) && ultimoBackupStr !== dataHojeStr) { document.getElementById('dataProximoBackup').innerHTML = "<strong style='color: #28a745;'>Hoje (Automático)</strong>"; return; }
+        let proximo = new Date(hoje); proximo.setDate(proximo.getDate() + 1);
+        while (proximo.getDay() !== 1 && proximo.getDay() !== 4) { proximo.setDate(proximo.getDate() + 1); }
+        const diasSemana = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+        document.getElementById('dataProximoBackup').innerHTML = `<strong>${diasSemana[proximo.getDay()]}, ${proximo.toLocaleDateString('pt-BR')}</strong>`;
+    }
+
     function gatilhoInteligenteBackup() {
-        const ultimoBackupStr = configGlobais.ultimoBackupData;
-        const hoje = new Date();
-        hoje.setHours(0,0,0,0);
-
+        const ultimoBackupStr = configGlobais.ultimoBackupData; const hoje = new Date(); hoje.setHours(0,0,0,0);
         let precisaFazer = false;
-
-        if (!ultimoBackupStr) {
-            precisaFazer = true; 
-        } else {
-            const partes = ultimoBackupStr.split('/');
-            const dataUltimo = new Date(partes[2], partes[1] - 1, partes[0]);
-            dataUltimo.setHours(0,0,0,0);
-            
-            let tempDate = new Date(dataUltimo);
-            tempDate.setDate(tempDate.getDate() + 1); 
-            
-            while (tempDate <= hoje) {
-                if (tempDate.getDay() === 1 || tempDate.getDay() === 4) {
-                    precisaFazer = true;
-                    break;
-                }
-                tempDate.setDate(tempDate.getDate() + 1);
-            }
+        if (!ultimoBackupStr) precisaFazer = true; 
+        else {
+            const partes = ultimoBackupStr.split('/'); const dataUltimo = new Date(partes[2], partes[1] - 1, partes[0]); dataUltimo.setHours(0,0,0,0);
+            let tempDate = new Date(dataUltimo); tempDate.setDate(tempDate.getDate() + 1); 
+            while (tempDate <= hoje) { if (tempDate.getDay() === 1 || tempDate.getDay() === 4) { precisaFazer = true; break; } tempDate.setDate(tempDate.getDate() + 1); }
         }
-
         if (precisaFazer) {
             const clientId = configGlobais.gapiClientId;
             if(clientId) {
-                document.getElementById('alertaBackupInteligente').style.display = 'block';
-                document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático (Bi-Semanal):</strong> A iniciar o envio de segurança para o Google Drive...";
-                iniciarBackupDrive(true);
+                document.getElementById('alertaBackupInteligente').style.display = 'block'; document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático (Bi-Semanal):</strong> A iniciar o envio de segurança..."; iniciarBackupDrive(true);
             } else {
-                document.getElementById('alertaBackupInteligente').style.display = 'block';
-                document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático (Bi-Semanal):</strong> A descarregar backup local (Google Drive não configurado).";
-                setTimeout(() => { baixarBackupLocalManual(true); }, 3000); 
+                document.getElementById('alertaBackupInteligente').style.display = 'block'; document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático:</strong> A descarregar localmente (Drive não configurado)."; setTimeout(() => { baixarBackupLocalManual(true); }, 3000); 
             }
         }
     }
 
     async function baixarBackupLocalManual(silencioso = false) {
-        const snap = await db.collection("servicos").get();
-        let dados = [];
-        snap.forEach(doc => dados.push(doc.data()));
-        
+        const snap = await db.collection("servicos").get(); let dados = []; snap.forEach(doc => dados.push(doc.data()));
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dados, null, 2));
-        const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href", dataStr);
+        const downloadAnchorNode = document.createElement('a'); downloadAnchorNode.setAttribute("href", dataStr);
         downloadAnchorNode.setAttribute("download", "backup_kleber_os_" + new Date().toISOString().split('T')[0] + ".json");
-        document.body.appendChild(downloadAnchorNode);
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
-        
+        document.body.appendChild(downloadAnchorNode); downloadAnchorNode.click(); downloadAnchorNode.remove();
         await registarDataBackupNuvem();
-        
-        if(!silencioso) {
-            document.getElementById('statusBackup').innerText = "✅ Backup Local Concluído com Sucesso!";
-        } else {
-            setTimeout(() => { document.getElementById('alertaBackupInteligente').style.display = 'none'; }, 6000);
-        }
+        if(!silencioso) document.getElementById('statusBackup').innerText = "✅ Backup Local Concluído!";
+        else setTimeout(() => { document.getElementById('alertaBackupInteligente').style.display = 'none'; }, 6000);
     }
 
     let tokenClient;
     async function iniciarBackupDrive(silencioso = false) {
         const clientId = configGlobais.gapiClientId;
-        if(!clientId) {
-            if(!silencioso) alert("Por favor, insira o seu Google Client ID nas Configurações primeiro.");
-            return;
-        }
-        
-        if(!silencioso) document.getElementById('statusBackup').innerText = "⏳ A autenticar no Google Drive...";
-        
+        if(!clientId) { if(!silencioso) alert("Insira o Google Client ID nas Configurações."); return; }
+        if(!silencioso) document.getElementById('statusBackup').innerText = "⏳ A autenticar no Drive...";
         tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: clientId,
-            scope: 'https://www.googleapis.com/auth/drive.file',
-            callback: (tokenResponse) => {
-                if (tokenResponse && tokenResponse.access_token) {
-                    executarFluxoDrive(tokenResponse.access_token, silencioso);
-                }
-            },
-        });
-        tokenClient.requestAccessToken();
+            client_id: clientId, scope: 'https://www.googleapis.com/auth/drive.file',
+            callback: (tokenResponse) => { if (tokenResponse && tokenResponse.access_token) executarFluxoDrive(tokenResponse.access_token, silencioso); }
+        }); tokenClient.requestAccessToken();
     }
 
     async function executarFluxoDrive(token, silencioso = false) {
         const status = document.getElementById('statusBackup');
         try {
-            if(!silencioso) status.innerText = "🔍 A procurar a pasta 'backup Sistema OS'...";
-            
-            let res = await fetch('https://www.googleapis.com/drive/v3/files?q=name="backup Sistema OS" and mimeType="application/vnd.google-apps.folder" and trashed=false', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            let folderResult = await res.json();
-            let folderId = folderResult.files && folderResult.files.length > 0 ? folderResult.files[0].id : null;
-
+            if(!silencioso) status.innerText = "🔍 A procurar a pasta...";
+            let res = await fetch('https://www.googleapis.com/drive/v3/files?q=name="backup Sistema OS" and mimeType="application/vnd.google-apps.folder" and trashed=false', { headers: { Authorization: `Bearer ${token}` } });
+            let folderResult = await res.json(); let folderId = folderResult.files && folderResult.files.length > 0 ? folderResult.files[0].id : null;
             if(!folderId) {
-                if(!silencioso) status.innerText = "📁 A criar pasta 'backup Sistema OS'...";
-                let cf = await fetch('https://www.googleapis.com/drive/v3/files', {
-                    method: 'POST',
-                    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: 'backup Sistema OS', mimeType: 'application/vnd.google-apps.folder' })
-                });
-                let folderCreated = await cf.json();
-                folderId = folderCreated.id;
+                let cf = await fetch('https://www.googleapis.com/drive/v3/files', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'backup Sistema OS', mimeType: 'application/vnd.google-apps.folder' }) });
+                let folderCreated = await cf.json(); folderId = folderCreated.id;
             }
-
-            if(!silencioso) status.innerText = "📦 A preparar dados do sistema...";
-            const snap = await db.collection("servicos").get();
-            let lista = []; snap.forEach(d => lista.push(d.data()));
+            const snap = await db.collection("servicos").get(); let lista = []; snap.forEach(d => lista.push(d.data()));
             const blob = new Blob([JSON.stringify(lista, null, 2)], {type: 'application/json'});
-
-            if(!silencioso) status.innerText = "☁️ A enviar para o Drive...";
             const meta = { name: `Backup_OS_${new Date().toISOString().split('T')[0]}.json`, parents: [folderId] };
-            const form = new FormData();
-            form.append('metadata', new Blob([JSON.stringify(meta)], {type: 'application/json'}));
-            form.append('file', blob);
-
-            let uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form
-            });
-
+            const form = new FormData(); form.append('metadata', new Blob([JSON.stringify(meta)], {type: 'application/json'})); form.append('file', blob);
+            let uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form });
+            
             if(uploadRes.ok) {
-                const hoje = new Date().toLocaleDateString('pt-BR');
-                configGlobais.ultimoBackupData = hoje;
+                const hoje = new Date().toLocaleDateString('pt-BR'); configGlobais.ultimoBackupData = hoje;
                 await db.collection('configuracoes').doc('gerais').update({ ultimoBackupData: hoje });
-                atualizarPainelProximoBackup(); // ATUALIZA O PAINEL DEPOIS DO SUCESSO
-
-                if(silencioso) {
-                    document.getElementById('alertaBackupInteligente').innerHTML = "<strong>✅ Backup Automático (Bi-Semanal):</strong> Sincronizado com sucesso no Google Drive!";
-                    setTimeout(() => { document.getElementById('alertaBackupInteligente').style.display = 'none'; }, 5000);
-                } else {
-                    status.innerText = "✅ Sucesso! Backup salvo no seu Google Drive.";
-                }
-            } else {
-                throw new Error("Falha no upload");
-            }
+                atualizarPainelProximoBackup();
+                if(silencioso) { document.getElementById('alertaBackupInteligente').innerHTML = "<strong>✅ Backup Automático:</strong> Sincronizado!"; setTimeout(() => { document.getElementById('alertaBackupInteligente').style.display = 'none'; }, 5000); } 
+                else { status.innerText = "✅ Sucesso! Backup salvo."; }
+            } else throw new Error("Falha");
         } catch(e) {
-            console.error(e);
-            if(silencioso) {
-                document.getElementById('alertaBackupInteligente').innerHTML = "<strong>❌ Erro no Backup Automático:</strong> Não foi possível comunicar com o Drive. Faça um backup manual em 'Configs'.";
-            } else {
-                status.innerHTML = "<span style='color:red;'>❌ Erro. Verifique se marcou a caixa 'Ver e gerenciar arquivos' no login do Google.</span>";
-            }
+            if(silencioso) document.getElementById('alertaBackupInteligente').innerHTML = "<strong>❌ Erro no Backup.</strong> Faça manual.";
+            else status.innerHTML = "<span style='color:red;'>❌ Erro. Marque a permissão do Drive no Google.</span>";
         }
     }
 </script>
