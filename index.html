@@ -689,7 +689,7 @@
     async function carregarHistorico() {
         try {
             const snap = await db.collection("servicos").orderBy("os", "desc").get();
-            processarInteligencia(snap); // Processa fidelidade e garantia com segurança
+            processarInteligencia(snap); 
             renderizarKanban(snap);
         } catch (e) {
             console.error("Erro ao carregar banco de dados:", e);
@@ -740,7 +740,7 @@
         }
     }
 
-    // KANBAN BLINDADO
+    // KANBAN BLINDADO COM GARANTIA RESTAURADA
     function renderizarKanban(snap, filtroText = "") {
         let htmlOrcar = "", htmlExec = "", htmlConc = "", htmlEntr = "";
         let cOrcar = 0, cExec = 0, cConc = 0, cEntr = 0;
@@ -775,9 +775,25 @@
                 if(d.categoria === 'VENDA_BALCAO') { 
                     tagExtra = `<span class="tag" style="background:#6c757d;">🛒 VENDA</span>`; 
                 } else if(d.status === 'Entregue ao Cliente') {
-                    let gO = converterParaDias(d.garO); let gP = converterParaDias(d.garP);
-                    if ((gO > 0 && dias <= gO) || (gP > 0 && dias <= gP)) tagExtra = `<span class="tag" style="background:#28a745;">🛡️ GARANTIA ATIVA</span>`;
-                    else tagExtra = `<span class="tag" style="background:#6c757d;">❌ S/ GARANTIA</span>`;
+                    
+                    // LÓGICA DE GARANTIA DETALHADA RESTAURADA AQUI
+                    let gO = converterParaDias(d.garO); 
+                    let gP = converterParaDias(d.garP);
+                    
+                    let obraAtiva = gO > 0 && dias <= gO;
+                    let pecasAtiva = gP > 0 && dias <= gP;
+
+                    if (obraAtiva && pecasAtiva) {
+                        tagExtra = `<span class="tag" style="background:#28a745;">🛡️ Garantia: AMBAS</span>`;
+                    } else if (obraAtiva && !pecasAtiva) {
+                        tagExtra = `<span class="tag" style="background:#17a2b8;">🛡️ Garantia: MÃO DE OBRA</span>`;
+                    } else if (!obraAtiva && pecasAtiva) {
+                        tagExtra = `<span class="tag" style="background:#6f42c1;">🛡️ Garantia: PEÇAS</span>`;
+                    } else {
+                        tagExtra = `<span class="tag" style="background:#6c757d;">❌ GARANTIA EXPIRADA</span>`;
+                    }
+                    // FIM DA LÓGICA DE GARANTIA DETALHADA
+
                 } else if(dias > 180) { 
                     tagExtra = `<span class="tag" style="background:red;">🚨 ABANDONADO</span>`; 
                 }
