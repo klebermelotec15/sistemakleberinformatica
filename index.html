@@ -67,7 +67,7 @@
         .aba { display: none; }
         .aba.ativa { display: block; }
 
-        /* PDF A4 OTIMIZADO */
+        /* PDF A4 OTIMIZADO (OS e PDV) */
         #telaDocumento { display: none; background: white; color: #000; font-family: Arial, sans-serif; padding: 25px; border: 1px solid #ccc; box-shadow: 0 5px 15px rgba(0,0,0,0.2); margin: 20px auto; max-width: 790px; }
         .pdf-header { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: flex-start; }
         .pdf-section { border: 1px solid #000; margin-bottom: 6px; border-radius: 4px; overflow: hidden; page-break-inside: avoid; }
@@ -82,10 +82,20 @@
         .pdf-assinaturas { margin-top: 15px; display: flex; justify-content: space-around; text-align: center; font-size: 11px; }
         .termo-juridico { font-size: 8px; text-align: justify; margin-top: 5px; border: 1px solid #000; padding: 4px 6px; background: #f9f9f9; border-radius: 4px; line-height: 1.1; }
 
+        /* PDF RELATÓRIO MEI */
+        #telaDocumentoMEI { display: none; background: white; color: #000; font-family: Arial, sans-serif; padding: 25px; border: 1px solid #ccc; box-shadow: 0 5px 15px rgba(0,0,0,0.2); margin: 20px auto; max-width: 790px; }
+        .tabela-mei { width: 100%; border-collapse: collapse; border: 2px solid #000; font-size: 11px; }
+        .tabela-mei th, .tabela-mei td { border: 1px solid #000; padding: 6px; }
+        .tabela-mei th { background: #e0e0e0; text-align: center; font-weight: bold; }
+        .tabela-mei td.valor { text-align: right; width: 120px; font-weight: bold; }
+        .tabela-mei td.secao { background: #f4f5f7; font-weight: bold; text-align: center; text-transform: uppercase; font-size: 10px; }
+        
+        .box-soma-mei { background: #f9f9f9; padding: 15px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; }
+
         @media print {
             body { background: white; padding: 0; margin: 0; }
             .no-print, .navbar { display: none !important; }
-            #telaDocumento { display: block !important; padding: 0; border: none; margin: 0; box-shadow: none; max-width: 100%; }
+            #telaDocumento, #telaDocumentoMEI { display: block !important; padding: 0; border: none; margin: 0; box-shadow: none; max-width: 100%; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
@@ -104,10 +114,11 @@
 <div class="navbar no-print" id="menuNavegacao" style="display:none;">
     <img id="navLogo" src="" alt="Logomarca" style="height: 38px; border-radius: 4px; display: none; margin-right: auto; background: white; padding: 2px;">
     <button onclick="mudarAba('abaNovaOS')" id="btn-abaNovaOS" class="ativo">📝 1. Nova OS</button>
-    <button onclick="mudarAba('abaHistorico')" id="btn-abaHistorico">📂 2. Kanban & Histórico</button>
+    <button onclick="mudarAba('abaHistorico')" id="btn-abaHistorico">📂 2. Histórico</button>
     <button onclick="mudarAba('abaPDV')" id="btn-abaPDV">🛒 3. Venda PDV</button>
     <button onclick="mudarAba('abaFinanceiro')" id="btn-abaFinanceiro">📊 4. Financeiro</button>
-    <button onclick="mudarAba('abaConfig')" id="btn-abaConfig">⚙️ 5. Configs & Backup</button>
+    <button onclick="mudarAba('abaRelatorioMEI')" id="btn-abaRelatorioMEI">📄 5. Relatório MEI</button>
+    <button onclick="mudarAba('abaConfig')" id="btn-abaConfig">⚙️ 6. Configs & Backup</button>
     <button class="btn-sair" onclick="sairSistema()" style="margin-left: auto;">Sair 🚪</button>
 </div>
 
@@ -271,6 +282,62 @@
         </div>
     </div>
 
+    <div id="abaRelatorioMEI" class="aba no-print">
+        <h2 style="margin-top: 0;">📄 Relatório Mensal das Receitas Brutas (MEI)</h2>
+        <p style="color:#666; font-size:13px; margin-bottom:20px;">Preencha os valores mensais. O sistema calcula os totais (Incisos III, VI, IX e X) automaticamente. A Razão Social e CNPJ são preenchidos conforme salvos na aba Configurações.</p>
+        
+        <div class="grid">
+            <div>
+                <label>Mês de Apuração:</label>
+                <select id="meiMes">
+                    <option value="JANEIRO">JANEIRO</option><option value="FEVEREIRO">FEVEREIRO</option>
+                    <option value="MARÇO">MARÇO</option><option value="ABRIL">ABRIL</option>
+                    <option value="MAIO">MAIO</option><option value="JUNHO">JUNHO</option>
+                    <option value="JULHO">JULHO</option><option value="AGOSTO">AGOSTO</option>
+                    <option value="SETEMBRO">SETEMBRO</option><option value="OUTUBRO">OUTUBRO</option>
+                    <option value="NOVEMBRO">NOVEMBRO</option><option value="DEZEMBRO">DEZEMBRO</option>
+                </select>
+            </div>
+            <div>
+                <label>Ano de Apuração:</label>
+                <input type="number" id="meiAno" value="2024">
+            </div>
+        </div>
+
+        <div class="box-soma-mei">
+            <h4 style="margin-top:0; color:#0056b3;">1. REVENDA DE MERCADORIAS (COMÉRCIO)</h4>
+            <div class="grid">
+                <div><label>I - Sem documento fiscal (R$):</label><input type="number" id="mei1" oninput="calcularMEI()" placeholder="0.00"></div>
+                <div><label>II - Com documento fiscal emitido (R$):</label><input type="number" id="mei2" oninput="calcularMEI()" placeholder="0.00"></div>
+            </div>
+            <div style="text-align:right; font-weight:bold; color:#28a745; margin-top:5px;">III - Total (I + II): R$ <span id="mei3">0.00</span></div>
+        </div>
+
+        <div class="box-soma-mei">
+            <h4 style="margin-top:0; color:#0056b3;">2. VENDA DE PRODUTOS INDUSTRIALIZADOS (INDÚSTRIA)</h4>
+            <div class="grid">
+                <div><label>IV - Sem documento fiscal (R$):</label><input type="number" id="mei4" oninput="calcularMEI()" placeholder="0.00"></div>
+                <div><label>V - Com documento fiscal emitido (R$):</label><input type="number" id="mei5" oninput="calcularMEI()" placeholder="0.00"></div>
+            </div>
+            <div style="text-align:right; font-weight:bold; color:#28a745; margin-top:5px;">VI - Total (IV + V): R$ <span id="mei6">0.00</span></div>
+        </div>
+
+        <div class="box-soma-mei">
+            <h4 style="margin-top:0; color:#0056b3;">3. PRESTAÇÃO DE SERVIÇOS</h4>
+            <div class="grid">
+                <div><label>VII - Sem documento fiscal (R$):</label><input type="number" id="mei7" oninput="calcularMEI()" placeholder="0.00"></div>
+                <div><label>VIII - Com documento fiscal emitido (R$):</label><input type="number" id="mei8" oninput="calcularMEI()" placeholder="0.00"></div>
+            </div>
+            <div style="text-align:right; font-weight:bold; color:#28a745; margin-top:5px;">IX - Total (VII + VIII): R$ <span id="mei9">0.00</span></div>
+        </div>
+
+        <div style="background:#fff3cd; border: 1px solid #ffeeba; padding:15px; border-radius:8px; text-align:center; margin-bottom:20px;">
+            <h3 style="margin:0; color:#856404;">X - TOTAL GERAL DAS RECEITAS NO MÊS: R$ <span id="mei10">0.00</span></h3>
+        </div>
+
+        <button class="btn-dark" onclick="imprimirMEI()" style="width:100%;">🖨️ GERAR E IMPRIMIR RELATÓRIO OFICIAL</button>
+    </div>
+
     <div id="abaConfig" class="aba no-print">
         <h2 style="margin-top: 0;">⚙️ Configurações, Backup e Lembretes</h2>
         
@@ -294,10 +361,16 @@
         </div>
         <p id="statusBackup" style="text-align:center; font-weight:bold; color:var(--primary);"></p>
 
-        <h3 style="border-bottom: 1px solid #ccc; padding-bottom:5px;">🏪 Dados da Loja</h3>
+        <h3 style="border-bottom: 1px solid #ccc; padding-bottom:5px;">🏪 Dados da Loja e Relatórios</h3>
         <div class="grid">
             <div class="full"><label>Palavra-passe de Acesso (Login):</label><input type="text" id="configSenha"></div>
             <div class="full"><label>Sua Logomarca:</label><input type="file" id="inputLogo" accept="image/*"></div>
+            
+            <div class="full"><strong style="color:#dc3545; font-size:12px;">* Dados abaixo usados no Relatório MEI e Recibos:</strong></div>
+            <div style="grid-column: span 2;"><label>Razão Social (Empreendedor Individual):</label><input type="text" id="configRazao" placeholder="Ex: KLEBER MELO 12345678900"></div>
+            <div><label>CNPJ:</label><input type="text" id="configCnpj" placeholder="Ex: 00.000.000/0001-00"></div>
+            <div><label>Cidade/UF:</label><input type="text" id="configCidade" placeholder="Ex: Belém - PA"></div>
+            
             <div><label>Telefone da Loja:</label><input type="text" id="lojaTel"></div>
             <div class="full"><label>Endereço Completo:</label><input type="text" id="lojaEnd"></div>
         </div>
@@ -393,17 +466,104 @@
         </div>
     </div>
 
-    <div style="text-align: right; font-size: 10px; margin-top: 5px;">Belém, <span id="resData"></span></div>
+    <div style="text-align: right; font-size: 10px; margin-top: 5px;"><span id="resLocalData">Belém</span>, <span id="resData"></span></div>
 
     <div class="termo-juridico" id="termoJuridico">
         <strong>TERMO DE RESPONSABILIDADE E ABANDONO:</strong> O cliente declara estar ciente de que o equipamento deve ser retirado em até <strong>90 dias (3 meses)</strong>. Após este prazo, será cobrada uma taxa de armazenamento de <strong>R$ 30,00 por mês</strong>. Passados <strong>180 dias (6 meses)</strong> sem retirada, o equipamento será legalmente considerado como <strong>abandonado e tratado como sucata</strong>. Os equipamentos marcados como "Empréstimo/Comodato" devem ser devolvidos no ato da entrega, sob pena de cobrança do valor de mercado.
     </div>
 
     <div class="pdf-assinaturas">
-        <div><p>______________________________________</p><p><strong>Kleber Informática</strong><br>Técnico: Kleber Melo</p></div>
+        <div><p>______________________________________</p><p><strong>Kleber Informática</strong><br>Técnico Responsável</p></div>
         <div><p>______________________________________</p><p><strong>Assinatura do Cliente</strong></p></div>
     </div>
     <button class="btn-dark no-print" onclick="window.print()" style="margin-top:15px; width:100%;">🖨️ IMPRIMIR DOCUMENTO</button>
+</div>
+
+<div id="telaDocumentoMEI">
+    <button class="btn-red no-print" onclick="fecharImpressao()" style="margin-bottom:20px; width:100%; font-size:16px; padding:15px;">⬅️ FECHAR E VOLTAR AO SISTEMA</button>
+    
+    <table class="tabela-mei">
+        <tr>
+            <th colspan="2" style="font-size:14px; padding:10px;">RELATÓRIO MENSAL DAS RECEITAS BRUTAS</th>
+        </tr>
+        <tr>
+            <td colspan="2"><strong>CNPJ:</strong> <span id="docMeiCnpj"></span></td>
+        </tr>
+        <tr>
+            <td colspan="2"><strong>EMPREENDEDOR INDIVIDUAL:</strong> <span id="docMeiRazao"></span></td>
+        </tr>
+        <tr>
+            <td colspan="2"><strong>PERÍODO DE APURAÇÃO:</strong> <span id="docMeiPeriodo"></span></td>
+        </tr>
+        
+        <tr>
+            <td colspan="2" class="secao">RECEITA BRUTA MENSAL - REVENDA DE MERCADORIAS (COMÉRCIO)</td>
+        </tr>
+        <tr>
+            <td>I - Revenda de mercadorias com dispensa de emissão de documento fiscal</td>
+            <td class="valor" id="docMei1"></td>
+        </tr>
+        <tr>
+            <td>II - Revenda de mercadorias com documento fiscal emitido</td>
+            <td class="valor" id="docMei2"></td>
+        </tr>
+        <tr>
+            <td style="font-weight:bold; background:#f9f9f9;">III - Total das receitas com revenda de mercadorias (I + II)</td>
+            <td class="valor" style="background:#f9f9f9;" id="docMei3"></td>
+        </tr>
+
+        <tr>
+            <td colspan="2" class="secao">RECEITA BRUTA MENSAL - VENDA DE PRODUTOS INDUSTRIALIZADOS (INDÚSTRIA)</td>
+        </tr>
+        <tr>
+            <td>IV - Venda de produtos industrializados com dispensa de emissão de documento fiscal</td>
+            <td class="valor" id="docMei4"></td>
+        </tr>
+        <tr>
+            <td>V - Venda de produtos industrializados com documento fiscal emitido</td>
+            <td class="valor" id="docMei5"></td>
+        </tr>
+        <tr>
+            <td style="font-weight:bold; background:#f9f9f9;">VI - Total das receitas com venda de produtos industrializados (IV + V)</td>
+            <td class="valor" style="background:#f9f9f9;" id="docMei6"></td>
+        </tr>
+
+        <tr>
+            <td colspan="2" class="secao">RECEITA BRUTA MENSAL - PRESTAÇÃO DE SERVIÇOS</td>
+        </tr>
+        <tr>
+            <td>VII - Receita com prestação de serviços com dispensa de emissão de documento fiscal</td>
+            <td class="valor" id="docMei7"></td>
+        </tr>
+        <tr>
+            <td>VIII - Receita com prestação de serviços com documento fiscal emitido</td>
+            <td class="valor" id="docMei8"></td>
+        </tr>
+        <tr>
+            <td style="font-weight:bold; background:#f9f9f9;">IX - Total das receitas com prestação de serviços (VII + VIII)</td>
+            <td class="valor" style="background:#f9f9f9;" id="docMei9"></td>
+        </tr>
+
+        <tr>
+            <td style="font-weight:bold; font-size:12px; background:#e0e0e0;">X - Total geral das receitas brutas no mês (III + VI + IX)</td>
+            <td class="valor" style="font-size:13px; background:#e0e0e0;" id="docMei10"></td>
+        </tr>
+        <tr>
+            <td style="padding:15px 5px;">LOCAL E DATA: <span id="docMeiLocalData"></span></td>
+            <td style="text-align:center; padding:15px 5px;">
+                ASSINATURA DO EMPRESÁRIO:<br><br><br>
+                ____________________________________________________
+            </td>
+        </tr>
+    </table>
+    
+    <div style="font-size:9px; margin-top:15px; text-align:justify;">
+        <strong>ENCONTRAM-SE ANEXADOS A ESTE RELATÓRIO:</strong><br>
+        - Os documentos fiscais comprobatórios das entradas de mercadorias e serviços tomados referentes ao período;<br>
+        - As notas fiscais relativas às operações ou prestações realizadas eventualmente emitidas.
+    </div>
+
+    <button class="btn-dark no-print" onclick="window.print()" style="margin-top:20px; width:100%;">🖨️ IMPRIMIR RELATÓRIO MEI</button>
 </div>
 
 <script>
@@ -415,11 +575,14 @@
     let editandoId = null;
     let tipoDocOriginal = 'ENTRADA';
     let ultimaAbaAberta = 'abaNovaOS';
-    let configGlobais = { senhaAdmin: "123456", gapiClientId: "", end: "", tel: "", logo: "", ultimoBackupData: "", lembretes: "" };
+    let configGlobais = { senhaAdmin: "123456", gapiClientId: "", end: "", tel: "", logo: "", ultimoBackupData: "", lembretes: "", cnpj: "", razao: "", cidade: "Belém - PA" };
     
     // VARIÁVEIS DA INTELIGÊNCIA
     let clientesFieis = new Map();
     let mapaGarantias = new Map(); 
+
+    // OBTÉM ANO ATUAL PARA O RELATÓRIO MEI
+    document.getElementById('meiAno').value = new Date().getFullYear();
 
     // BUSCA DE CEP (VIACEP)
     async function buscarCEP() {
@@ -452,6 +615,9 @@
                 if(dados.gapiClientId) configGlobais.gapiClientId = dados.gapiClientId;
                 if(dados.ultimoBackupData) configGlobais.ultimoBackupData = dados.ultimoBackupData;
                 if(dados.lembretes) configGlobais.lembretes = dados.lembretes;
+                if(dados.cnpj) configGlobais.cnpj = dados.cnpj;
+                if(dados.razao) configGlobais.razao = dados.razao;
+                if(dados.cidade) configGlobais.cidade = dados.cidade;
             }
         } catch(e) { console.error("Erro na nuvem.", e); }
 
@@ -480,12 +646,19 @@
         document.getElementById(idAba).classList.add('ativa');
         document.getElementById('btn-' + idAba).classList.add('ativo');
         document.getElementById('telaDocumento').style.display = 'none';
+        document.getElementById('telaDocumentoMEI').style.display = 'none';
         document.getElementById('conteinerPrincipal').style.display = 'block';
         if(idAba === 'abaConfig') atualizarPainelProximoBackup();
     }
 
     function cancelarEdicao() { limparFormularioOS(); mudarAba('abaHistorico'); }
-    function fecharImpressao() { document.getElementById('telaDocumento').style.display = 'none'; document.getElementById('conteinerPrincipal').style.display = 'block'; mudarAba(ultimaAbaAberta); }
+    
+    function fecharImpressao() { 
+        document.getElementById('telaDocumento').style.display = 'none'; 
+        document.getElementById('telaDocumentoMEI').style.display = 'none'; 
+        document.getElementById('conteinerPrincipal').style.display = 'block'; 
+        mudarAba(ultimaAbaAberta); 
+    }
 
     function aplicarConfiguracoesNaTela() {
         document.getElementById('lojaEnd').value = configGlobais.end || "";
@@ -493,6 +666,11 @@
         document.getElementById('configSenha').value = configGlobais.senhaAdmin || "123456";
         document.getElementById('configClientId').value = configGlobais.gapiClientId || "";
         document.getElementById('configLembretes').value = configGlobais.lembretes || "";
+        
+        document.getElementById('configCnpj').value = configGlobais.cnpj || "";
+        document.getElementById('configRazao').value = configGlobais.razao || "";
+        document.getElementById('configCidade').value = configGlobais.cidade || "";
+        
         if (configGlobais.logo) { document.getElementById('navLogo').src = configGlobais.logo; document.getElementById('navLogo').style.display = 'block'; }
     }
 
@@ -504,6 +682,11 @@
         const senhaAdmin = document.getElementById('configSenha').value;
         const gapiClientId = document.getElementById('configClientId').value;
         const lembretes = document.getElementById('configLembretes').value;
+        
+        const cnpj = document.getElementById('configCnpj').value;
+        const razao = document.getElementById('configRazao').value;
+        const cidade = document.getElementById('configCidade').value;
+
         const file = document.getElementById('inputLogo').files[0];
         let logoData = configGlobais.logo || "";
 
@@ -511,23 +694,80 @@
             const reader = new FileReader();
             reader.onload = async (e) => { 
                 logoData = e.target.result; 
-                await enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, lembretes, logoData);
+                await enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, lembretes, cnpj, razao, cidade, logoData);
                 btnSalvar.innerText = "💾 SALVAR TUDO NA NUVEM";
             };
             reader.readAsDataURL(file);
         } else { 
-            await enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, lembretes, logoData);
+            await enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, lembretes, cnpj, razao, cidade, logoData);
             btnSalvar.innerText = "💾 SALVAR TUDO NA NUVEM";
         }
     }
 
-    async function enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, lembretes, logoData) {
-        const dados = { end, tel, senhaAdmin, gapiClientId, lembretes, logo: logoData, ultimoBackupData: configGlobais.ultimoBackupData || "" };
+    async function enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, lembretes, cnpj, razao, cidade, logoData) {
+        const dados = { end, tel, senhaAdmin, gapiClientId, lembretes, cnpj, razao, cidade, logo: logoData, ultimoBackupData: configGlobais.ultimoBackupData || "" };
         await db.collection('configuracoes').doc('gerais').set(dados);
         configGlobais = dados;
         if (logoData) { document.getElementById('navLogo').src = logoData; document.getElementById('navLogo').style.display = 'block'; }
         alert("Configurações sincronizadas!");
     }
+
+    // LOGICA DO RELATORIO MEI
+    function formatarMoeda(valor) {
+        return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function calcularMEI() {
+        let v1 = parseFloat(document.getElementById('mei1').value) || 0;
+        let v2 = parseFloat(document.getElementById('mei2').value) || 0;
+        let v3 = v1 + v2;
+        document.getElementById('mei3').innerText = v3.toFixed(2);
+
+        let v4 = parseFloat(document.getElementById('mei4').value) || 0;
+        let v5 = parseFloat(document.getElementById('mei5').value) || 0;
+        let v6 = v4 + v5;
+        document.getElementById('mei6').innerText = v6.toFixed(2);
+
+        let v7 = parseFloat(document.getElementById('mei7').value) || 0;
+        let v8 = parseFloat(document.getElementById('mei8').value) || 0;
+        let v9 = v7 + v8;
+        document.getElementById('mei9').innerText = v9.toFixed(2);
+
+        let v10 = v3 + v6 + v9;
+        document.getElementById('mei10').innerText = v10.toFixed(2);
+    }
+
+    function imprimirMEI() {
+        document.getElementById('docMeiCnpj').innerText = configGlobais.cnpj || "NÃO CONFIGURADO NA ABA CONFIG";
+        document.getElementById('docMeiRazao').innerText = configGlobais.razao || "NÃO CONFIGURADO";
+        
+        let mes = document.getElementById('meiMes').value;
+        let ano = document.getElementById('meiAno').value;
+        document.getElementById('docMeiPeriodo').innerText = `${mes} DE ${ano}`;
+
+        document.getElementById('docMei1').innerText = formatarMoeda(parseFloat(document.getElementById('mei1').value) || 0);
+        document.getElementById('docMei2').innerText = formatarMoeda(parseFloat(document.getElementById('mei2').value) || 0);
+        document.getElementById('docMei3').innerText = formatarMoeda(parseFloat(document.getElementById('mei3').innerText) || 0);
+
+        document.getElementById('docMei4').innerText = formatarMoeda(parseFloat(document.getElementById('mei4').value) || 0);
+        document.getElementById('docMei5').innerText = formatarMoeda(parseFloat(document.getElementById('mei5').value) || 0);
+        document.getElementById('docMei6').innerText = formatarMoeda(parseFloat(document.getElementById('mei6').innerText) || 0);
+
+        document.getElementById('docMei7').innerText = formatarMoeda(parseFloat(document.getElementById('mei7').value) || 0);
+        document.getElementById('docMei8').innerText = formatarMoeda(parseFloat(document.getElementById('mei8').value) || 0);
+        document.getElementById('docMei9').innerText = formatarMoeda(parseFloat(document.getElementById('mei9').innerText) || 0);
+
+        document.getElementById('docMei10').innerText = formatarMoeda(parseFloat(document.getElementById('mei10').innerText) || 0);
+
+        let dataHoje = new Date().toLocaleDateString('pt-BR');
+        let cidade = configGlobais.cidade || "Sua Cidade";
+        document.getElementById('docMeiLocalData').innerText = `${cidade}, ${dataHoje}`;
+
+        document.getElementById('conteinerPrincipal').style.display = 'none';
+        document.getElementById('telaDocumentoMEI').style.display = 'block';
+        window.scrollTo(0, 0);
+    }
+
 
     // FUNÇÕES DE DATA BLINDADAS (EVITAM ERROS EM OS ANTIGAS)
     function converterParaDataObj(dataStr) {
@@ -557,6 +797,7 @@
         return snap.empty ? 1 : snap.docs[0].data().os + 1;
     }
 
+    // SALVAR PDV
     async function salvarVendaPDV(imprimirRecibo) {
         const desc = document.getElementById('pdvProduto').value;
         const venda = parseFloat(document.getElementById('pdvVenda').value) || 0;
@@ -574,7 +815,7 @@
         };
         await db.collection("servicos").add(dados); alert("Venda registada!");
         document.querySelectorAll('#abaPDV input[type=number], #abaPDV textarea').forEach(el => el.value = '');
-        if(imprimirRecibo) { prepararImpressao(dados); } else { carregarHistorico(); }
+        if(imprimirRecibo) { prepararImpressaoOS(dados); } else { carregarHistorico(); }
     }
 
     async function salvarOS(tipoDoc) {
@@ -609,7 +850,7 @@
         if(!dados.cliente) return alert("Digite o nome do cliente!");
 
         if(editandoId) { await db.collection("servicos").doc(editandoId).update(dados); limparFormularioOS(); mudarAba('abaHistorico'); } 
-        else { await db.collection("servicos").add(dados); prepararImpressao(dados); limparFormularioOS(); }
+        else { await db.collection("servicos").add(dados); prepararImpressaoOS(dados); limparFormularioOS(); }
         carregarHistorico();
     }
 
@@ -625,18 +866,18 @@
         document.getElementById('dataEntrada').value = new Date().toISOString().split('T')[0];
     }
 
-    // IMPRESSÃO BLINDADA CONTRA ERRO DE ASPAS NAS STRINGS
+    // IMPRESSÃO OS E PDV
     function prepararImpressaoFromEncoded(encodedStr) {
         try {
             const d = JSON.parse(decodeURIComponent(encodedStr));
-            prepararImpressao(d);
+            prepararImpressaoOS(d);
         } catch (e) {
             alert("Erro ao ler os dados para impressão.");
             console.error(e);
         }
     }
 
-    function prepararImpressao(d) {
+    function prepararImpressaoOS(d) {
         if(configGlobais.logo) { document.getElementById('docLogo').src = configGlobais.logo; document.getElementById('docLogo').style.display = 'inline-block'; }
         document.getElementById('docEnd').innerText = configGlobais.end || ""; document.getElementById('docTel').innerText = configGlobais.tel || "";
         document.getElementById('resOS').innerText = String(d.os).padStart(4, '0');
@@ -673,6 +914,9 @@
         document.getElementById('resObra').innerText = d.vObra ? d.vObra.toFixed(2) : "0.00"; document.getElementById('resTotal').innerText = "R$ " + (d.total ? d.total.toFixed(2) : "0.00");
         document.getElementById('resSinal').innerText = d.vSinal ? "R$ " + d.vSinal.toFixed(2) : "R$ 0.00"; document.getElementById('resFaltaPagar').innerText = d.faltaPagar ? "R$ " + d.faltaPagar.toFixed(2) : "R$ 0.00";
         document.getElementById('resGarO').innerText = d.garO || ""; document.getElementById('resGarP').innerText = d.garP || ""; document.getElementById('resDataPrev').innerText = d.dataPrev || "Sem previsão";
+        
+        let cidadeLocal = configGlobais.cidade || "Sua Cidade";
+        document.getElementById('resLocalData').innerText = cidadeLocal;
         document.getElementById('resData').innerText = d.data || new Date().toLocaleDateString('pt-BR');
 
         let pagText = [];
@@ -683,7 +927,8 @@
         if(pagText.length > 0) { document.getElementById('rowMetodosPagamento').style.display = 'flex'; document.getElementById('resMeiosPag').innerText = pagText.join(' | '); } 
         else { document.getElementById('rowMetodosPagamento').style.display = 'none'; }
 
-        document.getElementById('conteinerPrincipal').style.display = 'none'; document.getElementById('telaDocumento').style.display = 'block'; window.scrollTo(0, 0);
+        document.getElementById('conteinerPrincipal').style.display = 'none'; document.getElementById('telaDocumentoMEI').style.display = 'none';
+        document.getElementById('telaDocumento').style.display = 'block'; window.scrollTo(0, 0);
     }
 
     async function carregarHistorico() {
@@ -696,7 +941,6 @@
         }
     }
 
-    // INTELIGÊNCIA BLINDADA
     function processarInteligencia(snap) {
         try {
             clientesFieis.clear(); mapaGarantias.clear();
@@ -740,7 +984,6 @@
         }
     }
 
-    // KANBAN BLINDADO COM GARANTIA RESTAURADA
     function renderizarKanban(snap, filtroText = "") {
         let htmlOrcar = "", htmlExec = "", htmlConc = "", htmlEntr = "";
         let cOrcar = 0, cExec = 0, cConc = 0, cEntr = 0;
@@ -776,7 +1019,6 @@
                     tagExtra = `<span class="tag" style="background:#6c757d;">🛒 VENDA</span>`; 
                 } else if(d.status === 'Entregue ao Cliente') {
                     
-                    // LÓGICA DE GARANTIA DETALHADA RESTAURADA AQUI
                     let gO = converterParaDias(d.garO); 
                     let gP = converterParaDias(d.garP);
                     
@@ -792,7 +1034,6 @@
                     } else {
                         tagExtra = `<span class="tag" style="background:#6c757d;">❌ GARANTIA EXPIRADA</span>`;
                     }
-                    // FIM DA LÓGICA DE GARANTIA DETALHADA
 
                 } else if(dias > 180) { 
                     tagExtra = `<span class="tag" style="background:red;">🚨 ABANDONADO</span>`; 
@@ -809,7 +1050,6 @@
                     }
                 }
 
-                // Proteção contra quebra de aspas simples/duplas no HTML do botão
                 const encodedData = encodeURIComponent(JSON.stringify(d));
 
                 let card = `
