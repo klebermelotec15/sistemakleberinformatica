@@ -311,6 +311,11 @@
         <h3 style="border-bottom: 1px solid #ccc; padding-bottom:5px;">🛡️ Backup de Segurança</h3>
         <p style="font-size: 13px; color: #555;">O sistema verifica automaticamente se houve backup após a última Segunda-feira e Quinta-feira. Pode também forçar um backup manual a qualquer momento.</p>
         
+        <div style="background:#e8f4fd; padding:15px; border-radius:8px; border:1px solid #b8daff; margin-bottom: 20px;">
+            <strong style="color:#0056b3;">📅 Próximo Backup Automático na Nuvem:</strong>
+            <p id="dataProximoBackup" style="margin: 5px 0 0 0; font-size: 15px;">A calcular...</p>
+        </div>
+
         <div class="grid">
             <div class="full">
                 <label>Seu Google Client ID (Para envio automático ao Google Drive):</label>
@@ -320,7 +325,7 @@
         
         <div class="btn-group" style="margin-bottom: 30px;">
             <button class="btn-blue" onclick="baixarBackupLocalManual()">💾 BAIXAR BACKUP NO COMPUTADOR</button>
-            <button class="btn-green" onclick="iniciarBackupDrive()">☁️ ENVIAR PARA O GOOGLE DRIVE</button>
+            <button class="btn-green" onclick="iniciarBackupDrive()">☁️ ENVIAR PARA O GOOGLE DRIVE AGORA</button>
         </div>
         <p id="statusBackup" style="text-align:center; font-weight:bold; color:var(--primary);"></p>
 
@@ -481,6 +486,7 @@
             carregarHistorico();
             limparFormularioOS();
             gatilhoInteligenteBackup();
+            atualizarPainelProximoBackup();
         } else {
             document.getElementById('erroLogin').style.display = 'block';
             btn.innerText = "ENTRAR";
@@ -498,6 +504,10 @@
         
         document.getElementById('telaDocumento').style.display = 'none';
         document.getElementById('conteinerPrincipal').style.display = 'block';
+        
+        if(idAba === 'abaConfig') {
+            atualizarPainelProximoBackup();
+        }
     }
 
     function cancelarEdicao() {
@@ -567,6 +577,36 @@
         const dataHoje = new Date().toLocaleDateString('pt-BR');
         configGlobais.ultimoBackupData = dataHoje;
         await db.collection('configuracoes').doc('gerais').set(configGlobais);
+        atualizarPainelProximoBackup();
+    }
+
+    // LÓGICA DO PRÓXIMO BACKUP NO PAINEL
+    function atualizarPainelProximoBackup() {
+        const hoje = new Date();
+        hoje.setHours(0,0,0,0);
+        const dataHojeStr = hoje.toLocaleDateString('pt-BR');
+        const ultimoBackupStr = configGlobais.ultimoBackupData;
+
+        let diaAtual = hoje.getDay(); // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sab
+
+        // Se hoje for dia de backup e ainda não foi feito
+        if ((diaAtual === 1 || diaAtual === 4) && ultimoBackupStr !== dataHojeStr) {
+            document.getElementById('dataProximoBackup').innerHTML = "<strong style='color: #28a745;'>Hoje (Automático)</strong>";
+            return;
+        }
+
+        // Calcula a próxima Segunda (1) ou Quinta (4)
+        let proximo = new Date(hoje);
+        proximo.setDate(proximo.getDate() + 1);
+        while (proximo.getDay() !== 1 && proximo.getDay() !== 4) {
+            proximo.setDate(proximo.getDate() + 1);
+        }
+
+        const diasSemana = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+        const dataFormatada = proximo.toLocaleDateString('pt-BR');
+        const nomeDia = diasSemana[proximo.getDay()];
+
+        document.getElementById('dataProximoBackup').innerHTML = `<strong>${nomeDia}, ${dataFormatada}</strong>`;
     }
 
     function calcularDias(dataStr) {
@@ -626,7 +666,7 @@
         if(imprimirRecibo) { prepararImpressao(dados); } else { carregarHistorico(); }
     }
 
-    // SALVAR OS (ATUALIZADO COM INSPEÇÃO RÁPIDA)
+    // SALVAR OS
     async function salvarOS(tipoDoc) {
         const vp = parseFloat(document.getElementById('vPecas').value) || 0;
         const vo = parseFloat(document.getElementById('vObra').value) || 0;
@@ -1067,6 +1107,7 @@
                 const hoje = new Date().toLocaleDateString('pt-BR');
                 configGlobais.ultimoBackupData = hoje;
                 await db.collection('configuracoes').doc('gerais').update({ ultimoBackupData: hoje });
+                atualizarPainelProximoBackup(); // ATUALIZA O PAINEL DEPOIS DO SUCESSO
 
                 if(silencioso) {
                     document.getElementById('alertaBackupInteligente').innerHTML = "<strong>✅ Backup Automático (Bi-Semanal):</strong> Sincronizado com sucesso no Google Drive!";
