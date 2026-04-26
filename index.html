@@ -40,6 +40,12 @@
         .checklist-grid { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; }
         .chk-label { display: flex; align-items: center; gap: 5px; font-weight: normal; margin: 0; font-size: 13px; cursor: pointer; }
         
+        /* ESTILO DA CAIXA DE INSPEÇÃO RÁPIDA */
+        .inspecao-box { background: #e3f2fd; padding: 15px; border-radius: 8px; border: 1px solid #90caf9; margin-top: 15px; }
+        .inspecao-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+        .inspecao-grid label { font-size: 12px; color: #0056b3; }
+        .inspecao-grid select { padding: 6px; font-size: 13px; border-color: #b8daff; }
+
         .btn-group { display: flex; gap: 10px; margin-top: 20px; }
         button { flex: 1; padding: 15px; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; color: white; transition: 0.3s; }
         .btn-blue { background: var(--primary); }
@@ -159,8 +165,54 @@
                     <label class="chk-label"><input type="checkbox" class="chk-item" value="Cartucho/Toner"> Cartucho/Toner</label>
                 </div>
             </div>
+
+            <div class="full inspecao-box">
+                <label style="color:#0056b3; margin-bottom:10px; font-size:14px;">🔍 Inspeção Rápida de Balcão (Pré-Diagnóstico)</label>
+                <div class="inspecao-grid">
+                    <div>
+                        <label>Liga?</label>
+                        <select id="insLiga">
+                            <option value="-">-</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Dá Imagem?</label>
+                        <select id="insImagem">
+                            <option value="-">-</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Barulho Estranho?</label>
+                        <select id="insBarulho">
+                            <option value="-">-</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Temp. Alta?</label>
+                        <select id="insTemp">
+                            <option value="-">-</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>LED Piscando?</label>
+                        <select id="insLed">
+                            <option value="-">-</option>
+                            <option value="Sim">Sim</option>
+                            <option value="Não">Não</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
             
-            <div class="full"><label>Outros Acessórios / Estado Físico (Ex: Tela trincada, sem bateria...):</label><input type="text" id="aces"></div>
+            <div class="full"><label>Outros Acessórios / Estado Físico Detalhado (Ex: Tela trincada, dobradiça quebrada...):</label><input type="text" id="aces"></div>
         </div>
 
         <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">3. Detalhes Técnicos</h3>
@@ -178,9 +230,9 @@
                     <option value="Entregue ao Cliente">🟢 Entregue ao Cliente</option>
                 </select>
             </div>
-            <div class="full"><label>Defeito Relatado:</label><textarea id="defeito" rows="2"></textarea></div>
-            <div class="full"><label>Laudo Técnico:</label><textarea id="laudo" rows="2"></textarea></div>
-            <div class="full"><label>Serviços / Peças:</label><textarea id="servicos" rows="2"></textarea></div>
+            <div class="full"><label>Defeito Relatado pelo Cliente:</label><textarea id="defeito" rows="2"></textarea></div>
+            <div class="full"><label>Laudo Técnico (Diagnóstico Final):</label><textarea id="laudo" rows="2"></textarea></div>
+            <div class="full"><label>Serviços Realizados / Peças Trocadas:</label><textarea id="servicos" rows="2"></textarea></div>
         </div>
 
         <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">4. Fechamento Financeiro & Pagamento</h3>
@@ -328,6 +380,14 @@
         </div>
         <div class="pdf-row">
             <div class="pdf-col" style="flex:1"><span class="pdf-label">Acessórios Recebidos / Estado Físico</span><span class="pdf-value" id="resAcesFull"></span></div>
+        </div>
+        
+        <div class="pdf-row" id="rowInspecao" style="background:#e3f2fd;">
+            <div class="pdf-col"><span class="pdf-label" style="color:#0056b3;">Inspeção: Liga?</span><span class="pdf-value" id="resInsLiga"></span></div>
+            <div class="pdf-col"><span class="pdf-label" style="color:#0056b3;">Dá Imagem?</span><span class="pdf-value" id="resInsImagem"></span></div>
+            <div class="pdf-col"><span class="pdf-label" style="color:#0056b3;">Barulho Estranho?</span><span class="pdf-value" id="resInsBarulho"></span></div>
+            <div class="pdf-col"><span class="pdf-label" style="color:#0056b3;">Temp. Alta?</span><span class="pdf-value" id="resInsTemp"></span></div>
+            <div class="pdf-col"><span class="pdf-label" style="color:#0056b3;">LED Piscando?</span><span class="pdf-value" id="resInsLed"></span></div>
         </div>
     </div>
 
@@ -566,7 +626,7 @@
         if(imprimirRecibo) { prepararImpressao(dados); } else { carregarHistorico(); }
     }
 
-    // SALVAR OS (ATUALIZADO COM O NOVO CHECKLIST + BLUETOOTH)
+    // SALVAR OS (ATUALIZADO COM INSPEÇÃO RÁPIDA)
     async function salvarOS(tipoDoc) {
         const vp = parseFloat(document.getElementById('vPecas').value) || 0;
         const vo = parseFloat(document.getElementById('vObra').value) || 0;
@@ -580,7 +640,7 @@
         const dataInput = document.getElementById('dataEntrada').value;
         const dataFormatada = dataInput ? dataInput.split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
 
-        // RECOLHER CHECKLIST
+        // RECOLHER CHECKLIST E INSPEÇÃO
         let chkArr = [];
         document.querySelectorAll('.chk-item:checked').forEach(el => chkArr.push(el.value));
 
@@ -594,8 +654,17 @@
             cep: document.getElementById('cep').value, equip: document.getElementById('equip').value,
             modelo: document.getElementById('modelo').value, serie: document.getElementById('serie').value,
             
-            chkList: chkArr.join(', '), // Salva a nova lista dinâmica
-            aces: document.getElementById('aces').value, // Salva os "outros" itens textuais
+            chkList: chkArr.join(', '), 
+            aces: document.getElementById('aces').value,
+            
+            // Dados da Inspeção Rápida
+            inspecao: {
+                liga: document.getElementById('insLiga').value,
+                imagem: document.getElementById('insImagem').value,
+                barulho: document.getElementById('insBarulho').value,
+                temp: document.getElementById('insTemp').value,
+                led: document.getElementById('insLed').value
+            },
             
             defeito: document.getElementById('defeito').value,
             laudo: document.getElementById('laudo').value, servicos: document.getElementById('servicos').value,
@@ -630,6 +699,14 @@
         document.querySelectorAll('#abaNovaOS input[type=text], #abaNovaOS input[type=number], #abaNovaOS textarea').forEach(el => el.value = '');
         
         document.querySelectorAll('.chk-item').forEach(el => el.checked = false);
+        
+        // Reset Inspecao
+        document.getElementById('insLiga').value = "-";
+        document.getElementById('insImagem').value = "-";
+        document.getElementById('insBarulho').value = "-";
+        document.getElementById('insTemp').value = "-";
+        document.getElementById('insLed').value = "-";
+
         document.getElementById('status').value = "Falta Orçar";
         document.getElementById('garObra').value = "90 Dias";
         document.getElementById('garPecas').value = "3 meses";
@@ -683,13 +760,19 @@
         let acesArr = [];
         if (d.chkList) acesArr.push(d.chkList);
         else {
-            // Suporte legado
             if (d.chkFonte === "Sim") acesArr.push("Fonte/Carregador");
             if (d.chkCapa === "Sim") acesArr.push("Capa/Case");
         }
         if (d.aces) acesArr.push(d.aces);
         
         document.getElementById('resAcesFull').innerText = acesArr.join(' | ') || "Nenhum acessório registado";
+
+        // Inspeção no PDF
+        document.getElementById('resInsLiga').innerText = d.inspecao?.liga || "-";
+        document.getElementById('resInsImagem').innerText = d.inspecao?.imagem || "-";
+        document.getElementById('resInsBarulho').innerText = d.inspecao?.barulho || "-";
+        document.getElementById('resInsTemp').innerText = d.inspecao?.temp || "-";
+        document.getElementById('resInsLed').innerText = d.inspecao?.led || "-";
 
         document.getElementById('resDefeito').innerText = d.defeito || ""; document.getElementById('resLaudo').innerText = d.laudo || "";
         document.getElementById('resServicos').innerText = d.servicos || "";
@@ -818,11 +901,17 @@
                 if(cb) cb.checked = true;
             });
         }
-        // Suporte legado
         if(d.chkFonte === "Sim") { const cb = document.querySelector(`.chk-item[value="Fonte/Carregador"]`); if(cb) cb.checked = true; }
         if(d.chkCapa === "Sim") { const cb = document.querySelector(`.chk-item[value="Capa/Case"]`); if(cb) cb.checked = true; }
         
         document.getElementById('aces').value = d.aces || "";
+        
+        // Puxar Inspecao
+        document.getElementById('insLiga').value = d.inspecao?.liga || "-";
+        document.getElementById('insImagem').value = d.inspecao?.imagem || "-";
+        document.getElementById('insBarulho').value = d.inspecao?.barulho || "-";
+        document.getElementById('insTemp').value = d.inspecao?.temp || "-";
+        document.getElementById('insLed').value = d.inspecao?.led || "-";
         
         document.getElementById('defeito').value = d.defeito || ""; document.getElementById('laudo').value = d.laudo || "";
         document.getElementById('servicos').value = d.servicos || ""; document.getElementById('vPecas').value = d.vPecas || "";
