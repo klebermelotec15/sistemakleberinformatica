@@ -219,6 +219,10 @@
         <h2 style="margin-top: 0;">📂 Quadro Kanban & Histórico</h2>
         <input type="text" id="busca" onkeyup="buscar()" placeholder="🔍 Buscar cliente, OS ou equipamento..." style="margin-bottom:15px;">
         
+        <div class="alerta-abandono" id="alertaAbandono">
+            <strong>🚨 ATENÇÃO:</strong> Existem <span id="qtdAbandonados">0</span> equipamento(s) na loja há mais de 180 dias!
+        </div>
+
         <div class="kanban-board" id="kanbanBoard">
             <div class="kanban-col">
                 <div class="kanban-header" style="color:#dc3545;">🔴 Falta Orçar (<span id="countOrcar">0</span>)</div>
@@ -413,11 +417,11 @@
     let ultimaAbaAberta = 'abaNovaOS';
     let configGlobais = { senhaAdmin: "123456", gapiClientId: "", end: "", tel: "", logo: "", ultimoBackupData: "", lembretes: "" };
     
-    // VARIÁVEIS DE INTELIGÊNCIA (FIDELIDADE E GARANTIA)
+    // VARIÁVEIS DA INTELIGÊNCIA
     let clientesFieis = new Map();
-    let mapaGarantias = new Map(); // Guarda a série e a data da OS mais recente
+    let mapaGarantias = new Map(); 
 
-    // BUSCA DE CEP AUTOMÁTICA
+    // BUSCA DE CEP (VIACEP)
     async function buscarCEP() {
         let cep = document.getElementById('cep').value.replace(/\D/g, '');
         if (cep.length === 8) {
@@ -457,7 +461,7 @@
             document.getElementById('menuNavegacao').style.display = 'flex';
             document.getElementById('conteinerPrincipal').style.display = 'block';
             aplicarConfiguracoesNaTela();
-            carregarHistorico();
+            await carregarHistorico();
             limparFormularioOS();
             gatilhoInteligenteBackup();
             atualizarPainelProximoBackup();
@@ -525,20 +529,24 @@
         alert("Configurações sincronizadas!");
     }
 
+    // FUNÇÕES DE DATA BLINDADAS (EVITAM ERROS EM OS ANTIGAS)
     function converterParaDataObj(dataStr) {
-        if(!dataStr) return null;
-        const [d, m, y] = dataStr.split('/');
-        if(!d || !m || !y) return null;
-        return new Date(y, m - 1, d);
+        if(!dataStr || typeof dataStr !== 'string') return null;
+        const partes = dataStr.split('/');
+        if(partes.length !== 3) return null;
+        return new Date(partes[2], partes[1] - 1, partes[0]);
     }
+    
     function calcularDias(dataStr) {
         let obj = converterParaDataObj(dataStr);
         if(!obj) return 0;
         return Math.floor(Math.abs(new Date() - obj) / (1000 * 60 * 60 * 24));
     }
+    
     function converterParaDias(texto) {
         if (!texto) return 0;
-        let t = texto.toLowerCase().trim(); let n = parseFloat(t.replace(/[^0-9.]/g, '')) || 0;
+        let t = String(texto).toLowerCase().trim(); 
+        let n = parseFloat(t.replace(/[^0-9.]/g, '')) || 0;
         if (t.includes('mês') || t.includes('mes')) return n * 30;
         if (t.includes('ano')) return n * 365;
         return n; 
@@ -617,11 +625,22 @@
         document.getElementById('dataEntrada').value = new Date().toISOString().split('T')[0];
     }
 
+    // IMPRESSÃO BLINDADA CONTRA ERRO DE ASPAS NAS STRINGS
+    function prepararImpressaoFromEncoded(encodedStr) {
+        try {
+            const d = JSON.parse(decodeURIComponent(encodedStr));
+            prepararImpressao(d);
+        } catch (e) {
+            alert("Erro ao ler os dados para impressão.");
+            console.error(e);
+        }
+    }
+
     function prepararImpressao(d) {
         if(configGlobais.logo) { document.getElementById('docLogo').src = configGlobais.logo; document.getElementById('docLogo').style.display = 'inline-block'; }
         document.getElementById('docEnd').innerText = configGlobais.end || ""; document.getElementById('docTel').innerText = configGlobais.tel || "";
         document.getElementById('resOS').innerText = String(d.os).padStart(4, '0');
-        document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=OS:${d.os}-Cliente:${encodeURIComponent(d.cliente)}`;
+        document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=OS:${d.os}-Cliente:${encodeURIComponent(d.cliente || '')}`;
 
         if(d.categoria === 'VENDA_BALCAO') {
             document.getElementById('secEquipamento').style.display = 'none'; document.getElementById('tituloTecnico').innerText = "PRODUTOS VENDIDOS";
@@ -636,7 +655,7 @@
             document.getElementById('resPecas').innerText = d.vPecas ? d.vPecas.toFixed(2) : "0.00";
         }
 
-        document.getElementById('resCliente').innerText = d.cliente; document.getElementById('resCpf').innerText = d.cpf || ""; document.getElementById('resRg').innerText = d.rg || "";
+        document.getElementById('resCliente').innerText = d.cliente || ""; document.getElementById('resCpf').innerText = d.cpf || ""; document.getElementById('resRg').innerText = d.rg || "";
         document.getElementById('resEndCli').innerText = d.endCliente || ""; document.getElementById('resBairro').innerText = d.bairro || "";
         document.getElementById('resCep').innerText = d.cep || ""; document.getElementById('resZap').innerText = d.whatsapp || "";
         document.getElementById('resEquip').innerText = d.equip || ""; document.getElementById('resModelo').innerText = d.modelo || ""; document.getElementById('resSerie').innerText = d.serie || ""; 
@@ -668,107 +687,138 @@
     }
 
     async function carregarHistorico() {
-        const snap = await db.collection("servicos").orderBy("os", "desc").get();
-        processarInteligencia(snap); // Processa fidelidade e garantia
-        renderizarKanban(snap);
+        try {
+            const snap = await db.collection("servicos").orderBy("os", "desc").get();
+            processarInteligencia(snap); // Processa fidelidade e garantia com segurança
+            renderizarKanban(snap);
+        } catch (e) {
+            console.error("Erro ao carregar banco de dados:", e);
+        }
     }
 
+    // INTELIGÊNCIA BLINDADA
     function processarInteligencia(snap) {
-        clientesFieis.clear(); mapaGarantias.clear();
-        let faturado = 0, custoPecas = 0, abandonados = 0;
-        
-        let docs = []; snap.forEach(d => docs.push(d.data()));
-        
-        // ORDENA DO MAIS VELHO PARA O MAIS NOVO PARA MONTAR MAPA DE GARANTIA CORRETO
-        let docsCronologicos = [...docs].reverse(); 
-        
-        docsCronologicos.forEach(d => {
-            if(d.categoria !== 'VENDA_BALCAO' && d.serie) {
-                mapaGarantias.set(d.serie, { os: d.os, data: d.data });
-            }
-            if(d.status === 'Entregue ao Cliente' && d.cliente) {
-                let nomeKey = d.cliente.toUpperCase().trim();
-                clientesFieis.set(nomeKey, (clientesFieis.get(nomeKey) || 0) + 1);
-            }
-        });
+        try {
+            clientesFieis.clear(); mapaGarantias.clear();
+            let faturado = 0, custoPecas = 0, abandonados = 0;
+            
+            let docs = []; snap.forEach(d => docs.push(d.data()));
+            let docsCronologicos = [...docs].reverse(); 
+            
+            docsCronologicos.forEach(d => {
+                if(d.categoria !== 'VENDA_BALCAO' && d.serie) {
+                    mapaGarantias.set(String(d.serie).trim(), { os: d.os, data: d.data });
+                }
+                if(d.status === 'Entregue ao Cliente' && d.cliente) {
+                    let nomeKey = String(d.cliente).toUpperCase().trim();
+                    clientesFieis.set(nomeKey, (clientesFieis.get(nomeKey) || 0) + 1);
+                }
+            });
 
-        // DASHBOARD
-        docs.forEach(d => {
-            if(d.status === 'Entregue ao Cliente') { faturado += d.total || 0; custoPecas += d.vPecas || 0; } 
-            else if (calcularDias(d.data) > 180 && d.categoria !== 'VENDA_BALCAO') { abandonados++; }
-        });
+            docs.forEach(d => {
+                if(d.status === 'Entregue ao Cliente') { 
+                    faturado += parseFloat(d.total) || 0; 
+                    custoPecas += parseFloat(d.vPecas) || 0; 
+                } 
+                else if (calcularDias(d.data) > 180 && d.categoria !== 'VENDA_BALCAO') { 
+                    abandonados++; 
+                }
+            });
 
-        document.getElementById('dashFaturado').innerText = "R$ " + faturado.toFixed(2);
-        document.getElementById('dashPecas').innerText = "R$ " + custoPecas.toFixed(2);
-        document.getElementById('dashLucro').innerText = "R$ " + (faturado - custoPecas).toFixed(2);
-        if(abandonados > 0) { document.getElementById('qtdAbandonados').innerText = abandonados; document.getElementById('alertaAbandono').style.display = 'block'; } 
-        else { document.getElementById('alertaAbandono').style.display = 'none'; }
+            document.getElementById('dashFaturado').innerText = "R$ " + faturado.toFixed(2);
+            document.getElementById('dashPecas').innerText = "R$ " + custoPecas.toFixed(2);
+            document.getElementById('dashLucro').innerText = "R$ " + (faturado - custoPecas).toFixed(2);
+            
+            if(abandonados > 0) { 
+                document.getElementById('qtdAbandonados').innerText = abandonados; 
+                document.getElementById('alertaAbandono').style.display = 'block'; 
+            } else { 
+                document.getElementById('alertaAbandono').style.display = 'none'; 
+            }
+        } catch (error) {
+            console.error("Ignorando erro de dados antigos na Inteligência:", error);
+        }
     }
 
+    // KANBAN BLINDADO
     function renderizarKanban(snap, filtroText = "") {
         let htmlOrcar = "", htmlExec = "", htmlConc = "", htmlEntr = "";
         let cOrcar = 0, cExec = 0, cConc = 0, cEntr = 0;
 
         snap.forEach(doc => {
-            const d = doc.data();
-            let searchTarget = `${d.cliente} ${d.os} ${d.equip} ${d.defeito}`.toUpperCase();
-            if (filtroText && !searchTarget.includes(filtroText)) return;
+            try {
+                const d = doc.data();
+                let searchTarget = `${d.cliente || ""} ${d.os || ""} ${d.equip || ""} ${d.defeito || ""}`.toUpperCase();
+                if (filtroText && !searchTarget.includes(filtroText)) return;
 
-            let tagExtra = "", garantiaTag = "", fidelidadeTag = "";
-            let dias = calcularDias(d.data);
-            
-            // INTELIGÊNCIA: FIDELIDADE
-            if(d.cliente && clientesFieis.get(d.cliente.toUpperCase().trim()) >= 5) {
-                fidelidadeTag = `<span class="tag" style="background:#ffc107; color:#000;">⭐ Fiel</span>`;
-            }
-
-            // INTELIGÊNCIA: ALERTA DE GARANTIA (Se existe OS anterior com a mesma série há menos de 90 dias)
-            if(d.serie && d.categoria !== 'VENDA_BALCAO') {
-                let ultimaDaSerie = mapaGarantias.get(d.serie);
-                // Se esta OS NÃO é a última registada para esta série e a OS atual foi aberta recentemente
-                if(ultimaDaSerie && ultimaDaSerie.os !== d.os) {
-                     let diffDiasAnterior = calcularDias(ultimaDaSerie.data);
-                     // Se a última vez que passou na loja foi há menos de 90 dias
-                     if(diffDiasAnterior <= 90 && d.status !== 'Entregue ao Cliente') {
-                         garantiaTag = `<br><span class="tag" style="background:#dc3545;">⚠️ POSSÍVEL RETORNO/GARANTIA</span>`;
-                     }
+                let tagExtra = "", garantiaTag = "", fidelidadeTag = "";
+                let dias = calcularDias(d.data);
+                
+                if(d.cliente) {
+                    let nomeKey = String(d.cliente).toUpperCase().trim();
+                    if (clientesFieis.get(nomeKey) >= 5) {
+                        fidelidadeTag = `<span class="tag" style="background:#ffc107; color:#000;">⭐ Fiel</span>`;
+                    }
                 }
+
+                if(d.serie && d.categoria !== 'VENDA_BALCAO') {
+                    let serieKey = String(d.serie).trim();
+                    let ultimaDaSerie = mapaGarantias.get(serieKey);
+                    if(ultimaDaSerie && ultimaDaSerie.os !== d.os) {
+                        let diffDiasAnterior = calcularDias(ultimaDaSerie.data);
+                        if(diffDiasAnterior <= 90 && d.status !== 'Entregue ao Cliente') {
+                            garantiaTag = `<br><span class="tag" style="background:#dc3545;">⚠️ POSSÍVEL RETORNO/GARANTIA</span>`;
+                        }
+                    }
+                }
+
+                if(d.categoria === 'VENDA_BALCAO') { 
+                    tagExtra = `<span class="tag" style="background:#6c757d;">🛒 VENDA</span>`; 
+                } else if(d.status === 'Entregue ao Cliente') {
+                    let gO = converterParaDias(d.garO); let gP = converterParaDias(d.garP);
+                    if ((gO > 0 && dias <= gO) || (gP > 0 && dias <= gP)) tagExtra = `<span class="tag" style="background:#28a745;">🛡️ GARANTIA ATIVA</span>`;
+                    else tagExtra = `<span class="tag" style="background:#6c757d;">❌ S/ GARANTIA</span>`;
+                } else if(dias > 180) { 
+                    tagExtra = `<span class="tag" style="background:red;">🚨 ABANDONADO</span>`; 
+                }
+                
+                let previsaoTag = "";
+                if(d.dataPrev && d.status !== 'Concluída' && d.status !== 'Entregue ao Cliente') {
+                    let dataObj = converterParaDataObj(d.dataPrev);
+                    if (dataObj) {
+                        let diasParaEntrega = Math.floor((dataObj - new Date()) / (1000 * 60 * 60 * 24));
+                        if(diasParaEntrega < 0) previsaoTag = `<span class="tag" style="background:#dc3545;">⏰ ATRASADO!</span>`;
+                        else if(diasParaEntrega === 0) previsaoTag = `<span class="tag" style="background:#ffc107; color:black;">⏰ ENTREGA HOJE</span>`;
+                        else previsaoTag = `<span class="tag" style="background:#17a2b8;">⏳ Prev: ${d.dataPrev}</span>`;
+                    }
+                }
+
+                // Proteção contra quebra de aspas simples/duplas no HTML do botão
+                const encodedData = encodeURIComponent(JSON.stringify(d));
+
+                let card = `
+                <div class="os-card">
+                    <div style="margin-bottom:8px;">
+                        <strong style="font-size:14px;">#${String(d.os).padStart(4, '0')} - ${d.cliente || "Sem Nome"}</strong> ${fidelidadeTag} <br>
+                        <span style="color:#666;">${d.equip || "Balcão"} | ${d.data || ""}</span>
+                        <div>${tagExtra} ${previsaoTag} ${garantiaTag}</div>
+                    </div>
+                    <div style="display:flex; gap:5px; margin-top:10px;">
+                        <button class="btn-dark btn-small" style="padding:4px;" onclick="prepararImpressaoFromEncoded('${encodedData}')">🖨️ PDF</button>
+                        <button class="btn-blue btn-small" style="padding:4px;" onclick="editarOS('${doc.id}')">✏️ Editar</button>
+                        <button class="btn-red btn-small" style="padding:4px; flex:none;" onclick="excluirOS('${doc.id}')">🗑️</button>
+                    </div>
+                </div>`;
+
+                let stat = String(d.status).trim();
+                if (stat === 'Falta Orçar') { htmlOrcar += card; cOrcar++; }
+                else if (stat === 'Executando') { htmlExec += card; cExec++; }
+                else if (stat === 'Concluída') { htmlConc += card; cConc++; }
+                else { htmlEntr += card; cEntr++; }
+
+            } catch (err) {
+                console.error("OS ignorada na renderização por erro de formato:", doc.id, err);
             }
-
-            if(d.categoria === 'VENDA_BALCAO') { tagExtra = `<span class="tag" style="background:#6c757d;">🛒 VENDA</span>`; } 
-            else if(d.status === 'Entregue ao Cliente') {
-                let gO = converterParaDias(d.garO); let gP = converterParaDias(d.garP);
-                if ((gO > 0 && dias <= gO) || (gP > 0 && dias <= gP)) tagExtra = `<span class="tag" style="background:#28a745;">🛡️ GARANTIA ATIVA</span>`;
-                else tagExtra = `<span class="tag" style="background:#6c757d;">❌ S/ GARANTIA</span>`;
-            } else if(dias > 180) { tagExtra = `<span class="tag" style="background:red;">🚨 ABANDONADO</span>`; }
-            
-            // PREVISÃO
-            let previsaoTag = "";
-            if(d.dataPrev && d.status !== 'Concluída' && d.status !== 'Entregue ao Cliente') {
-                let diasParaEntrega = Math.floor((converterParaDataObj(d.dataPrev) - new Date()) / (1000 * 60 * 60 * 24));
-                if(diasParaEntrega < 0) previsaoTag = `<span class="tag" style="background:#dc3545;">⏰ ATRASADO!</span>`;
-                else if(diasParaEntrega === 0) previsaoTag = `<span class="tag" style="background:#ffc107; color:black;">⏰ ENTREGA HOJE</span>`;
-                else previsaoTag = `<span class="tag" style="background:#17a2b8;">⏳ Prev: ${d.dataPrev}</span>`;
-            }
-
-            let card = `
-            <div class="os-card">
-                <div style="margin-bottom:8px;">
-                    <strong style="font-size:14px;">#${String(d.os).padStart(4, '0')} - ${d.cliente}</strong> ${fidelidadeTag} <br>
-                    <span style="color:#666;">${d.equip || "Balcão"} | ${d.data}</span>
-                    <div>${tagExtra} ${previsaoTag} ${garantiaTag}</div>
-                </div>
-                <div style="display:flex; gap:5px; margin-top:10px;">
-                    <button class="btn-dark btn-small" style="padding:4px;" onclick='prepararImpressao(${JSON.stringify(d)})'>🖨️ PDF</button>
-                    <button class="btn-blue btn-small" style="padding:4px;" onclick="editarOS('${doc.id}')">✏️ Editar</button>
-                    <button class="btn-red btn-small" style="padding:4px; flex:none;" onclick="excluirOS('${doc.id}')">🗑️</button>
-                </div>
-            </div>`;
-
-            if (d.status === 'Falta Orçar') { htmlOrcar += card; cOrcar++; }
-            else if (d.status === 'Executando') { htmlExec += card; cExec++; }
-            else if (d.status === 'Concluída') { htmlConc += card; cConc++; }
-            else { htmlEntr += card; cEntr++; }
         });
 
         document.getElementById('kb-orcar').innerHTML = htmlOrcar; document.getElementById('countOrcar').innerText = cOrcar;
@@ -789,11 +839,11 @@
         const doc = await db.collection("servicos").doc(id).get(); const d = doc.data();
         if(d.categoria === 'VENDA_BALCAO') return alert("Vendas de balcão não podem ser editadas, exclua e refaça.");
         tipoDocOriginal = d.tipo || 'ENTRADA'; editandoId = id;
-        document.getElementById('status').value = d.status; document.getElementById('cliente').value = d.cliente;
+        document.getElementById('status').value = d.status; document.getElementById('cliente').value = d.cliente || "";
         document.getElementById('cpf').value = d.cpf || ""; document.getElementById('rg').value = d.rg || "";
         document.getElementById('whatsapp').value = d.whatsapp || ""; document.getElementById('endCliente').value = d.endCliente || "";
         document.getElementById('bairro').value = d.bairro || ""; document.getElementById('cep').value = d.cep || "";
-        document.getElementById('equip').value = d.equip; document.getElementById('modelo').value = d.modelo || ""; document.getElementById('serie').value = d.serie || ""; 
+        document.getElementById('equip').value = d.equip || ""; document.getElementById('modelo').value = d.modelo || ""; document.getElementById('serie').value = d.serie || ""; 
         
         document.querySelectorAll('.chk-item').forEach(el => el.checked = false);
         if(d.chkList) { d.chkList.split(', ').forEach(item => { const cb = document.querySelector(`.chk-item[value="${item}"]`); if(cb) cb.checked = true; }); }
@@ -819,7 +869,7 @@
         document.getElementById('botaoSalvarEdicao').style.display = 'flex'; mudarAba('abaNovaOS');
     }
 
-    // LÓGICA DO BACKUP AUTOMÁTICO
+    // BACKUP E CONFIGS
     function atualizarPainelProximoBackup() {
         const hoje = new Date(); hoje.setHours(0,0,0,0); const dataHojeStr = hoje.toLocaleDateString('pt-BR');
         const ultimoBackupStr = configGlobais.ultimoBackupData; let diaAtual = hoje.getDay(); 
@@ -842,9 +892,9 @@
         if (precisaFazer) {
             const clientId = configGlobais.gapiClientId;
             if(clientId) {
-                document.getElementById('alertaBackupInteligente').style.display = 'block'; document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático (Bi-Semanal):</strong> A iniciar o envio de segurança..."; iniciarBackupDrive(true);
+                document.getElementById('alertaBackupInteligente').style.display = 'block'; document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático:</strong> Iniciando envio..."; iniciarBackupDrive(true);
             } else {
-                document.getElementById('alertaBackupInteligente').style.display = 'block'; document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático:</strong> A descarregar localmente (Drive não configurado)."; setTimeout(() => { baixarBackupLocalManual(true); }, 3000); 
+                document.getElementById('alertaBackupInteligente').style.display = 'block'; document.getElementById('alertaBackupInteligente').innerHTML = "<strong>⚙️ Backup Automático:</strong> Baixando localmente (Drive não configurado)."; setTimeout(() => { baixarBackupLocalManual(true); }, 3000); 
             }
         }
     }
@@ -864,7 +914,7 @@
     async function iniciarBackupDrive(silencioso = false) {
         const clientId = configGlobais.gapiClientId;
         if(!clientId) { if(!silencioso) alert("Insira o Google Client ID nas Configurações."); return; }
-        if(!silencioso) document.getElementById('statusBackup').innerText = "⏳ A autenticar no Drive...";
+        if(!silencioso) document.getElementById('statusBackup').innerText = "⏳ Autenticando no Drive...";
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: clientId, scope: 'https://www.googleapis.com/auth/drive.file',
             callback: (tokenResponse) => { if (tokenResponse && tokenResponse.access_token) executarFluxoDrive(tokenResponse.access_token, silencioso); }
@@ -874,7 +924,7 @@
     async function executarFluxoDrive(token, silencioso = false) {
         const status = document.getElementById('statusBackup');
         try {
-            if(!silencioso) status.innerText = "🔍 A procurar a pasta...";
+            if(!silencioso) status.innerText = "🔍 Buscando pasta...";
             let res = await fetch('https://www.googleapis.com/drive/v3/files?q=name="backup Sistema OS" and mimeType="application/vnd.google-apps.folder" and trashed=false', { headers: { Authorization: `Bearer ${token}` } });
             let folderResult = await res.json(); let folderId = folderResult.files && folderResult.files.length > 0 ? folderResult.files[0].id : null;
             if(!folderId) {
@@ -895,7 +945,7 @@
                 else { status.innerText = "✅ Sucesso! Backup salvo."; }
             } else throw new Error("Falha");
         } catch(e) {
-            if(silencioso) document.getElementById('alertaBackupInteligente').innerHTML = "<strong>❌ Erro no Backup.</strong> Faça manual.";
+            if(silencioso) document.getElementById('alertaBackupInteligente').innerHTML = "<strong>❌ Erro no Backup Automático.</strong> Faça manual.";
             else status.innerHTML = "<span style='color:red;'>❌ Erro. Marque a permissão do Drive no Google.</span>";
         }
     }
