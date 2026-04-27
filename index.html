@@ -928,8 +928,7 @@
         document.getElementById('pdvDin').value = ""; document.getElementById('pdvCred').value = ""; 
         document.getElementById('pdvDeb').value = "";
 
-        // PROTEÇÃO NA CHAMADA DO PDF (MANTENDO A MESMA FUNÇÃO PARA VENDAS E OS)
-        if(imprimirRecibo) { prepararImpressaoFromEncoded(encodeURIComponent(JSON.stringify(dados)).replace(/'/g, "%27")); } else { carregarHistorico(); }
+        if(imprimirRecibo) { prepararImpressao(dados); } else { carregarHistorico(); }
     }
 
     // SALVAR OS (COM DESCONTO)
@@ -991,8 +990,7 @@
             mudarAba('abaHistorico'); 
         } else {
             await db.collection("servicos").add(dados);
-            // PROTEÇÃO NA CHAMADA DO PDF (MANTENDO A MESMA FUNÇÃO PARA VENDAS E OS)
-            prepararImpressaoFromEncoded(encodeURIComponent(JSON.stringify(dados)).replace(/'/g, "%27"));
+            prepararImpressao(dados);
             limparFormularioOS();
         }
         carregarHistorico();
@@ -1021,11 +1019,15 @@
         document.getElementById('dataEntrada').value = new Date().toISOString().split('T')[0];
     }
 
-    // IMPRESSÃO BLINDADA CONTRA ERRO DE ASPAS NAS STRINGS
-    function prepararImpressaoFromEncoded(encodedStr) {
+    // IMPRESSÃO DE PDF (BLINDADA, PUXANDO DA NUVEM)
+    async function imprimirOS(id) {
         try {
-            const d = JSON.parse(decodeURIComponent(encodedStr));
-            prepararImpressao(d);
+            const doc = await db.collection("servicos").doc(id).get();
+            if (doc.exists) {
+                prepararImpressao(doc.data());
+            } else {
+                alert("Erro: OS não encontrada no banco de dados.");
+            }
         } catch (e) {
             alert("Erro ao ler os dados para impressão.");
             console.error(e);
@@ -1207,9 +1209,6 @@
                     }
                 }
 
-                // CORREÇÃO CRÍTICA APLICADA AQUI: .replace(/'/g, "%27")
-                const encodedData = encodeURIComponent(JSON.stringify(d)).replace(/'/g, "%27");
-
                 let card = `
                 <div class="os-card">
                     <div style="margin-bottom:8px;">
@@ -1218,7 +1217,7 @@
                         <div>${tagExtra} ${previsaoTag} ${garantiaTag}</div>
                     </div>
                     <div style="display:flex; gap:5px; margin-top:10px;">
-                        <button class="btn-dark btn-small" style="padding:4px;" onclick="prepararImpressaoFromEncoded('${encodedData}')">🖨️ PDF</button>
+                        <button class="btn-dark btn-small" style="padding:4px;" onclick="imprimirOS('${doc.id}')">🖨️ PDF</button>
                         <button class="btn-blue btn-small" style="padding:4px;" onclick="editarOS('${doc.id}')">✏️ Editar</button>
                         <button class="btn-red btn-small" style="padding:4px; flex:none;" onclick="excluirOS('${doc.id}')">🗑️</button>
                     </div>
