@@ -94,7 +94,7 @@
         @media print {
             body { background: white; padding: 0; margin: 0; }
             .no-print, .navbar { display: none !important; }
-            #telaDocumento, #telaDocumentoMEI { display: block !important; padding: 0; border: none; margin: 0; box-shadow: none; max-width: 100%; }
+            #telaDocumento, #telaDocumentoMEI { padding: 0; border: none; margin: 0; box-shadow: none; max-width: 100%; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
@@ -474,7 +474,7 @@
         </div>
     </div>
 
-    <div style="text-align: right; font-size: 10px; margin-top: 5px;"><span id="resLocalData">Belém</span>, <span id="resData"></span></div>
+    <div style="text-align: right; font-size: 10px; margin-top: 5px;"><span id="resLocalData">Belém - PA</span>, <span id="resData"></span></div>
 
     <div class="termo-juridico" id="termoJuridico">
         <strong>TERMO DE RESPONSABILIDADE E ABANDONO:</strong> O cliente declara estar ciente de que o equipamento deverá ser retirado em até <strong>90 dias (3 meses)</strong>. Após este prazo, será cobrada uma taxa de armazenamento de <strong>R$ 30,00 por mês</strong>. Passados <strong>180 dias (6 meses)</strong> sem retirada, o equipamento será legalmente considerado como <strong>abandonado e tratado como sucata</strong> para abatimento dos custos operacionais, não cabendo reclamações ou indenizações posteriores.
@@ -931,7 +931,7 @@
         if(imprimirRecibo) { prepararImpressao(dados); } else { carregarHistorico(); }
     }
 
-    // SALVAR OS (COM DESCONTO)
+    // SALVAR OS (COM DESCONTO E PROTEÇÃO NAN)
     async function salvarOS(tipoDoc) {
         const vp = parseFloat(document.getElementById('vPecas').value) || 0;
         const vo = parseFloat(document.getElementById('vObra').value) || 0;
@@ -1019,7 +1019,7 @@
         document.getElementById('dataEntrada').value = new Date().toISOString().split('T')[0];
     }
 
-    // IMPRESSÃO DIRETO DA NUVEM (SEGURO CONTRA CARACTERES ESPECIAIS)
+    // IMPRIMIR LENDO DO BANCO DE DADOS (SEGURO E BLINDADO)
     async function imprimirOS(id) {
         try {
             const doc = await db.collection("servicos").doc(id).get();
@@ -1040,6 +1040,7 @@
         document.getElementById('resOS').innerText = String(d.os).padStart(4, '0');
         document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=OS:${d.os}-Cliente:${encodeURIComponent(d.cliente || '')}`;
 
+        // BLINDAGEM MATEMÁTICA PARA OS ANTIGAS (Evita o NaN)
         let vd = parseFloat(d.vDesc) || 0;
         let vpec = parseFloat(d.vPecas) || 0;
         let vobr = parseFloat(d.vObra) || 0;
@@ -1084,7 +1085,11 @@
         document.getElementById('resGarO').innerText = d.garO || ""; document.getElementById('resGarP').innerText = d.garP || ""; document.getElementById('resDataPrev').innerText = d.dataPrev || "Sem previsão";
         
         let cidadeLocal = configGlobais.cidade || "Sua Cidade";
-        if(document.getElementById('resLocalData')) document.getElementById('resLocalData').innerText = cidadeLocal;
+        // BLINDAGEM DE DOM: Só tenta injetar a cidade se o campo (span) realmente existir no HTML
+        if(document.getElementById('resLocalData')) {
+            document.getElementById('resLocalData').innerText = cidadeLocal;
+        }
+        
         document.getElementById('resData').innerText = d.data || new Date().toLocaleDateString('pt-BR');
 
         let pagText = [];
@@ -1102,8 +1107,10 @@
         if(pagText.length > 0) { document.getElementById('rowMetodosPagamento').style.display = 'flex'; document.getElementById('resMeiosPag').innerText = pagText.join(' | '); } 
         else { document.getElementById('rowMetodosPagamento').style.display = 'none'; }
 
-        document.getElementById('conteinerPrincipal').style.display = 'none'; document.getElementById('telaDocumentoMEI').style.display = 'none';
-        document.getElementById('telaDocumento').style.display = 'block'; window.scrollTo(0, 0);
+        document.getElementById('conteinerPrincipal').style.display = 'none'; 
+        document.getElementById('telaDocumentoMEI').style.display = 'none';
+        document.getElementById('telaDocumento').style.display = 'block'; 
+        window.scrollTo(0, 0);
     }
 
     async function carregarHistorico() {
