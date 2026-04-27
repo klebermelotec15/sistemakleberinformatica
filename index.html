@@ -199,9 +199,10 @@
         </div>
 
         <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">4. Fechamento Financeiro & Pagamento</h3>
-        <div class="grid">
+        <div class="grid-3">
             <div><label>Mão de Obra (R$):</label><input type="number" id="vObra"></div>
             <div><label>Peças (R$):</label><input type="number" id="vPecas"></div>
+            <div><label>Desconto (R$):</label><input type="number" id="vDesc" placeholder="Desconto aplicado"></div>
         </div>
         
         <div class="grid-4" style="background:#eef8e5; padding:15px; border-radius:8px; border:1px solid #c3e6cb; margin-top:10px;">
@@ -259,7 +260,8 @@
         <div class="grid">
             <div class="full"><label>Nome do Cliente (Opcional):</label><input type="text" id="pdvCliente" value="CLIENTE BALCÃO"></div>
             <div class="full"><label>Produto(s) Vendido(s):</label><textarea id="pdvProduto" rows="3"></textarea></div>
-            <div class="full"><label>Valor Total da Venda (R$):</label><input type="number" id="pdvVenda" placeholder="Total a ser cobrado"></div>
+            <div><label>Valor Total da Venda (R$):</label><input type="number" id="pdvVenda" placeholder="Total a ser cobrado"></div>
+            <div><label>Desconto (R$):</label><input type="number" id="pdvDesc" placeholder="Desconto aplicado"></div>
         </div>
         
         <label style="margin-top:15px; display:block;"><strong>Métodos de Pagamento:</strong></label>
@@ -455,6 +457,7 @@
         <div class="pdf-row">
             <div class="pdf-col"><span class="pdf-label" id="lblObra">Mão de Obra (R$)</span><span class="pdf-value" id="resObra"></span></div>
             <div class="pdf-col"><span class="pdf-label" id="lblPecas">Peças (R$)</span><span class="pdf-value" id="resPecas"></span></div>
+            <div class="pdf-col"><span class="pdf-label" id="lblDesc">Desconto (R$)</span><span class="pdf-value" id="resDesc"></span></div>
             <div class="pdf-col"><span class="pdf-label">Total Pago / Sinal</span><strong class="pdf-value" id="resSinal" style="color:#28a745;"></strong></div>
         </div>
         <div class="pdf-row" id="rowMetodosPagamento" style="background:#eef8e5;">
@@ -471,7 +474,7 @@
         </div>
     </div>
 
-    <div style="text-align: right; font-size: 10px; margin-top: 5px;"><span id="resLocalData">Belém</span>, <span id="resData"></span></div>
+    <div style="text-align: right; font-size: 10px; margin-top: 5px;">Belém, <span id="resData"></span></div>
 
     <div class="termo-juridico" id="termoJuridico">
         <strong>TERMO DE RESPONSABILIDADE E ABANDONO:</strong> O cliente declara estar ciente de que o equipamento deverá ser retirado em até <strong>90 dias (3 meses)</strong>. Após este prazo, será cobrada uma taxa de armazenamento de <strong>R$ 30,00 por mês</strong>. Passados <strong>180 dias (6 meses)</strong> sem retirada, o equipamento será legalmente considerado como <strong>abandonado e tratado como sucata</strong> para abatimento dos custos operacionais, não cabendo reclamações ou indenizações posteriores.
@@ -581,7 +584,7 @@
     let tipoDocOriginal = 'ENTRADA';
     let ultimaAbaAberta = 'abaNovaOS';
 
-    // VARIÁVEL GLOBAL PARA A NUVEM (Adicionado CNPJ, Razão e Cidade)
+    // VARIÁVEL GLOBAL PARA A NUVEM
     let configGlobais = { senhaAdmin: "123456", gapiClientId: "", end: "", tel: "", logo: "", ultimoBackupData: "", lembretes: "", cnpj: "", razao: "", cidade: "Belém - PA" };
 
     // VARIÁVEIS DA INTELIGÊNCIA
@@ -605,7 +608,7 @@
         }
     }
 
-    // VERIFICAÇÃO DE LOGIN NA NUVEM COM CHAVE MESTRA E CAMPOS MEI
+    // VERIFICAÇÃO DE LOGIN NA NUVEM
     async function fazerLogin() {
         const btn = document.getElementById('btnLogin');
         btn.innerText = "A VERIFICAR...";
@@ -891,10 +894,11 @@
         return snap.empty ? 1 : snap.docs[0].data().os + 1;
     }
 
-    // SALVAR PDV
+    // SALVAR PDV (COM DESCONTO)
     async function salvarVendaPDV(imprimirRecibo) {
         const desc = document.getElementById('pdvProduto').value;
         const venda = parseFloat(document.getElementById('pdvVenda').value) || 0;
+        const descPDV = parseFloat(document.getElementById('pdvDesc').value) || 0;
         
         const pix = parseFloat(document.getElementById('pdvPix').value) || 0;
         const din = parseFloat(document.getElementById('pdvDin').value) || 0;
@@ -905,11 +909,13 @@
         if(!desc) return alert("Digite o produto vendido.");
         
         const numOS = await obterProximaOS();
+        const totalVenda = venda - descPDV;
+
         const dados = {
             os: numOS, categoria: 'VENDA_BALCAO', status: 'Entregue ao Cliente',
             cliente: document.getElementById('pdvCliente').value,
             defeito: desc, 
-            vPecas: 0, vObra: venda, total: venda, faltaPagar: venda - totalPago, vSinal: totalPago,
+            vPecas: 0, vObra: venda, vDesc: descPDV, total: totalVenda, faltaPagar: totalVenda - totalPago, vSinal: totalPago,
             pagamentos: { pix, din, cred, deb },
             data: new Date().toLocaleDateString('pt-BR'),
             tipo: 'RECIBO'
@@ -919,16 +925,18 @@
         alert("Venda registada com sucesso!");
         
         document.getElementById('pdvProduto').value = ""; document.getElementById('pdvVenda').value = "";
-        document.getElementById('pdvPix').value = ""; document.getElementById('pdvDin').value = "";
-        document.getElementById('pdvCred').value = ""; document.getElementById('pdvDeb').value = "";
+        document.getElementById('pdvDesc').value = ""; document.getElementById('pdvPix').value = ""; 
+        document.getElementById('pdvDin').value = ""; document.getElementById('pdvCred').value = ""; 
+        document.getElementById('pdvDeb').value = "";
 
         if(imprimirRecibo) { prepararImpressaoFromEncoded(encodeURIComponent(JSON.stringify(dados))); } else { carregarHistorico(); }
     }
 
-    // SALVAR OS
+    // SALVAR OS (COM DESCONTO)
     async function salvarOS(tipoDoc) {
         const vp = parseFloat(document.getElementById('vPecas').value) || 0;
         const vo = parseFloat(document.getElementById('vObra').value) || 0;
+        const vd = parseFloat(document.getElementById('vDesc').value) || 0;
         
         const pix = parseFloat(document.getElementById('osPix').value) || 0;
         const din = parseFloat(document.getElementById('osDin').value) || 0;
@@ -940,11 +948,12 @@
         const dataFormatada = dataInput ? dataInput.split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
         let dataPrevFormatada = document.getElementById('dataPrev').value ? document.getElementById('dataPrev').value.split('-').reverse().join('/') : "";
 
-        // RECOLHER CHECKLIST E INSPEÇÃO
         let chkArr = [];
         document.querySelectorAll('.chk-item:checked').forEach(el => chkArr.push(el.value));
 
         let numOS = editandoId ? parseInt(document.getElementById('idEdicao').innerText) : await obterProximaOS();
+
+        const totalOS = (vp + vo) - vd;
 
         const dados = {
             os: numOS, categoria: 'SERVICO', status: document.getElementById('status').value,
@@ -957,7 +966,6 @@
             chkList: chkArr.join(', '), 
             aces: document.getElementById('aces').value,
             
-            // Dados da Inspeção Rápida
             inspecao: {
                 liga: document.getElementById('insLiga').value,
                 imagem: document.getElementById('insImagem').value,
@@ -969,7 +977,7 @@
             emprestimo: document.getElementById('emprestimo').value,
             defeito: document.getElementById('defeito').value,
             laudo: document.getElementById('laudo').value, servicos: document.getElementById('servicos').value,
-            vPecas: vp, vObra: vo, vSinal: totalPago, total: vp + vo, faltaPagar: (vp + vo) - totalPago,
+            vPecas: vp, vObra: vo, vDesc: vd, vSinal: totalPago, total: totalOS, faltaPagar: totalOS - totalPago,
             pagamentos: { pix, din, cred, deb },
             garP: document.getElementById('garPecas').value, garO: document.getElementById('garObra').value,
             data: dataFormatada, dataPrev: dataPrevFormatada, tipo: tipoDoc
@@ -1000,7 +1008,6 @@
         
         document.querySelectorAll('.chk-item').forEach(el => el.checked = false);
         
-        // Reset Inspecao
         document.getElementById('insLiga').value = "-";
         document.getElementById('insImagem').value = "-";
         document.getElementById('insBarulho').value = "-";
@@ -1013,7 +1020,6 @@
         document.getElementById('dataEntrada').value = new Date().toISOString().split('T')[0];
     }
 
-    // IMPRESSÃO BLINDADA CONTRA ERRO DE ASPAS NAS STRINGS
     function prepararImpressaoFromEncoded(encodedStr) {
         try {
             const d = JSON.parse(decodeURIComponent(encodedStr));
@@ -1035,12 +1041,14 @@
             document.getElementById('lblDefeito').innerText = "Descrição dos Itens"; document.getElementById('boxLaudo').style.display = 'none';
             document.getElementById('termoJuridico').style.display = 'none'; document.getElementById('rowGarantias').style.display = 'none';
             document.getElementById('lblObra').innerText = "Valor da Venda (R$)"; document.getElementById('lblPecas').innerText = "Outros Custos"; document.getElementById('resPecas').innerText = "-";
+            document.getElementById('lblDesc').innerText = "Desconto"; document.getElementById('resDesc').innerText = d.vDesc ? d.vDesc.toFixed(2) : "-";
         } else {
             document.getElementById('secEquipamento').style.display = 'block'; document.getElementById('tituloTecnico').innerText = "3. DETALHES TÉCNICOS DO ATENDIMENTO";
             document.getElementById('lblDefeito').innerText = "3.1. Defeito Relatado / Produto"; document.getElementById('boxLaudo').style.display = 'block';
             document.getElementById('termoJuridico').style.display = 'block'; document.getElementById('rowGarantias').style.display = 'flex';
             document.getElementById('lblObra').innerText = "Mão de Obra (R$)"; document.getElementById('lblPecas').innerText = "Peças (R$)";
             document.getElementById('resPecas').innerText = d.vPecas ? d.vPecas.toFixed(2) : "0.00";
+            document.getElementById('lblDesc').innerText = "Desconto (R$)"; document.getElementById('resDesc').innerText = d.vDesc ? d.vDesc.toFixed(2) : "0.00";
         }
 
         document.getElementById('resCliente').innerText = d.cliente || ""; document.getElementById('resCpf').innerText = d.cpf || ""; document.getElementById('resRg').innerText = d.rg || "";
@@ -1074,7 +1082,8 @@
         if(pagText.length > 0) { document.getElementById('rowMetodosPagamento').style.display = 'flex'; document.getElementById('resMeiosPag').innerText = pagText.join(' | '); } 
         else { document.getElementById('rowMetodosPagamento').style.display = 'none'; }
 
-        document.getElementById('conteinerPrincipal').style.display = 'none'; document.getElementById('telaDocumento').style.display = 'block'; window.scrollTo(0, 0);
+        document.getElementById('conteinerPrincipal').style.display = 'none'; document.getElementById('telaDocumentoMEI').style.display = 'none';
+        document.getElementById('telaDocumento').style.display = 'block'; window.scrollTo(0, 0);
     }
 
     async function carregarHistorico() {
@@ -1259,6 +1268,7 @@
         document.getElementById('defeito').value = d.defeito || ""; document.getElementById('laudo').value = d.laudo || ""; document.getElementById('servicos').value = d.servicos || "";
         document.getElementById('emprestimo').value = d.emprestimo || "";
         document.getElementById('vPecas').value = d.vPecas || ""; document.getElementById('vObra').value = d.vObra || ""; 
+        document.getElementById('vDesc').value = d.vDesc || "";
         document.getElementById('osPix').value = d.pagamentos?.pix || ""; document.getElementById('osDin').value = d.pagamentos?.din || "";
         document.getElementById('osCred').value = d.pagamentos?.cred || ""; document.getElementById('osDeb').value = d.pagamentos?.deb || "";
         document.getElementById('garPecas').value = d.garP || ""; document.getElementById('garObra').value = d.garO || "";
