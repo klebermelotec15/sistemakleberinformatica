@@ -474,7 +474,7 @@
         </div>
     </div>
 
-    <div style="text-align: right; font-size: 10px; margin-top: 5px;">Belém, <span id="resData"></span></div>
+    <div style="text-align: right; font-size: 10px; margin-top: 5px;"><span id="resLocalData">Belém</span>, <span id="resData"></span></div>
 
     <div class="termo-juridico" id="termoJuridico">
         <strong>TERMO DE RESPONSABILIDADE E ABANDONO:</strong> O cliente declara estar ciente de que o equipamento deverá ser retirado em até <strong>90 dias (3 meses)</strong>. Após este prazo, será cobrada uma taxa de armazenamento de <strong>R$ 30,00 por mês</strong>. Passados <strong>180 dias (6 meses)</strong> sem retirada, o equipamento será legalmente considerado como <strong>abandonado e tratado como sucata</strong> para abatimento dos custos operacionais, não cabendo reclamações ou indenizações posteriores.
@@ -591,7 +591,7 @@
     let clientesFieis = new Map();
     let mapaGarantias = new Map(); 
 
-    document.getElementById('meiAno').value = new Date().getFullYear();
+    if(document.getElementById('meiAno')) document.getElementById('meiAno').value = new Date().getFullYear();
 
     // BUSCA DE CEP (VIACEP)
     async function buscarCEP() {
@@ -684,17 +684,16 @@
 
     // APLICAR CONFIGURAÇÕES DA NUVEM NO ECRÃ E NO NAVBAR
     function aplicarConfiguracoesNaTela() {
-        document.getElementById('lojaEnd').value = configGlobais.end || "";
-        document.getElementById('lojaTel').value = configGlobais.tel || "";
-        document.getElementById('configSenha').value = configGlobais.senhaAdmin || "123456";
-        document.getElementById('configClientId').value = configGlobais.gapiClientId || "";
-        document.getElementById('configLembretes').value = configGlobais.lembretes || "";
+        if(document.getElementById('lojaEnd')) document.getElementById('lojaEnd').value = configGlobais.end || "";
+        if(document.getElementById('lojaTel')) document.getElementById('lojaTel').value = configGlobais.tel || "";
+        if(document.getElementById('configSenha')) document.getElementById('configSenha').value = configGlobais.senhaAdmin || "123456";
+        if(document.getElementById('configClientId')) document.getElementById('configClientId').value = configGlobais.gapiClientId || "";
+        if(document.getElementById('configLembretes')) document.getElementById('configLembretes').value = configGlobais.lembretes || "";
+        if(document.getElementById('configCnpj')) document.getElementById('configCnpj').value = configGlobais.cnpj || "";
+        if(document.getElementById('configRazao')) document.getElementById('configRazao').value = configGlobais.razao || "";
+        if(document.getElementById('configCidade')) document.getElementById('configCidade').value = configGlobais.cidade || "";
         
-        document.getElementById('configCnpj').value = configGlobais.cnpj || "";
-        document.getElementById('configRazao').value = configGlobais.razao || "";
-        document.getElementById('configCidade').value = configGlobais.cidade || "";
-        
-        if (configGlobais.logo) {
+        if (configGlobais.logo && document.getElementById('navLogo')) {
             document.getElementById('navLogo').src = configGlobais.logo;
             document.getElementById('navLogo').style.display = 'block';
         }
@@ -703,7 +702,7 @@
     // SALVAR CONFIGURAÇÕES NA NUVEM
     async function salvarConfig() {
         const btnSalvar = document.getElementById('btnSalvarConfigs');
-        btnSalvar.innerText = "⏳ A SALVAR NA NUVEM...";
+        if(btnSalvar) btnSalvar.innerText = "⏳ A SALVAR NA NUVEM...";
         
         const end = document.getElementById('lojaEnd').value;
         const tel = document.getElementById('lojaTel').value;
@@ -722,12 +721,12 @@
             reader.onload = async (e) => { 
                 logoData = e.target.result; 
                 await enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, lembretes, cnpj, razao, cidade, logoData);
-                btnSalvar.innerText = "💾 SALVAR CONFIGURAÇÕES NA NUVEM";
+                if(btnSalvar) btnSalvar.innerText = "💾 SALVAR CONFIGURAÇÕES NA NUVEM";
             };
             reader.readAsDataURL(file);
         } else { 
             await enviarParaFirebase(end, tel, senhaAdmin, gapiClientId, lembretes, cnpj, razao, cidade, logoData);
-            btnSalvar.innerText = "💾 SALVAR CONFIGURAÇÕES NA NUVEM";
+            if(btnSalvar) btnSalvar.innerText = "💾 SALVAR CONFIGURAÇÕES NA NUVEM";
         }
     }
 
@@ -736,7 +735,7 @@
         await db.collection('configuracoes').doc('gerais').set(dados);
         configGlobais = dados;
         
-        if (logoData) {
+        if (logoData && document.getElementById('navLogo')) {
             document.getElementById('navLogo').src = logoData;
             document.getElementById('navLogo').style.display = 'block';
         }
@@ -802,6 +801,7 @@
     }
 
     async function carregarMEI() {
+        if(!document.getElementById('meiMes') || !document.getElementById('meiAno')) return;
         let mes = document.getElementById('meiMes').value;
         let ano = document.getElementById('meiAno').value;
         if(!ano) return;
@@ -893,7 +893,7 @@
         return snap.empty ? 1 : snap.docs[0].data().os + 1;
     }
 
-    // SALVAR PDV E ABRIR IMPRESSÃO LIMPA
+    // SALVAR PDV (COM DESCONTO)
     async function salvarVendaPDV(imprimirRecibo) {
         const desc = document.getElementById('pdvProduto').value;
         const venda = parseFloat(document.getElementById('pdvVenda').value) || 0;
@@ -931,7 +931,7 @@
         if(imprimirRecibo) { prepararImpressao(dados); } else { carregarHistorico(); }
     }
 
-    // SALVAR OS E ABRIR IMPRESSÃO LIMPA
+    // SALVAR OS (COM DESCONTO)
     async function salvarOS(tipoDoc) {
         const vp = parseFloat(document.getElementById('vPecas').value) || 0;
         const vo = parseFloat(document.getElementById('vObra').value) || 0;
@@ -1019,7 +1019,7 @@
         document.getElementById('dataEntrada').value = new Date().toISOString().split('T')[0];
     }
 
-    // IMPRIMIR LENDO DO BANCO DE DADOS (Resolve o erro do Kanban de vez)
+    // IMPRESSÃO DIRETO DA NUVEM (SEGURO CONTRA CARACTERES ESPECIAIS)
     async function imprimirOS(id) {
         try {
             const doc = await db.collection("servicos").doc(id).get();
@@ -1029,7 +1029,7 @@
                 alert("Erro: OS não encontrada no banco de dados.");
             }
         } catch (e) {
-            alert("Erro ao ler os dados para impressão.");
+            alert("Erro ao conectar com o servidor para impressão.");
             console.error(e);
         }
     }
@@ -1040,19 +1040,26 @@
         document.getElementById('resOS').innerText = String(d.os).padStart(4, '0');
         document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=OS:${d.os}-Cliente:${encodeURIComponent(d.cliente || '')}`;
 
+        let vd = parseFloat(d.vDesc) || 0;
+        let vpec = parseFloat(d.vPecas) || 0;
+        let vobr = parseFloat(d.vObra) || 0;
+        let vtot = parseFloat(d.total) || 0;
+        let vfal = parseFloat(d.faltaPagar) || 0;
+        let vsin = parseFloat(d.vSinal) || 0;
+
         if(d.categoria === 'VENDA_BALCAO') {
             document.getElementById('secEquipamento').style.display = 'none'; document.getElementById('tituloTecnico').innerText = "PRODUTOS VENDIDOS";
             document.getElementById('lblDefeito').innerText = "Descrição dos Itens"; document.getElementById('boxLaudo').style.display = 'none';
             document.getElementById('termoJuridico').style.display = 'none'; document.getElementById('rowGarantias').style.display = 'none';
             document.getElementById('lblObra').innerText = "Valor da Venda (R$)"; document.getElementById('lblPecas').innerText = "Outros Custos"; document.getElementById('resPecas').innerText = "-";
-            document.getElementById('lblDesc').innerText = "Desconto"; document.getElementById('resDesc').innerText = d.vDesc ? d.vDesc.toFixed(2) : "-";
+            document.getElementById('lblDesc').innerText = "Desconto (R$)"; document.getElementById('resDesc').innerText = vd ? vd.toFixed(2) : "0.00";
         } else {
             document.getElementById('secEquipamento').style.display = 'block'; document.getElementById('tituloTecnico').innerText = "3. DETALHES TÉCNICOS DO ATENDIMENTO";
             document.getElementById('lblDefeito').innerText = "3.1. Defeito Relatado / Produto"; document.getElementById('boxLaudo').style.display = 'block';
             document.getElementById('termoJuridico').style.display = 'block'; document.getElementById('rowGarantias').style.display = 'flex';
             document.getElementById('lblObra').innerText = "Mão de Obra (R$)"; document.getElementById('lblPecas').innerText = "Peças (R$)";
-            document.getElementById('resPecas').innerText = d.vPecas ? d.vPecas.toFixed(2) : "0.00";
-            document.getElementById('lblDesc').innerText = "Desconto (R$)"; document.getElementById('resDesc').innerText = d.vDesc ? d.vDesc.toFixed(2) : "0.00";
+            document.getElementById('resPecas').innerText = vpec ? vpec.toFixed(2) : "0.00";
+            document.getElementById('lblDesc').innerText = "Desconto (R$)"; document.getElementById('resDesc').innerText = vd ? vd.toFixed(2) : "0.00";
         }
 
         document.getElementById('resCliente').innerText = d.cliente || ""; document.getElementById('resCpf').innerText = d.cpf || ""; document.getElementById('resRg').innerText = d.rg || "";
@@ -1070,18 +1077,27 @@
         else { document.getElementById('rowEmprestimo').style.display = 'none'; }
 
         document.getElementById('resDefeito').innerText = d.defeito || ""; document.getElementById('resLaudo').innerText = d.laudo || ""; document.getElementById('resServicos').innerText = d.servicos || "";
-        document.getElementById('resObra').innerText = d.vObra ? d.vObra.toFixed(2) : "0.00"; document.getElementById('resTotal').innerText = "R$ " + (d.total ? d.total.toFixed(2) : "0.00");
-        document.getElementById('resSinal').innerText = d.vSinal ? "R$ " + d.vSinal.toFixed(2) : "R$ 0.00"; document.getElementById('resFaltaPagar').innerText = d.faltaPagar ? "R$ " + d.faltaPagar.toFixed(2) : "R$ 0.00";
+        document.getElementById('resObra').innerText = vobr ? vobr.toFixed(2) : "0.00"; 
+        document.getElementById('resTotal').innerText = "R$ " + (vtot ? vtot.toFixed(2) : "0.00");
+        document.getElementById('resSinal').innerText = vsin ? "R$ " + vsin.toFixed(2) : "R$ 0.00"; 
+        document.getElementById('resFaltaPagar').innerText = vfal ? "R$ " + vfal.toFixed(2) : "R$ 0.00";
         document.getElementById('resGarO').innerText = d.garO || ""; document.getElementById('resGarP').innerText = d.garP || ""; document.getElementById('resDataPrev').innerText = d.dataPrev || "Sem previsão";
         
         let cidadeLocal = configGlobais.cidade || "Sua Cidade";
-        document.getElementById('resLocalData').innerText = cidadeLocal;
+        if(document.getElementById('resLocalData')) document.getElementById('resLocalData').innerText = cidadeLocal;
         document.getElementById('resData').innerText = d.data || new Date().toLocaleDateString('pt-BR');
 
         let pagText = [];
         if(d.pagamentos) {
-            if(d.pagamentos.pix > 0) pagText.push(`PIX: R$ ${d.pagamentos.pix.toFixed(2)}`); if(d.pagamentos.din > 0) pagText.push(`DIN: R$ ${d.pagamentos.din.toFixed(2)}`);
-            if(d.pagamentos.cred > 0) pagText.push(`CRÉD: R$ ${d.pagamentos.cred.toFixed(2)}`); if(d.pagamentos.deb > 0) pagText.push(`DÉB: R$ ${d.pagamentos.deb.toFixed(2)}`);
+            let vPix = parseFloat(d.pagamentos.pix) || 0;
+            let vDin = parseFloat(d.pagamentos.din) || 0;
+            let vCred = parseFloat(d.pagamentos.cred) || 0;
+            let vDeb = parseFloat(d.pagamentos.deb) || 0;
+            
+            if(vPix > 0) pagText.push(`PIX: R$ ${vPix.toFixed(2)}`); 
+            if(vDin > 0) pagText.push(`DIN: R$ ${vDin.toFixed(2)}`);
+            if(vCred > 0) pagText.push(`CRÉD: R$ ${vCred.toFixed(2)}`); 
+            if(vDeb > 0) pagText.push(`DÉB: R$ ${vDeb.toFixed(2)}`);
         }
         if(pagText.length > 0) { document.getElementById('rowMetodosPagamento').style.display = 'flex'; document.getElementById('resMeiosPag').innerText = pagText.join(' | '); } 
         else { document.getElementById('rowMetodosPagamento').style.display = 'none'; }
@@ -1209,7 +1225,6 @@
                     }
                 }
 
-                // O BOTÃO PDF AGORA ENVIA APENAS O ID. ZERO CODIFICAÇÃO.
                 let card = `
                 <div class="os-card">
                     <div style="margin-bottom:8px;">
