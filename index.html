@@ -79,7 +79,7 @@
         .pdf-label { font-size: 8px; color: #444; display: block; margin-bottom: 2px; font-weight: bold; text-transform: uppercase; }
         .pdf-value { font-size: 11px; min-height: 12px; font-weight: normal; }
         .pdf-textarea { padding: 4px 6px; font-size: 11px; min-height: 15px; border: 1px solid #000; margin-bottom: 4px; border-radius: 3px; }
-        .pdf-assinaturas { margin-top: 15px; display: flex; justify-content: space-around; text-align: center; font-size: 11px; }
+        .pdf-assinaturas { margin-top: 15px; display: flex; justify-content: space-around; text-align: center; font-size: 11px; align-items: flex-end; }
         .termo-juridico { font-size: 8px; text-align: justify; margin-top: 5px; border: 1px solid #000; padding: 4px 6px; background: #f9f9f9; border-radius: 4px; line-height: 1.1; }
 
         /* PDF RELATÓRIO MEI */
@@ -94,7 +94,7 @@
         @media print {
             body { background: white; padding: 0; margin: 0; }
             .no-print, .navbar { display: none !important; }
-            #telaDocumento, #telaDocumentoMEI { padding: 0; border: none; margin: 0; box-shadow: none; max-width: 100%; }
+            #telaDocumento, #telaDocumentoMEI { display: block !important; padding: 0; border: none; margin: 0; box-shadow: none; max-width: 100%; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
@@ -480,10 +480,18 @@
         <strong>TERMO DE RESPONSABILIDADE E ABANDONO:</strong> O cliente declara estar ciente de que o equipamento deverá ser retirado em até <strong>90 dias (3 meses)</strong>. Após este prazo, será cobrada uma taxa de armazenamento de <strong>R$ 30,00 por mês</strong>. Passados <strong>180 dias (6 meses)</strong> sem retirada, o equipamento será legalmente considerado como <strong>abandonado e tratado como sucata</strong> para abatimento dos custos operacionais, não cabendo reclamações ou indenizações posteriores.
     </div>
 
-    <div class="pdf-assinaturas">
-        <div><p>______________________________________</p><p><strong>Kleber Informática</strong><br>Técnico Responsável</p></div>
-        <div><p>______________________________________</p><p><strong>Assinatura do Cliente</strong></p></div>
+    <div class="pdf-assinaturas" style="align-items: flex-end;">
+        <div style="display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
+            <span style="font-family: 'Brush Script MT', 'Dancing Script', 'Comic Sans MS', cursive; font-size: 24px; margin-bottom: -5px; color: #333;">Kleber Informática</span>
+            <p style="margin: 0;">______________________________________</p>
+            <p style="margin: 3px 0 0 0;"><strong>Técnico Responsável</strong></p>
+        </div>
+        <div style="display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
+            <p style="margin: 0;">______________________________________</p>
+            <p style="margin: 3px 0 0 0;"><strong>Assinatura do Cliente</strong></p>
+        </div>
     </div>
+
     <button class="btn-dark no-print" onclick="window.print()" style="margin-top:15px; width:100%;">🖨️ IMPRIMIR DOCUMENTO</button>
 </div>
 
@@ -558,8 +566,10 @@
         </tr>
         <tr>
             <td style="padding:15px 5px;">LOCAL E DATA: <span id="docMeiLocalData"></span></td>
-            <td style="text-align:center; padding:15px 5px;">
-                ASSINATURA DO EMPRESÁRIO:<br><br><br>
+            
+            <td style="text-align:center; padding:15px 5px; vertical-align: bottom;">
+                <span style="display:block; margin-bottom: 10px;">ASSINATURA DO EMPRESÁRIO:</span>
+                <span style="font-family: 'Brush Script MT', 'Dancing Script', 'Comic Sans MS', cursive; font-size: 24px; display: block; margin-bottom: -5px; color: #333;">Kleber Informática</span>
                 ____________________________________________________
             </td>
         </tr>
