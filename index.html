@@ -863,7 +863,6 @@
     }
     // ==========================================
 
-
     function calcularDias(dataStr) {
         if(!dataStr || typeof dataStr !== 'string') return 0;
         const partes = dataStr.split('/');
@@ -929,7 +928,8 @@
         document.getElementById('pdvDin').value = ""; document.getElementById('pdvCred').value = ""; 
         document.getElementById('pdvDeb').value = "";
 
-        if(imprimirRecibo) { prepararImpressaoFromEncoded(encodeURIComponent(JSON.stringify(dados))); } else { carregarHistorico(); }
+        // PROTEÇÃO NA CHAMADA DO PDF (MANTENDO A MESMA FUNÇÃO PARA VENDAS E OS)
+        if(imprimirRecibo) { prepararImpressaoFromEncoded(encodeURIComponent(JSON.stringify(dados)).replace(/'/g, "%27")); } else { carregarHistorico(); }
     }
 
     // SALVAR OS (COM DESCONTO)
@@ -991,7 +991,8 @@
             mudarAba('abaHistorico'); 
         } else {
             await db.collection("servicos").add(dados);
-            prepararImpressaoFromEncoded(encodeURIComponent(JSON.stringify(dados)));
+            // PROTEÇÃO NA CHAMADA DO PDF (MANTENDO A MESMA FUNÇÃO PARA VENDAS E OS)
+            prepararImpressaoFromEncoded(encodeURIComponent(JSON.stringify(dados)).replace(/'/g, "%27"));
             limparFormularioOS();
         }
         carregarHistorico();
@@ -1020,6 +1021,7 @@
         document.getElementById('dataEntrada').value = new Date().toISOString().split('T')[0];
     }
 
+    // IMPRESSÃO BLINDADA CONTRA ERRO DE ASPAS NAS STRINGS
     function prepararImpressaoFromEncoded(encodedStr) {
         try {
             const d = JSON.parse(decodeURIComponent(encodedStr));
@@ -1205,7 +1207,8 @@
                     }
                 }
 
-                const encodedData = encodeURIComponent(JSON.stringify(d));
+                // CORREÇÃO CRÍTICA APLICADA AQUI: .replace(/'/g, "%27")
+                const encodedData = encodeURIComponent(JSON.stringify(d)).replace(/'/g, "%27");
 
                 let card = `
                 <div class="os-card">
