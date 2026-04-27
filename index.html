@@ -893,7 +893,7 @@
         return snap.empty ? 1 : snap.docs[0].data().os + 1;
     }
 
-    // SALVAR PDV (COM DESCONTO)
+    // SALVAR PDV
     async function salvarVendaPDV(imprimirRecibo) {
         const desc = document.getElementById('pdvProduto').value;
         const venda = parseFloat(document.getElementById('pdvVenda').value) || 0;
@@ -931,7 +931,7 @@
         if(imprimirRecibo) { prepararImpressao(dados); } else { carregarHistorico(); }
     }
 
-    // SALVAR OS (COM DESCONTO)
+    // SALVAR OS
     async function salvarOS(tipoDoc) {
         const vp = parseFloat(document.getElementById('vPecas').value) || 0;
         const vo = parseFloat(document.getElementById('vObra').value) || 0;
@@ -1019,7 +1019,7 @@
         document.getElementById('dataEntrada').value = new Date().toISOString().split('T')[0];
     }
 
-    // IMPRESSÃO DE PDF (BLINDADA, PUXANDO DA NUVEM)
+    // IMPRESSÃO DE PDF SEGURA, LENDO DIRETO DO BANCO DE DADOS
     async function imprimirOS(id) {
         try {
             const doc = await db.collection("servicos").doc(id).get();
@@ -1209,6 +1209,7 @@
                     }
                 }
 
+                // O BOTÃO PDF AGORA ENVIA APENAS O ID, SEM STRING ENCODADA
                 let card = `
                 <div class="os-card">
                     <div style="margin-bottom:8px;">
