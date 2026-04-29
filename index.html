@@ -61,9 +61,10 @@
         .os-card { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 6px solid #ccc; font-size: 13px; }
         .tag { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-top: 3px; }
         
-        .dashboard { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .dashboard { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .dash-card { padding: 15px; border-radius: 8px; color: white; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .dash-blue { background: #007bff; } .dash-red { background: #dc3545; } .dash-green { background: #28a745; }
+        .dash-warning { background: #ffc107; color: #000; } .dash-info { background: #17a2b8; }
         
         .aba { display: none; }
         .aba.ativa { display: block; }
@@ -95,12 +96,24 @@
         @media print {
             body { background: white; padding: 0; margin: 0; }
             .no-print, .navbar { display: none !important; }
-            #telaDocumento, #telaDocumentoMEI { display: block !important; padding: 0; border: none; margin: 0; box-shadow: none; max-width: 100%; }
+            #telaDocumento, #telaDocumentoMEI { padding: 0; border: none; margin: 0; box-shadow: none; max-width: 100%; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         }
     </style>
 </head>
 <body>
+
+<div id="modalBuscaCliente" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:99999; justify-content:center; align-items:center;">
+    <div style="background:white; padding:25px; border-radius:12px; width:450px; max-width:90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0; color:var(--dark);">🔍 Buscar Cliente</h3>
+            <button onclick="fecharBuscaCliente()" class="btn-red btn-small" style="padding: 5px 10px;">X</button>
+        </div>
+        <input type="text" id="inputBuscaCliente" onkeyup="filtrarClientesModal()" placeholder="Digite o nome do cliente..." style="margin-bottom:15px; font-size: 16px;">
+        <div id="listaClientesModal" style="max-height:300px; overflow-y:auto; border:1px solid #ddd; border-radius:6px; background:#f9f9f9;">
+            </div>
+    </div>
+</div>
 
 <div id="telaLogin">
     <div class="login-box">
@@ -137,7 +150,13 @@
         <h3 style="margin-top: 0; border-bottom: 1px solid #ccc;">1. Informações do Cliente</h3>
         <div class="grid-3">
             <div><label>CEP (Busca Auto):</label><input type="text" id="cep" placeholder="Ex: 66000-000" onblur="buscarCEP()"></div>
-            <div style="grid-column: span 2;"><label>Nome do Cliente:</label><input type="text" id="cliente"></div>
+            <div style="grid-column: span 2;">
+                <label>Nome do Cliente:</label>
+                <div style="display: flex; gap: 5px;">
+                    <input type="text" id="cliente" style="flex: 1;" placeholder="Digite para salvar ou clique na lupa para buscar">
+                    <button class="btn-blue btn-small" onclick="abrirBuscaCliente()" style="padding: 10px; font-size: 16px;" title="Buscar Cliente Cadastrado">🔍</button>
+                </div>
+            </div>
             <div><label>WhatsApp:</label><input type="text" id="whatsapp" placeholder="Ex: 91988887777"></div>
             <div><label>CPF:</label><input type="text" id="cpf"></div>
             <div><label>RG:</label><input type="text" id="rg"></div>
@@ -200,9 +219,10 @@
         </div>
 
         <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">4. Fechamento Financeiro & Pagamento</h3>
-        <div class="grid-3">
+        <div class="grid-4">
+            <div><label>Peças (Cobrado R$):</label><input type="number" id="vPecas"></div>
+            <div><label>Custo da Peça (Seu Custo):</label><input type="number" id="vCustoPecas" placeholder="Não sai no PDF"></div>
             <div><label>Mão de Obra (R$):</label><input type="number" id="vObra"></div>
-            <div><label>Peças (R$):</label><input type="number" id="vPecas"></div>
             <div><label>Desconto (R$):</label><input type="number" id="vDesc" placeholder="Desconto aplicado"></div>
         </div>
         
@@ -281,11 +301,12 @@
 
     <div id="abaFinanceiro" class="aba no-print">
         <h2 style="margin-top: 0;">📊 Painel Financeiro</h2>
-        <p style="color:#666;">Valores referentes às OS marcadas como "Entregue ao Cliente" e Vendas do PDV.</p>
+        <p style="color:#666;">Valores referentes às OS e Vendas concluídas e entregues.</p>
         <div class="dashboard">
-            <div class="dash-card dash-blue"><h4>Total Faturado</h4><h2 id="dashFaturado">R$ 0,00</h2></div>
-            <div class="dash-card dash-red"><h4>Custo Peças (Apenas OS)</h4><h2 id="dashPecas">R$ 0,00</h2></div>
-            <div class="dash-card dash-green"><h4>Lucro Real</h4><h2 id="dashLucro">R$ 0,00</h2></div>
+            <div class="dash-card dash-blue"><h4>Peças (Lucro)</h4><h2 id="dashLucroPecas">R$ 0,00</h2></div>
+            <div class="dash-card dash-warning"><h4>Mão de Obra</h4><h2 id="dashObra" style="color:black;">R$ 0,00</h2></div>
+            <div class="dash-card dash-info"><h4>Vendas PDV</h4><h2 id="dashPDV">R$ 0,00</h2></div>
+            <div class="dash-card dash-green"><h4>Total Geral</h4><h2 id="dashTotal">R$ 0,00</h2></div>
         </div>
     </div>
 
@@ -601,6 +622,7 @@
     // VARIÁVEIS DA INTELIGÊNCIA
     let clientesFieis = new Map();
     let mapaGarantias = new Map(); 
+    let listaClientesGlobais = [];
 
     if(document.getElementById('meiAno')) document.getElementById('meiAno').value = new Date().getFullYear();
 
@@ -617,6 +639,59 @@
                 }
             } catch(e) { console.log("Erro na busca de CEP"); }
         }
+    }
+
+    // CARREGAR CLIENTES (CADASTRO AUTOMÁTICO)
+    async function carregarClientesDaNuvem() {
+        try {
+            const snap = await db.collection("clientes").get();
+            listaClientesGlobais = [];
+            snap.forEach(doc => {
+                listaClientesGlobais.push({ id: doc.id, ...doc.data() });
+            });
+        } catch(e) { console.error("Erro ao carregar clientes", e); }
+    }
+
+    function abrirBuscaCliente() {
+        document.getElementById('modalBuscaCliente').style.display = 'flex';
+        document.getElementById('inputBuscaCliente').value = '';
+        filtrarClientesModal();
+        document.getElementById('inputBuscaCliente').focus();
+    }
+
+    function fecharBuscaCliente() {
+        document.getElementById('modalBuscaCliente').style.display = 'none';
+    }
+
+    function filtrarClientesModal() {
+        const t = document.getElementById('inputBuscaCliente').value.toUpperCase();
+        let html = "";
+        let cont = 0;
+        listaClientesGlobais.forEach(c => {
+            if(c.nome && c.nome.toUpperCase().includes(t)) {
+                html += `<div style="padding:10px; border-bottom:1px solid #eee; cursor:pointer; background:#fff; transition:0.2s;" onmouseover="this.style.background='#f0f8ff'" onmouseout="this.style.background='#fff'" onclick="selecionarCliente('${c.id}')">
+                            <strong style="color:var(--primary); font-size:14px;">${c.nome}</strong> <br>
+                            <span style="font-size:11px; color:#666;">WhatsApp: ${c.zap || 'N/A'} | CPF: ${c.cpf || 'N/A'}</span>
+                         </div>`;
+                cont++;
+            }
+        });
+        if(cont === 0) html = "<div style='padding:15px; color:#666; text-align:center;'>Nenhum cliente encontrado.</div>";
+        document.getElementById('listaClientesModal').innerHTML = html;
+    }
+
+    function selecionarCliente(id) {
+        const c = listaClientesGlobais.find(x => x.id === id);
+        if(c) {
+            document.getElementById('cliente').value = c.nome || "";
+            document.getElementById('whatsapp').value = c.zap || "";
+            document.getElementById('cpf').value = c.cpf || "";
+            document.getElementById('rg').value = c.rg || "";
+            document.getElementById('cep').value = c.cep || "";
+            document.getElementById('endCliente').value = c.end || "";
+            document.getElementById('bairro').value = c.bairro || "";
+        }
+        fecharBuscaCliente();
     }
 
     // VERIFICAÇÃO DE LOGIN NA NUVEM
@@ -654,6 +729,7 @@
             aplicarConfiguracoesNaTela();
             carregarHistorico();
             carregarMEI();
+            carregarClientesDaNuvem(); // Carrega o banco de clientes na memória
             limparFormularioOS();
             gatilhoInteligenteBackup();
             atualizarPainelProximoBackup();
@@ -904,7 +980,7 @@
         return snap.empty ? 1 : snap.docs[0].data().os + 1;
     }
 
-    // SALVAR PDV (COM DESCONTO)
+    // SALVAR PDV
     async function salvarVendaPDV(imprimirRecibo) {
         const desc = document.getElementById('pdvProduto').value;
         const venda = parseFloat(document.getElementById('pdvVenda').value) || 0;
@@ -925,7 +1001,7 @@
             os: numOS, categoria: 'VENDA_BALCAO', status: 'Entregue ao Cliente',
             cliente: document.getElementById('pdvCliente').value,
             defeito: desc, 
-            vPecas: 0, vObra: venda, vDesc: descPDV, total: totalVenda, faltaPagar: totalVenda - totalPago, vSinal: totalPago,
+            vPecas: 0, vCustoPecas: 0, vObra: venda, vDesc: descPDV, total: totalVenda, faltaPagar: totalVenda - totalPago, vSinal: totalPago,
             pagamentos: { pix, din, cred, deb },
             data: new Date().toLocaleDateString('pt-BR'),
             tipo: 'RECIBO'
@@ -942,9 +1018,10 @@
         if(imprimirRecibo) { prepararImpressao(dados); } else { carregarHistorico(); }
     }
 
-    // SALVAR OS (COM DESCONTO E PROTEÇÃO NAN)
+    // SALVAR OS (COM NOVO CUSTO DE PEÇA E CADASTRO AUTOMÁTICO DE CLIENTE)
     async function salvarOS(tipoDoc) {
         const vp = parseFloat(document.getElementById('vPecas').value) || 0;
+        const vcusto = parseFloat(document.getElementById('vCustoPecas').value) || 0;
         const vo = parseFloat(document.getElementById('vObra').value) || 0;
         const vd = parseFloat(document.getElementById('vDesc').value) || 0;
         
@@ -987,13 +1064,22 @@
             emprestimo: document.getElementById('emprestimo').value,
             defeito: document.getElementById('defeito').value,
             laudo: document.getElementById('laudo').value, servicos: document.getElementById('servicos').value,
-            vPecas: vp, vObra: vo, vDesc: vd, vSinal: totalPago, total: totalOS, faltaPagar: totalOS - totalPago,
+            vPecas: vp, vCustoPecas: vcusto, vObra: vo, vDesc: vd, vSinal: totalPago, total: totalOS, faltaPagar: totalOS - totalPago,
             pagamentos: { pix, din, cred, deb },
             garP: document.getElementById('garPecas').value, garO: document.getElementById('garObra').value,
             data: dataFormatada, dataPrev: dataPrevFormatada, tipo: tipoDoc
         };
 
         if(!dados.cliente) return alert("Digite o nome do cliente!");
+
+        // LÓGICA DE CADASTRO AUTOMÁTICO DE CLIENTE NA NUVEM
+        if(dados.cliente) {
+            let nomeKey = dados.cliente.toUpperCase().trim();
+            db.collection("clientes").doc(nomeKey).set({
+                nome: dados.cliente, zap: dados.whatsapp, cpf: dados.cpf,
+                rg: dados.rg, cep: dados.cep, end: dados.endCliente, bairro: dados.bairro
+            }).then(() => carregarClientesDaNuvem()); // Atualiza a lista da Lupa silenciosamente
+        }
 
         if(editandoId) {
             await db.collection("servicos").doc(editandoId).update(dados);
@@ -1030,7 +1116,7 @@
         document.getElementById('dataEntrada').value = new Date().toISOString().split('T')[0];
     }
 
-    // IMPRIMIR LENDO DO BANCO DE DADOS (SEGURO E BLINDADO)
+    // IMPRIMIR LENDO DO BANCO DE DADOS
     async function imprimirOS(id) {
         try {
             const doc = await db.collection("servicos").doc(id).get();
@@ -1051,7 +1137,6 @@
         document.getElementById('resOS').innerText = String(d.os).padStart(4, '0');
         document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=OS:${d.os}-Cliente:${encodeURIComponent(d.cliente || '')}`;
 
-        // BLINDAGEM MATEMÁTICA PARA OS ANTIGAS (Evita o NaN)
         let vd = parseFloat(d.vDesc) || 0;
         let vpec = parseFloat(d.vPecas) || 0;
         let vobr = parseFloat(d.vObra) || 0;
@@ -1096,7 +1181,6 @@
         document.getElementById('resGarO').innerText = d.garO || ""; document.getElementById('resGarP').innerText = d.garP || ""; document.getElementById('resDataPrev').innerText = d.dataPrev || "Sem previsão";
         
         let cidadeLocal = configGlobais.cidade || "Sua Cidade";
-        // BLINDAGEM DE DOM: Só tenta injetar a cidade se o campo (span) realmente existir no HTML
         if(document.getElementById('resLocalData')) {
             document.getElementById('resLocalData').innerText = cidadeLocal;
         }
@@ -1134,10 +1218,12 @@
         }
     }
 
+    // NOVA LÓGICA DO PAINEL FINANCEIRO DE 4 BLOCOS
     function processarInteligencia(snap) {
         try {
             clientesFieis.clear(); mapaGarantias.clear();
-            let faturado = 0, custoPecas = 0, abandonados = 0;
+            
+            let lucroPecas = 0, totalObra = 0, totalPDV = 0, descontosAplicados = 0, abandonados = 0;
             
             let docs = []; snap.forEach(d => docs.push(d.data()));
             let docsCronologicos = [...docs].reverse(); 
@@ -1154,17 +1240,31 @@
 
             docs.forEach(d => {
                 if(d.status === 'Entregue ao Cliente') { 
-                    faturado += parseFloat(d.total) || 0; 
-                    custoPecas += parseFloat(d.vPecas) || 0; 
+                    if (d.categoria === 'VENDA_BALCAO') {
+                        totalPDV += parseFloat(d.total) || 0; 
+                    } else {
+                        let vp = parseFloat(d.vPecas) || 0;
+                        let vc = parseFloat(d.vCustoPecas) || 0; // Custo Interno Novo
+                        let vo = parseFloat(d.vObra) || 0;
+                        let vd = parseFloat(d.vDesc) || 0;
+
+                        lucroPecas += (vp - vc);
+                        totalObra += vo;
+                        descontosAplicados += vd;
+                    }
                 } 
                 else if (calcularDias(d.data) > 180 && d.categoria !== 'VENDA_BALCAO') { 
                     abandonados++; 
                 }
             });
 
-            document.getElementById('dashFaturado').innerText = "R$ " + faturado.toFixed(2);
-            document.getElementById('dashPecas').innerText = "R$ " + custoPecas.toFixed(2);
-            document.getElementById('dashLucro').innerText = "R$ " + (faturado - custoPecas).toFixed(2);
+            // O Total Geral reflete exatamente o dinheiro que entrou (menos o custo da peça e já abatendo os descontos da OS)
+            let totalGeral = (lucroPecas + totalObra - descontosAplicados) + totalPDV;
+
+            document.getElementById('dashLucroPecas').innerText = "R$ " + lucroPecas.toFixed(2);
+            document.getElementById('dashObra').innerText = "R$ " + totalObra.toFixed(2);
+            document.getElementById('dashPDV').innerText = "R$ " + totalPDV.toFixed(2);
+            document.getElementById('dashTotal').innerText = "R$ " + totalGeral.toFixed(2);
             
             if(abandonados > 0) { 
                 document.getElementById('qtdAbandonados').innerText = abandonados; 
@@ -1303,7 +1403,9 @@
         
         document.getElementById('defeito').value = d.defeito || ""; document.getElementById('laudo').value = d.laudo || ""; document.getElementById('servicos').value = d.servicos || "";
         document.getElementById('emprestimo').value = d.emprestimo || "";
-        document.getElementById('vPecas').value = d.vPecas || ""; document.getElementById('vObra').value = d.vObra || ""; 
+        document.getElementById('vPecas').value = d.vPecas || ""; 
+        document.getElementById('vCustoPecas').value = d.vCustoPecas || ""; 
+        document.getElementById('vObra').value = d.vObra || ""; 
         document.getElementById('vDesc').value = d.vDesc || "";
         document.getElementById('osPix').value = d.pagamentos?.pix || ""; document.getElementById('osDin').value = d.pagamentos?.din || "";
         document.getElementById('osCred').value = d.pagamentos?.cred || ""; document.getElementById('osDeb').value = d.pagamentos?.deb || "";
