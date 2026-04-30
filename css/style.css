@@ -1,0 +1,88 @@
+:root { --primary: #007bff; --secondary: #28a745; --dark: #333; --danger: #dc3545; --warning: #ffc107; --info: #17a2b8; --light-blue: #e3f2fd; }
+body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+
+/* LOGIN */
+#telaLogin { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #222; display: flex; justify-content: center; align-items: center; z-index: 99999; }
+.login-box { background: white; padding: 40px; border-radius: 12px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 300px; }
+.login-box input { margin: 15px 0; font-size: 18px; text-align: center; width: 100%; box-sizing: border-box; }
+
+/* NAVBAR */
+.navbar { background: var(--dark); padding: 10px 20px; display: flex; gap: 10px; color: white; align-items: center; justify-content: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); flex-wrap: wrap; }
+.navbar button { background: none; border: 1px solid #555; color: white; padding: 10px 15px; border-radius: 6px; cursor: pointer; transition: 0.3s; font-size: 14px; font-weight: bold; }
+.navbar button:hover, .navbar button.ativo { background: var(--primary); border-color: var(--primary); }
+.navbar .btn-sair { background: var(--danger); border-color: var(--danger); margin-left: auto; }
+
+/* CONTAINER EXPANDIDO PARA WIDESCREEN */
+.container { max-width: 1400px; width: 95%; margin: 30px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+.grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+.full { grid-column: 1 / -1; }
+
+label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #555; }
+input:not([type="checkbox"]):not([type="file"]), select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+input[type="checkbox"] { width: auto; margin: 0; padding: 0; cursor: pointer; transform: scale(1.1); }
+
+.checklist-grid { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; }
+.chk-label { display: flex; align-items: center; gap: 5px; font-weight: normal; margin: 0; font-size: 13px; cursor: pointer; }
+
+.inspecao-box { background: var(--light-blue); padding: 15px; border-radius: 8px; border: 1px solid #90caf9; margin-top: 15px; }
+.inspecao-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.inspecao-grid label { font-size: 12px; color: #0056b3; }
+.inspecao-grid select { padding: 6px; font-size: 13px; border-color: #b8daff; }
+
+.btn-group { display: flex; gap: 10px; margin-top: 20px; }
+button { flex: 1; padding: 15px; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; color: white; transition: 0.3s; }
+.btn-blue { background: var(--primary); }
+.btn-green { background: var(--secondary); }
+.btn-dark { background: var(--dark); }
+.btn-red { background: var(--danger); }
+.btn-warning { background: var(--warning); color: #000; }
+.btn-small { padding: 6px 10px; font-size: 12px; flex: none; width: auto; }
+
+/* KANBAN BOARD */
+.kanban-board { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; align-items: flex-start; }
+.kanban-col { flex: 1; min-width: 250px; background: #f4f5f7; border-radius: 8px; padding: 10px; border: 1px solid #e1e4e8; }
+.kanban-header { font-weight: bold; text-align: center; padding-bottom: 10px; border-bottom: 2px solid #ddd; margin-bottom: 10px; font-size: 14px; }
+.os-card { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 6px solid #ccc; font-size: 13px; }
+.tag { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-top: 3px; }
+
+.dashboard { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+.dash-card { padding: 15px; border-radius: 8px; color: white; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.dash-blue { background: #007bff; } .dash-red { background: #dc3545; } .dash-green { background: #28a745; }
+.dash-warning { background: #ffc107; color: #000; } .dash-info { background: #17a2b8; }
+
+.aba { display: none; }
+.aba.ativa { display: block; }
+
+/* PDF A4 OTIMIZADO (OS e PDV) */
+#telaDocumento { display: none; background: white; color: #000; font-family: Arial, sans-serif; padding: 25px; border: 1px solid #ccc; box-shadow: 0 5px 15px rgba(0,0,0,0.2); margin: 20px auto; max-width: 790px; }
+.pdf-header { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: flex-start; }
+.pdf-section { border: 1px solid #000; margin-bottom: 6px; border-radius: 4px; overflow: hidden; page-break-inside: avoid; }
+.pdf-title { background: #e0e0e0; padding: 3px 6px; font-weight: bold; font-size: 10px; border-bottom: 1px solid #000; text-transform: uppercase; }
+.pdf-row { display: flex; border-bottom: 1px solid #000; }
+.pdf-row:last-child { border-bottom: none; }
+.pdf-col { flex: 1; padding: 3px 6px; border-right: 1px solid #000; }
+.pdf-col:last-child { border-right: none; }
+.pdf-label { font-size: 8px; color: #444; display: block; margin-bottom: 2px; font-weight: bold; text-transform: uppercase; }
+.pdf-value { font-size: 11px; min-height: 12px; font-weight: normal; }
+.pdf-textarea { padding: 4px 6px; font-size: 11px; min-height: 15px; border: 1px solid #000; margin-bottom: 4px; border-radius: 3px; }
+.pdf-assinaturas { margin-top: 15px; display: flex; justify-content: space-around; text-align: center; font-size: 11px; align-items: flex-end; }
+.termo-juridico { font-size: 8px; text-align: justify; margin-top: 5px; border: 1px solid #000; padding: 4px 6px; background: #f9f9f9; border-radius: 4px; line-height: 1.1; }
+
+/* PDF RELATÓRIO MEI */
+#telaDocumentoMEI { display: none; background: white; color: #000; font-family: Arial, sans-serif; padding: 25px; border: 1px solid #ccc; box-shadow: 0 5px 15px rgba(0,0,0,0.2); margin: 20px auto; max-width: 790px; }
+.tabela-mei { width: 100%; border-collapse: collapse; border: 2px solid #000; font-size: 11px; }
+.tabela-mei th, .tabela-mei td { border: 1px solid #000; padding: 6px; }
+.tabela-mei th { background: #e0e0e0; text-align: center; font-weight: bold; }
+.tabela-mei td.valor { text-align: right; width: 120px; font-weight: bold; }
+.tabela-mei td.secao { background: #f4f5f7; font-weight: bold; text-align: center; text-transform: uppercase; font-size: 10px; }
+.box-soma-mei { background: #f9f9f9; padding: 15px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; }
+
+@media print {
+    body { background: white; padding: 0; margin: 0; }
+    .no-print, .navbar { display: none !important; }
+    #telaDocumento, #telaDocumentoMEI { display: block !important; padding: 0; border: none; margin: 0; box-shadow: none; max-width: 100%; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+}
