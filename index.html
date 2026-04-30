@@ -5,104 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kleber Informática - ERP Premium Cloud</title>
     
+    <!-- FIREBASE E GOOGLE DRIVE -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    
     <script async defer src="https://accounts.google.com/gsi/client"></script>
 
-    <style>
-        :root { --primary: #007bff; --secondary: #28a745; --dark: #333; --danger: #dc3545; --warning: #ffc107; --info: #17a2b8; --light-blue: #e3f2fd; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
-        
-        /* LOGIN */
-        #telaLogin { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #222; display: flex; justify-content: center; align-items: center; z-index: 99999; }
-        .login-box { background: white; padding: 40px; border-radius: 12px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 300px; }
-        .login-box input { margin: 15px 0; font-size: 18px; text-align: center; width: 100%; box-sizing: border-box; }
-
-        /* NAVBAR */
-        .navbar { background: var(--dark); padding: 10px 20px; display: flex; gap: 10px; color: white; align-items: center; justify-content: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); flex-wrap: wrap; }
-        .navbar button { background: none; border: 1px solid #555; color: white; padding: 10px 15px; border-radius: 6px; cursor: pointer; transition: 0.3s; font-size: 14px; font-weight: bold; }
-        .navbar button:hover, .navbar button.ativo { background: var(--primary); border-color: var(--primary); }
-        .navbar .btn-sair { background: var(--danger); border-color: var(--danger); margin-left: auto; }
-
-        /* CONTAINER EXPANDIDO PARA WIDESCREEN */
-        .container { max-width: 1400px; width: 95%; margin: 30px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        .full { grid-column: 1 / -1; }
-        
-        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #555; }
-        input:not([type="checkbox"]):not([type="file"]), select, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
-        input[type="checkbox"] { width: auto; margin: 0; padding: 0; cursor: pointer; transform: scale(1.1); }
-        
-        .checklist-grid { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; }
-        .chk-label { display: flex; align-items: center; gap: 5px; font-weight: normal; margin: 0; font-size: 13px; cursor: pointer; }
-        
-        .inspecao-box { background: var(--light-blue); padding: 15px; border-radius: 8px; border: 1px solid #90caf9; margin-top: 15px; }
-        .inspecao-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
-        .inspecao-grid label { font-size: 12px; color: #0056b3; }
-        .inspecao-grid select { padding: 6px; font-size: 13px; border-color: #b8daff; }
-
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-        button { flex: 1; padding: 15px; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; color: white; transition: 0.3s; }
-        .btn-blue { background: var(--primary); }
-        .btn-green { background: var(--secondary); }
-        .btn-dark { background: var(--dark); }
-        .btn-red { background: var(--danger); }
-        .btn-warning { background: var(--warning); color: #000; }
-        .btn-small { padding: 6px 10px; font-size: 12px; flex: none; width: auto; }
-
-        /* KANBAN BOARD */
-        .kanban-board { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; align-items: flex-start; }
-        .kanban-col { flex: 1; min-width: 250px; background: #f4f5f7; border-radius: 8px; padding: 10px; border: 1px solid #e1e4e8; }
-        .kanban-header { font-weight: bold; text-align: center; padding-bottom: 10px; border-bottom: 2px solid #ddd; margin-bottom: 10px; font-size: 14px; }
-        .os-card { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 6px solid #ccc; font-size: 13px; }
-        .tag { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; color: white; display: inline-block; margin-top: 3px; }
-        
-        .dashboard { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .dash-card { padding: 15px; border-radius: 8px; color: white; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .dash-blue { background: #007bff; } .dash-red { background: #dc3545; } .dash-green { background: #28a745; }
-        .dash-warning { background: #ffc107; color: #000; } .dash-info { background: #17a2b8; }
-        
-        .aba { display: none; }
-        .aba.ativa { display: block; }
-
-        /* PDF A4 OTIMIZADO (OS e PDV) */
-        #telaDocumento { display: none; background: white; color: #000; font-family: Arial, sans-serif; padding: 25px; border: 1px solid #ccc; box-shadow: 0 5px 15px rgba(0,0,0,0.2); margin: 20px auto; max-width: 790px; }
-        .pdf-header { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: flex-start; }
-        .pdf-section { border: 1px solid #000; margin-bottom: 6px; border-radius: 4px; overflow: hidden; page-break-inside: avoid; }
-        .pdf-title { background: #e0e0e0; padding: 3px 6px; font-weight: bold; font-size: 10px; border-bottom: 1px solid #000; text-transform: uppercase; }
-        .pdf-row { display: flex; border-bottom: 1px solid #000; }
-        .pdf-row:last-child { border-bottom: none; }
-        .pdf-col { flex: 1; padding: 3px 6px; border-right: 1px solid #000; }
-        .pdf-col:last-child { border-right: none; }
-        .pdf-label { font-size: 8px; color: #444; display: block; margin-bottom: 2px; font-weight: bold; text-transform: uppercase; }
-        .pdf-value { font-size: 11px; min-height: 12px; font-weight: normal; }
-        .pdf-textarea { padding: 4px 6px; font-size: 11px; min-height: 15px; border: 1px solid #000; margin-bottom: 4px; border-radius: 3px; }
-        .pdf-assinaturas { margin-top: 15px; display: flex; justify-content: space-around; text-align: center; font-size: 11px; align-items: flex-end; }
-        .termo-juridico { font-size: 8px; text-align: justify; margin-top: 5px; border: 1px solid #000; padding: 4px 6px; background: #f9f9f9; border-radius: 4px; line-height: 1.1; }
-
-        /* PDF RELATÓRIO MEI */
-        #telaDocumentoMEI { display: none; background: white; color: #000; font-family: Arial, sans-serif; padding: 25px; border: 1px solid #ccc; box-shadow: 0 5px 15px rgba(0,0,0,0.2); margin: 20px auto; max-width: 790px; }
-        .tabela-mei { width: 100%; border-collapse: collapse; border: 2px solid #000; font-size: 11px; }
-        .tabela-mei th, .tabela-mei td { border: 1px solid #000; padding: 6px; }
-        .tabela-mei th { background: #e0e0e0; text-align: center; font-weight: bold; }
-        .tabela-mei td.valor { text-align: right; width: 120px; font-weight: bold; }
-        .tabela-mei td.secao { background: #f4f5f7; font-weight: bold; text-align: center; text-transform: uppercase; font-size: 10px; }
-        .box-soma-mei { background: #f9f9f9; padding: 15px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px; }
-
-        @media print {
-            body { background: white; padding: 0; margin: 0; }
-            .no-print, .navbar { display: none !important; }
-            #telaDocumento, #telaDocumentoMEI { padding: 0; border: none; margin: 0; box-shadow: none; max-width: 100%; }
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-        }
-    </style>
+    <!-- CONEXÃO COM O NOVO ARQUIVO DE ESTILOS -->
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
+<!-- MODAL DE BUSCA DE CLIENTE -->
 <div id="modalBuscaCliente" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:99999; justify-content:center; align-items:center;">
     <div style="background:white; padding:25px; border-radius:12px; width:450px; max-width:90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -111,7 +24,8 @@
         </div>
         <input type="text" id="inputBuscaCliente" onkeyup="filtrarClientesModal()" placeholder="Digite o nome do cliente..." style="margin-bottom:15px; font-size: 16px;">
         <div id="listaClientesModal" style="max-height:300px; overflow-y:auto; border:1px solid #ddd; border-radius:6px; background:#f9f9f9;">
-            </div>
+            <!-- Resultados aparecem aqui -->
+        </div>
     </div>
 </div>
 
@@ -139,6 +53,7 @@
     
     <div id="alertaBackupInteligente" style="background: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 4px; display: none; color: #856404;"></div>
 
+    <!-- ABA 1: NOVA OS -->
     <div id="abaNovaOS" class="aba ativa no-print">
         <div id="avisoEdicao" style="display:none; background: #fff3cd; padding:15px; border-radius:8px; margin-bottom:20px;">
             <div style="display:flex; justify-content: space-between; align-items: center;">
@@ -247,6 +162,7 @@
         </div>
     </div>
 
+    <!-- ABA 2: KANBAN E HISTÓRICO -->
     <div id="abaHistorico" class="aba no-print">
         <h2 style="margin-top: 0;">📂 Quadro Kanban & Histórico</h2>
         <input type="text" id="busca" onkeyup="buscar()" placeholder="🔍 Buscar cliente, OS ou equipamento..." style="margin-bottom:15px;">
@@ -275,6 +191,7 @@
         </div>
     </div>
 
+    <!-- ABA 3: PDV (VENDA RÁPIDA) -->
     <div id="abaPDV" class="aba no-print">
         <h2 style="margin-top: 0;">🛒 Venda de Balcão (PDV)</h2>
         <p style="color:#666; font-size:13px; margin-bottom:20px;">Use esta tela para registar vendas diretas. O recibo gerado oculta os laudos técnicos.</p>
@@ -289,8 +206,8 @@
         <div class="grid-4" style="background:#eef8e5; padding:15px; border-radius:8px; border:1px solid #c3e6cb;">
             <div><label>PIX (R$):</label><input type="number" id="pdvPix"></div>
             <div><label>Dinheiro (R$):</label><input type="number" id="pdvDin"></div>
-            <div><label>C. Crédito (R$):</label><input type="number" id="pdvCred"></div>
-            <div><label>C. Débito (R$):</label><input type="number" id="pdvDeb"></div>
+            <div><label>C. Crédito (R$):</label><input type="number" id="osCred"></div>
+            <div><label>C. Débito (R$):</label><input type="number" id="osDeb"></div>
         </div>
         
         <div class="btn-group" style="margin-top:20px;">
@@ -299,6 +216,7 @@
         </div>
     </div>
 
+    <!-- ABA 4: FINANCEIRO -->
     <div id="abaFinanceiro" class="aba no-print">
         <h2 style="margin-top: 0;">📊 Painel Financeiro</h2>
         <p style="color:#666;">Valores referentes às OS e Vendas concluídas e entregues.</p>
@@ -310,6 +228,7 @@
         </div>
     </div>
 
+    <!-- ABA 5: RELATÓRIO MEI -->
     <div id="abaRelatorioMEI" class="aba no-print">
         <h2 style="margin-top: 0;">📄 Relatório Mensal das Receitas Brutas (MEI)</h2>
         <p style="color:#666; font-size:13px; margin-bottom:20px;">Preencha os valores mensais. O sistema calcula os totais automaticamente.</p>
@@ -363,6 +282,7 @@
         <button class="btn-dark" onclick="imprimirMEI()" style="width:100%;">🖨️ GERAR E IMPRIMIR RELATÓRIO OFICIAL</button>
     </div>
 
+    <!-- ABA 6: CONFIGURAÇÕES E BACKUP -->
     <div id="abaConfig" class="aba no-print">
         <h2 style="margin-top: 0;">⚙️ Configurações, Backup e Lembretes</h2>
         
@@ -404,6 +324,7 @@
 
 </div>
 
+<!-- TELA DE DOCUMENTO / IMPRESSÃO (OS E PDV) -->
 <div id="telaDocumento">
     <button class="btn-red no-print" onclick="fecharImpressao()" style="margin-bottom:20px; width:100%; font-size:16px; padding:15px;">⬅️ FECHAR IMPRESSÃO E VOLTAR</button>
     
@@ -502,6 +423,7 @@
         <strong>TERMO DE RESPONSABILIDADE E ABANDONO:</strong> O cliente declara estar ciente de que o equipamento deverá ser retirado em até <strong>90 dias (3 meses)</strong>. Após este prazo, será cobrada uma taxa de armazenamento de <strong>R$ 30,00 por mês</strong>. Passados <strong>180 dias (6 meses)</strong> sem retirada, o equipamento será legalmente considerado como <strong>abandonado e tratado como sucata</strong> para abatimento dos custos operacionais, não cabendo reclamações ou indenizações posteriores.
     </div>
 
+    <!-- ASSINATURA PREMIUM -->
     <div class="pdf-assinaturas" style="align-items: flex-end;">
         <div style="display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
             <span style="font-family: 'Brush Script MT', 'Dancing Script', 'Comic Sans MS', cursive; font-size: 24px; margin-bottom: -5px; color: #333;">Kleber Informática</span>
@@ -517,6 +439,7 @@
     <button class="btn-dark no-print" onclick="window.print()" style="margin-top:15px; width:100%;">🖨️ IMPRIMIR DOCUMENTO</button>
 </div>
 
+<!-- TELA DE DOCUMENTO / IMPRESSÃO DO RELATÓRIO MEI -->
 <div id="telaDocumentoMEI">
     <button class="btn-red no-print" onclick="fecharImpressao()" style="margin-bottom:20px; width:100%; font-size:16px; padding:15px;">⬅️ FECHAR E VOLTAR AO SISTEMA</button>
     
@@ -589,6 +512,7 @@
         <tr>
             <td style="padding:15px 5px;">LOCAL E DATA: <span id="docMeiLocalData"></span></td>
             
+            <!-- ASSINATURA PREMIUM MEI -->
             <td style="text-align:center; padding:15px 5px; vertical-align: bottom;">
                 <span style="display:block; margin-bottom: 10px;">ASSINATURA DO EMPRESÁRIO:</span>
                 <span style="font-family: 'Brush Script MT', 'Dancing Script', 'Comic Sans MS', cursive; font-size: 24px; display: block; margin-bottom: -5px; color: #333;">Kleber Informática</span>
@@ -729,7 +653,7 @@
             aplicarConfiguracoesNaTela();
             carregarHistorico();
             carregarMEI();
-            carregarClientesDaNuvem(); // Carrega o banco de clientes na memória
+            carregarClientesDaNuvem(); 
             limparFormularioOS();
             gatilhoInteligenteBackup();
             atualizarPainelProximoBackup();
@@ -1018,7 +942,7 @@
         if(imprimirRecibo) { prepararImpressao(dados); } else { carregarHistorico(); }
     }
 
-    // SALVAR OS (COM NOVO CUSTO DE PEÇA E CADASTRO AUTOMÁTICO DE CLIENTE)
+    // SALVAR OS
     async function salvarOS(tipoDoc) {
         const vp = parseFloat(document.getElementById('vPecas').value) || 0;
         const vcusto = parseFloat(document.getElementById('vCustoPecas').value) || 0;
@@ -1072,13 +996,12 @@
 
         if(!dados.cliente) return alert("Digite o nome do cliente!");
 
-        // LÓGICA DE CADASTRO AUTOMÁTICO DE CLIENTE NA NUVEM
         if(dados.cliente) {
             let nomeKey = dados.cliente.toUpperCase().trim();
             db.collection("clientes").doc(nomeKey).set({
                 nome: dados.cliente, zap: dados.whatsapp, cpf: dados.cpf,
                 rg: dados.rg, cep: dados.cep, end: dados.endCliente, bairro: dados.bairro
-            }).then(() => carregarClientesDaNuvem()); // Atualiza a lista da Lupa silenciosamente
+            }).then(() => carregarClientesDaNuvem()); 
         }
 
         if(editandoId) {
@@ -1116,7 +1039,7 @@
         document.getElementById('dataEntrada').value = new Date().toISOString().split('T')[0];
     }
 
-    // IMPRIMIR LENDO DO BANCO DE DADOS
+    // IMPRIMIR
     async function imprimirOS(id) {
         try {
             const doc = await db.collection("servicos").doc(id).get();
@@ -1181,10 +1104,7 @@
         document.getElementById('resGarO').innerText = d.garO || ""; document.getElementById('resGarP').innerText = d.garP || ""; document.getElementById('resDataPrev').innerText = d.dataPrev || "Sem previsão";
         
         let cidadeLocal = configGlobais.cidade || "Sua Cidade";
-        if(document.getElementById('resLocalData')) {
-            document.getElementById('resLocalData').innerText = cidadeLocal;
-        }
-        
+        if(document.getElementById('resLocalData')) { document.getElementById('resLocalData').innerText = cidadeLocal; }
         document.getElementById('resData').innerText = d.data || new Date().toLocaleDateString('pt-BR');
 
         let pagText = [];
@@ -1218,7 +1138,6 @@
         }
     }
 
-    // NOVA LÓGICA DO PAINEL FINANCEIRO DE 4 BLOCOS
     function processarInteligencia(snap) {
         try {
             clientesFieis.clear(); mapaGarantias.clear();
@@ -1244,7 +1163,7 @@
                         totalPDV += parseFloat(d.total) || 0; 
                     } else {
                         let vp = parseFloat(d.vPecas) || 0;
-                        let vc = parseFloat(d.vCustoPecas) || 0; // Custo Interno Novo
+                        let vc = parseFloat(d.vCustoPecas) || 0; 
                         let vo = parseFloat(d.vObra) || 0;
                         let vd = parseFloat(d.vDesc) || 0;
 
@@ -1258,7 +1177,6 @@
                 }
             });
 
-            // O Total Geral reflete exatamente o dinheiro que entrou (menos o custo da peça e já abatendo os descontos da OS)
             let totalGeral = (lucroPecas + totalObra - descontosAplicados) + totalPDV;
 
             document.getElementById('dashLucroPecas').innerText = "R$ " + lucroPecas.toFixed(2);
