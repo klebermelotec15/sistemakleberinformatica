@@ -10,7 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <script async defer src="https://accounts.google.com/gsi/client"></script>
 
-    <!-- PONTE PARA O ARQUIVO DE ESTILOS (Ajustado cientificamente para 'css' minúsculo) -->
+    <!-- PONTE PARA O ARQUIVO DE ESTILOS -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -124,11 +124,13 @@
             <div><label>Previsão de Entrega (Opcional):</label><input type="date" id="dataPrev"></div>
             <div class="full"><label>Equipamento Cedido por Empréstimo ao Cliente (Opcional):</label><input type="text" id="emprestimo" placeholder="Ex: Fonte HP Backup, Teclado USB..."></div>
             <div class="full"><label>Situação da OS:</label>
+                <!-- NOVA ORGANIZAÇÃO LÓGICA DE STATUS -->
                 <select id="status">
-                    <option value="Falta Orçar">🔴 Falta Orçar</option>
-                    <option value="Executando">🟡 Executando</option>
-                    <option value="Concluída">🔵 Concluída</option>
-                    <option value="Entregue ao Cliente">🟢 Entregue ao Cliente</option>
+                    <option value="1. Falta Orçar">🔴 1. Falta Orçar</option>
+                    <option value="2. Executando">🟡 2. Executando</option>
+                    <option value="3. Concluída">🔵 3. Concluída</option>
+                    <option value="4. Entregue com sucesso de reparo">🟢 4. Entregue com sucesso de reparo</option>
+                    <option value="5. Devolvido sem reparo">⚫ 5. Devolvido sem reparo</option>
                 </select>
             </div>
             <div class="full"><label>Defeito Relatado pelo Cliente:</label><textarea id="defeito" rows="2"></textarea></div>
@@ -175,6 +177,7 @@
         </div>
 
         <div class="kanban-board" id="kanbanBoard">
+            <!-- ESTRUTURA KANBAN COM 5 COLUNAS -->
             <div class="kanban-col">
                 <div class="kanban-header" style="color:#dc3545;">🔴 Falta Orçar (<span id="countOrcar">0</span>)</div>
                 <div id="kb-orcar"></div>
@@ -190,6 +193,10 @@
             <div class="kanban-col">
                 <div class="kanban-header" style="color:#28a745;">🟢 Entregue (<span id="countEntr">0</span>)</div>
                 <div id="kb-entr"></div>
+            </div>
+            <div class="kanban-col" style="background: #e9ecef;">
+                <div class="kanban-header" style="color:#343a40;">⚫ Devolvido (<span id="countDevolv">0</span>)</div>
+                <div id="kb-devolv"></div>
             </div>
         </div>
     </div>
@@ -388,6 +395,12 @@
 
     <div class="pdf-section" style="border:none;" id="secTecnica">
         <div class="pdf-title" id="tituloTecnico" style="border: 1px solid #000; border-radius: 4px; margin-bottom:5px;">3. DETALHES TÉCNICOS DO ATENDIMENTO</div>
+        
+        <!-- ALERTA DE EQUIPAMENTO DEVOLVIDO (INJEÇÃO VIA JAVASCRIPT) -->
+        <div id="alertaDevolvidoPDF" style="display:none; background:#000; color:#fff; text-align:center; font-weight:bold; padding:5px; font-size:12px; margin-bottom:5px;">
+            ⚠️ APARELHO DEVOLVIDO SEM SOLUÇÃO / SEM REPARO
+        </div>
+
         <span class="pdf-label" id="lblDefeito">3.1. Defeito Relatado / Produto</span>
         <div class="pdf-textarea" id="resDefeito"></div>
         <div id="boxLaudo">
@@ -533,7 +546,7 @@
     <button class="btn-dark no-print" onclick="window.print()" style="margin-top:20px; width:100%;">🖨️ IMPRIMIR RELATÓRIO MEI</button>
 </div>
 
-<!-- PONTE PARA O CÉREBRO DO SISTEMA (Pastas JS em maiúsculas) -->
+<!-- PONTE PARA O CÉREBRO DO SISTEMA -->
 <script src="JS/globals.js"></script>
 <script src="JS/ui.js"></script>
 <script src="JS/mei.js"></script>
