@@ -39,15 +39,17 @@
     </div>
 </div>
 
-<!-- NAVBAR -->
+<!-- NAVBAR REORGANIZADA LÓGICAMENTE -->
 <div class="navbar no-print" id="menuNavegacao" style="display:none;">
     <img id="navLogo" src="logo.png.png" alt="Logomarca" style="height: 38px; border-radius: 4px; display: none; margin-right: auto; background: white; padding: 2px;">
     <button onclick="mudarAba('abaNovaOS')" id="btn-abaNovaOS" class="ativo">📝 1. Nova OS</button>
-    <button onclick="mudarAba('abaHistorico')" id="btn-abaHistorico">📂 2. Kanban & Histórico</button>
-    <button onclick="mudarAba('abaPDV')" id="btn-abaPDV">🛒 3. Venda PDV</button>
-    <button onclick="mudarAba('abaFinanceiro')" id="btn-abaFinanceiro">📊 4. Financeiro</button>
-    <button onclick="mudarAba('abaRelatorioMEI')" id="btn-abaRelatorioMEI">📄 5. Relatório MEI</button>
-    <button onclick="mudarAba('abaConfig')" id="btn-abaConfig">⚙️ 6. Configs & Backup</button>
+    <button onclick="mudarAba('abaCRM')" id="btn-abaCRM">🤝 2. Orçamentos</button>
+    <button onclick="mudarAba('abaHistorico')" id="btn-abaHistorico">📂 3. Kanban & Histórico</button>
+    <button onclick="mudarAba('abaPDV')" id="btn-abaPDV">🛒 4. Venda PDV</button>
+    <button onclick="mudarAba('abaB2B')" id="btn-abaB2B">🏢 5. Contratos B2B</button>
+    <button onclick="mudarAba('abaFinanceiro')" id="btn-abaFinanceiro">📊 6. Financeiro</button>
+    <button onclick="mudarAba('abaRelatorioMEI')" id="btn-abaRelatorioMEI">📄 7. Relatório MEI</button>
+    <button onclick="mudarAba('abaConfig')" id="btn-abaConfig">⚙️ 8. Configs & Backup</button>
     <button class="btn-sair" onclick="sairSistema()" style="margin-left: auto;">Sair 🚪</button>
 </div>
 
@@ -124,7 +126,6 @@
             <div><label>Previsão de Entrega (Opcional):</label><input type="date" id="dataPrev"></div>
             <div class="full"><label>Equipamento Cedido por Empréstimo ao Cliente (Opcional):</label><input type="text" id="emprestimo" placeholder="Ex: Fonte HP Backup, Teclado USB..."></div>
             <div class="full"><label>Situação da OS:</label>
-                <!-- NOVA ORGANIZAÇÃO LÓGICA DE STATUS -->
                 <select id="status">
                     <option value="1. Falta Orçar">🔴 1. Falta Orçar</option>
                     <option value="2. Executando">🟡 2. Executando</option>
@@ -167,7 +168,27 @@
         </div>
     </div>
 
-    <!-- ABA 2: KANBAN E HISTÓRICO -->
+    <!-- NOVA ABA 2: CRM DE ORÇAMENTOS -->
+    <div id="abaCRM" class="aba no-print">
+        <h2 style="margin-top: 0;">🤝 Esteira de Orçamentos (CRM)</h2>
+        <p style="color:#666; font-size:13px; margin-bottom:20px;">Gere orçamentos rápidos e converta em Ordem de Serviço (OS) com um clique quando o cliente aprovar.</p>
+        
+        <div class="grid">
+            <div class="full"><label>Nome do Prospecto (Cliente):</label><input type="text" id="crmCliente" placeholder="Ex: João Silva"></div>
+            <div class="full"><label>Aparelho / Descrição do Problema:</label><textarea id="crmDescricao" rows="2" placeholder="Ex: Notebook Dell não liga..."></textarea></div>
+            <div class="full"><label>Peças e Soluções Propostas:</label><textarea id="crmSolucao" rows="3" placeholder="Ex: 1x SSD 480GB (R$ 200,00) | 1x Formatação..."></textarea></div>
+            
+            <div><label>Valor Total das Peças (R$):</label><input type="number" id="crmPecas" value="0"></div>
+            <div><label>Valor da Mão de Obra (R$):</label><input type="number" id="crmObra" value="0"></div>
+            <div><label>Validade do Orçamento:</label><input type="text" id="crmValidade" value="5 Dias Úteis"></div>
+        </div>
+        
+        <div class="btn-group" style="margin-top:20px;">
+            <button class="btn-blue" onclick="gerarOrcamentoCRM()">📄 GERAR PDF DE ORÇAMENTO</button>
+        </div>
+    </div>
+
+    <!-- ABA 3: KANBAN E HISTÓRICO -->
     <div id="abaHistorico" class="aba no-print">
         <h2 style="margin-top: 0;">📂 Quadro Kanban & Histórico</h2>
         <input type="text" id="busca" onkeyup="buscar()" placeholder="🔍 Buscar cliente, OS ou equipamento..." style="margin-bottom:15px;">
@@ -177,7 +198,6 @@
         </div>
 
         <div class="kanban-board" id="kanbanBoard">
-            <!-- ESTRUTURA KANBAN COM 5 COLUNAS -->
             <div class="kanban-col">
                 <div class="kanban-header" style="color:#dc3545;">🔴 Falta Orçar (<span id="countOrcar">0</span>)</div>
                 <div id="kb-orcar"></div>
@@ -201,7 +221,7 @@
         </div>
     </div>
 
-    <!-- ABA 3: PDV (VENDA RÁPIDA) -->
+    <!-- ABA 4: PDV (VENDA RÁPIDA) -->
     <div id="abaPDV" class="aba no-print">
         <h2 style="margin-top: 0;">🛒 Venda de Balcão (PDV)</h2>
         <p style="color:#666; font-size:13px; margin-bottom:20px;">Use esta tela para registar vendas diretas. O recibo gerado oculta os laudos técnicos.</p>
@@ -226,7 +246,32 @@
         </div>
     </div>
 
-    <!-- ABA 4: FINANCEIRO -->
+    <!-- NOVA ABA 5: CONTRATOS B2B -->
+    <div id="abaB2B" class="aba no-print">
+        <h2 style="margin-top: 0;">🏢 Gestão de Contratos e SLA (B2B)</h2>
+        <p style="color:#666; font-size:13px; margin-bottom:20px;">Cadastre empresas. O sistema irá gerar OS automáticas todo dia 1º para previsibilidade de caixa.</p>
+        
+        <div class="grid" style="background:#f4f5f7; padding:15px; border-radius:8px; border:1px solid #e1e4e8;">
+            <div class="full"><label>Nome da Empresa (Razão Social):</label><input type="text" id="b2bEmpresa" placeholder="Ex: Padaria do João LTDA"></div>
+            <div><label>CNPJ:</label><input type="text" id="b2bCnpj"></div>
+            <div><label>SLA Acordado (Horas Úteis para Resposta):</label><input type="number" id="b2bSLA" placeholder="Ex: 24"></div>
+            <div><label>Valor Mensal do Contrato (R$):</label><input type="number" id="b2bValor"></div>
+            <div><label>Status do Contrato:</label>
+                <select id="b2bStatus">
+                    <option value="Ativo">🟢 Ativo</option>
+                    <option value="Cancelado">🔴 Cancelado</option>
+                </select>
+            </div>
+            <div class="full"><button class="btn-dark" onclick="salvarContratoB2B()">💾 CADASTRAR CONTRATO</button></div>
+        </div>
+
+        <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">Empresas com Contratos Ativos</h3>
+        <div id="listaContratos" style="display: grid; gap: 10px;">
+            <!-- Lista renderizada pelo b2b.js -->
+        </div>
+    </div>
+
+    <!-- ABA 6: FINANCEIRO -->
     <div id="abaFinanceiro" class="aba no-print">
         <h2 style="margin-top: 0;">📊 Painel Financeiro</h2>
         <p style="color:#666;">Valores referentes às OS e Vendas concluídas e entregues.</p>
@@ -238,7 +283,7 @@
         </div>
     </div>
 
-    <!-- ABA 5: RELATÓRIO MEI -->
+    <!-- ABA 7: RELATÓRIO MEI -->
     <div id="abaRelatorioMEI" class="aba no-print">
         <h2 style="margin-top: 0;">📄 Relatório Mensal das Receitas Brutas (MEI)</h2>
         <p style="color:#666; font-size:13px; margin-bottom:20px;">Preencha os valores mensais. O sistema calcula os totais automaticamente.</p>
@@ -292,7 +337,7 @@
         <button class="btn-dark" onclick="imprimirMEI()" style="width:100%;">🖨️ GERAR E IMPRIMIR RELATÓRIO OFICIAL</button>
     </div>
 
-    <!-- ABA 6: CONFIGURAÇÕES E BACKUP -->
+    <!-- ABA 8: CONFIGURAÇÕES E BACKUP -->
     <div id="abaConfig" class="aba no-print">
         <h2 style="margin-top: 0;">⚙️ Configurações, Backup e Lembretes</h2>
         
@@ -347,7 +392,7 @@
             <span id="docEnd"></span><br>Telefone: <span id="docTel"></span>
         </div>
         <div style="width: 30%; text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
-            <h1 style="margin: 0; font-size: 16px;">Nº DOC</h1>
+            <h1 style="margin: 0; font-size: 16px;" id="docTituloPrincipal">Nº DOC</h1>
             <h2 id="resOS" style="margin: 0 0 5px 0; font-size: 22px; color: #d00;">0000</h2>
             <img id="qrCode" src="" style="width: 45px; height: 45px;">
         </div>
@@ -396,7 +441,6 @@
     <div class="pdf-section" style="border:none;" id="secTecnica">
         <div class="pdf-title" id="tituloTecnico" style="border: 1px solid #000; border-radius: 4px; margin-bottom:5px;">3. DETALHES TÉCNICOS DO ATENDIMENTO</div>
         
-        <!-- ALERTA DE EQUIPAMENTO DEVOLVIDO (INJEÇÃO VIA JAVASCRIPT) -->
         <div id="alertaDevolvidoPDF" style="display:none; background:#000; color:#fff; text-align:center; font-weight:bold; padding:5px; font-size:12px; margin-bottom:5px;">
             ⚠️ APARELHO DEVOLVIDO SEM SOLUÇÃO / SEM REPARO
         </div>
@@ -436,20 +480,7 @@
     <div style="text-align: right; font-size: 10px; margin-top: 5px;"><span id="resLocalData">Belém - PA</span>, <span id="resData"></span></div>
 
     <div class="termo-juridico" id="termoJuridico">
-        <strong>TERMO DE RESPONSABILIDADE E ABANDONO:</strong> O cliente declara estar ciente de que o equipamento deverá ser retirado em até <strong>90 dias (3 meses)</strong>. Após este prazo, será cobrada uma taxa de armazenamento de <strong>R$ 30,00 por mês</strong>. Passados <strong>180 dias (6 meses)</strong> sem retirada, o equipamento será legalmente considerado como <strong>abandonado e tratado como sucata</strong> para abatimento dos custos operacionais, não cabendo reclamações ou indenizações posteriores.
-    </div>
-
-    <!-- ASSINATURA PREMIUM -->
-    <div class="pdf-assinaturas" style="align-items: flex-end;">
-        <div style="display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
-            <span style="font-family: 'Brush Script MT', 'Dancing Script', 'Comic Sans MS', cursive; font-size: 24px; margin-bottom: -5px; color: #333;">Kleber Informática</span>
-            <p style="margin: 0;">______________________________________</p>
-            <p style="margin: 3px 0 0 0;"><strong>Técnico Responsável</strong></p>
-        </div>
-        <div style="display: flex; flex-direction: column; justify-content: flex-end; align-items: center;">
-            <p style="margin: 0;">______________________________________</p>
-            <p style="margin: 3px 0 0 0;"><strong>Assinatura do Cliente</strong></p>
-        </div>
+        <strong>AVISO IMPORTANTE:</strong> Documento gerado eletronicamente. Orçamentos têm validade de 5 dias úteis a partir da emissão. Em caso de abandono de equipamento sem retirada após 180 dias, o mesmo será tratado como sucata para abatimento dos custos, isentando a empresa de obrigações legais.
     </div>
 
     <button class="btn-dark no-print" onclick="window.print()" style="margin-top:15px; width:100%;">🖨️ IMPRIMIR DOCUMENTO</button>
@@ -528,7 +559,6 @@
         <tr>
             <td style="padding:15px 5px;">LOCAL E DATA: <span id="docMeiLocalData"></span></td>
             
-            <!-- ASSINATURA PREMIUM MEI -->
             <td style="text-align:center; padding:15px 5px; vertical-align: bottom;">
                 <span style="display:block; margin-bottom: 10px;">ASSINATURA DO EMPRESÁRIO:</span>
                 <span style="font-family: 'Brush Script MT', 'Dancing Script', 'Comic Sans MS', cursive; font-size: 24px; display: block; margin-bottom: -5px; color: #333;">Kleber Informática</span>
@@ -546,9 +576,11 @@
     <button class="btn-dark no-print" onclick="window.print()" style="margin-top:20px; width:100%;">🖨️ IMPRIMIR RELATÓRIO MEI</button>
 </div>
 
-<!-- PONTE PARA O CÉREBRO DO SISTEMA -->
+<!-- PONTES PARA O CÉREBRO DO SISTEMA -->
 <script src="JS/globals.js"></script>
 <script src="JS/ui.js"></script>
+<script src="JS/crm.js"></script>
+<script src="JS/b2b.js"></script>
 <script src="JS/mei.js"></script>
 <script src="JS/os.js"></script>
 <script src="JS/backup.js"></script>
