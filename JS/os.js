@@ -1,5 +1,5 @@
 // JS/os.js
-// Cérebro Financeiro e Lógico das Ordens de Serviço (Motor Firebase Original Restaurado com Inteligência MEI)
+// Cérebro Financeiro e Lógico (Motor Firebase Original Restaurado com Inteligência MEI e Regime de Caixa)
 
 var editandoId = null;
 var tipoDocOriginal = 'ENTRADA';
@@ -160,9 +160,11 @@ async function salvarOS(tipoDoc) {
     // 🚀 LÓGICA DO REGIME DE CAIXA: Grava invisivelmente a data do pagamento
     let statusAtual = document.getElementById('status').value;
     let dataPagFinal = dataPagamentoAtual;
-    if ((statusAtual === '4. Entregue com sucesso de reparo' || statusAtual === 'Entregue ao Cliente') && !dataPagFinal) {
+    let pago = (statusAtual === '4. Entregue com sucesso de reparo' || statusAtual === 'Entregue ao Cliente');
+    
+    if (pago && !dataPagFinal) {
         dataPagFinal = new Date().toLocaleDateString('pt-BR');
-    } else if (statusAtual !== '4. Entregue com sucesso de reparo' && statusAtual !== 'Entregue ao Cliente') {
+    } else if (!pago) {
         dataPagFinal = ""; 
     }
 
@@ -413,17 +415,11 @@ function fecharImpressao() {
 // ----------------------------------------------------------------------
 // GESTÃO DE HISTÓRICO: O SEU CÓDIGO NATIVO ORIGINAL
 // ----------------------------------------------------------------------
-// 🚀 Atualiza os painéis em tempo real quando troca o mês no Select do Financeiro
-window.mudarMesFinanceiro = async function() {
-    const snap = await db.collection("servicos").orderBy("os", "desc").get();
-    processarInteligencia(snap);
-};
-
 async function carregarHistorico() {
     try {
+        // Fetch nativo direto do Firebase (O que garante que nunca vai dar erro no doc.data)
         const snap = await db.collection("servicos").orderBy("os", "desc").get();
         
-        // Define o mês inicial na interface assim que o site carrega
         try {
             const date = new Date();
             const mesesStr = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
@@ -438,7 +434,7 @@ async function carregarHistorico() {
         } catch(e) {}
 
         processarInteligencia(snap); 
-        renderizarKanban(snap); // Usando a leitura nativa (Firebase Snapshot) que funciona perfeitamente!
+        renderizarKanban(snap); // Manteve a leitura nativa original
     } catch (e) { 
         console.error("Erro ao carregar banco de dados:", e); 
     }
@@ -449,7 +445,6 @@ function processarInteligencia(snap) {
         clientesFieis.clear(); mapaGarantias.clear();
         let lucroPecas = 0, totalObra = 0, totalPDV = 0, descontosAplicados = 0, abandonados = 0;
         
-        // Leitura segura do filtro do usuário
         let receitaBrutaComercio = 0, receitaBrutaServicos = 0;
         let finMesEl = document.getElementById('finMes');
         let finAnoEl = document.getElementById('finAno');
@@ -458,7 +453,7 @@ function processarInteligencia(snap) {
         let mesesMap = {"JANEIRO":"01", "FEVEREIRO":"02", "MARÇO":"03", "ABRIL":"04", "MAIO":"05", "JUNHO":"06", "JULHO":"07", "AGOSTO":"08", "SETEMBRO":"09", "OUTUBRO":"10", "NOVEMBRO":"11", "DEZEMBRO":"12"};
         let numMes = mesSel ? mesesMap[mesSel] : null;
 
-        let docs = []; snap.forEach(d => docs.push(d.data()));
+        let docs = []; snap.forEach(doc => docs.push(doc.data()));
         let docsCronologicos = [...docs].reverse(); 
         
         docsCronologicos.forEach(d => {
@@ -479,7 +474,7 @@ function processarInteligencia(snap) {
 
             if(finalizadoComSucesso || d.categoria === 'VENDA_BALCAO') { 
                 
-                // 🚀 LÓGICA DO REGIME DE CAIXA: Olha para a dataPagamento. Se for antiga, assume a data de entrada como fallback
+                // 🚀 LÓGICA DO REGIME DE CAIXA: Verifica se o Mês de Pagamento bate com o filtro
                 let dataReferencia = d.dataPagamento || d.data;
                 let isMesmoMes = false;
                 
@@ -510,7 +505,6 @@ function processarInteligencia(snap) {
             } 
         });
 
-        // 1. Atualiza Dashboard Financeiro com a matemática de lucro
         let totalGeral = (lucroPecas + totalObra - descontosAplicados) + totalPDV;
         if(document.getElementById('dashLucroPecas')) document.getElementById('dashLucroPecas').innerText = "R$ " + lucroPecas.toFixed(2); 
         if(document.getElementById('dashObra')) document.getElementById('dashObra').innerText = "R$ " + totalObra.toFixed(2);
@@ -525,10 +519,9 @@ function processarInteligencia(snap) {
             } else { elAbandonados.style.display = 'none'; }
         }
 
-        // 2. 🚀 INJEÇÃO DO MEI: AUTO-PREENCHIMENTO DE CAIXA EM TEMPO REAL
+        // 🚀 INJEÇÃO DO MEI
         if(document.getElementById('meiMes') && mesSel) document.getElementById('meiMes').value = mesSel;
         if(document.getElementById('meiAno') && anoSel) document.getElementById('meiAno').value = anoSel;
-        
         if(document.getElementById('mei1')) document.getElementById('mei1').value = receitaBrutaComercio.toFixed(2);
         if(document.getElementById('mei7')) document.getElementById('mei7').value = receitaBrutaServicos.toFixed(2);
 
@@ -552,7 +545,7 @@ function renderizarKanban(snap, filtroText = "") {
 
     snap.forEach(doc => {
         try {
-            const d = doc.data();
+            const d = doc.data(); // O MOTOR ORIGINAL NUNCA QUEBRA AQUI
             let searchTarget = `${d.cliente || ""} ${d.os || ""} ${d.equip || ""} ${d.defeito || ""}`.toUpperCase();
             if (filtroText && !searchTarget.includes(filtroText)) return;
 
@@ -605,7 +598,7 @@ function renderizarKanban(snap, filtroText = "") {
                 }
             }
 
-            // O seu DOM de botões original que puxa a ID de forma nativa e sem quebras
+            // O seu DOM de botões original
             let card = `
             <div class="os-card">
                 <div style="margin-bottom:8px;">
@@ -620,7 +613,7 @@ function renderizarKanban(snap, filtroText = "") {
                 </div>
             </div>`;
 
-            // A condição matemática original que nunca falhou no seu sistema
+            // A condição original inquebrável
             if (stat === '1. Falta Orçar' || stat === 'Falta Orçar') { htmlOrcar += card; cOrcar++; }
             else if (stat === '2. Executando' || stat === 'Executando') { htmlExec += card; cExec++; }
             else if (stat === '3. Concluída' || stat === 'Concluída') { htmlConc += card; cConc++; }
@@ -654,6 +647,9 @@ async function editarOS(id) {
     
     // Recupera a data de pagamento para o Regime de Caixa não a perder
     dataPagamentoAtual = d.dataPagamento || "";
+    if(!dataPagamentoAtual && d.status && (d.status === '4. Entregue com sucesso de reparo' || d.status === 'Entregue ao Cliente')) {
+        dataPagamentoAtual = d.data; // Fallback se OS for antiga e foi paga no passado
+    }
     
     let s = d.status || "1. Falta Orçar";
     if(s === "Falta Orçar") s = "1. Falta Orçar";
@@ -701,8 +697,3 @@ async function editarOS(id) {
     document.getElementById('avisoEdicao').style.display = 'block'; document.getElementById('botoesCriar').style.display = 'none';
     document.getElementById('botaoSalvarEdicao').style.display = 'flex'; mudarAba('abaNovaOS');
 }
-
-// 🛡️ GATILHO DE SEGURANÇA: Dispara o Histórico automaticamente ao carregar o sistema
-document.addEventListener("DOMContentLoaded", function() {
-    setTimeout(() => { if(typeof carregarHistorico === 'function') carregarHistorico(); }, 500);
-});
