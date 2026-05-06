@@ -1,5 +1,5 @@
 // JS/os.js
-// Cérebro Financeiro e Lógico (Com Blindagem Anti-Crash e Histórico Restaurado)
+// Cérebro Financeiro e Lógico (Versão Blindada Anti-Crash com Filtro MEI e Kanban Completo)
 
 let cacheServicos = []; 
 let mapaGarantias = new Map();
@@ -36,7 +36,7 @@ async function obterProximaOS() {
 }
 
 // ----------------------------------------------------------------------
-// INTEGRAÇÃO COM BRASIL API E HISTÓRICO LOCAL (AUTO-PREENCHIMENTO)
+// INTEGRAÇÃO COM BRASIL API E HISTÓRICO LOCAL
 // ----------------------------------------------------------------------
 async function buscarCpfCnpj() {
     let docInput = document.getElementById('cpf').value;
@@ -207,7 +207,7 @@ function limparFormularioOS() {
 }
 
 // ----------------------------------------------------------------------
-// INTEGRAÇÃO FINANCEIRA, MEI E INTELIGÊNCIA KANBAN
+// INTEGRAÇÃO FINANCEIRA, MEI E INTELIGÊNCIA KANBAN (BLINDADOS CONTRA CRASH)
 // ----------------------------------------------------------------------
 async function carregarHistorico() {
     try {
@@ -218,110 +218,116 @@ async function carregarHistorico() {
             cacheServicos.push({ id: doc.id, ...doc.data() }); 
         });
 
-        const date = new Date();
-        const mesesStr = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
-        
-        let finMesEl = document.getElementById('finMes');
-        if (finMesEl && !finMesEl.dataset.loaded) {
-            finMesEl.value = mesesStr[date.getMonth()];
-            document.getElementById('finAno').value = date.getFullYear();
-            finMesEl.dataset.loaded = "true";
-        }
+        // Tenta ajustar o mês do Financeiro, mas se o HTML faltar, o sistema NÃO QUEBRA.
+        try {
+            const date = new Date();
+            const mesesStr = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
+            let finMesEl = document.getElementById('finMes');
+            let finAnoEl = document.getElementById('finAno');
+            
+            if (finMesEl && finAnoEl && !finMesEl.dataset.loaded) {
+                finMesEl.value = mesesStr[date.getMonth()];
+                finAnoEl.value = date.getFullYear();
+                finMesEl.dataset.loaded = "true";
+            }
+        } catch(e) { console.error("Aviso: Filtros de Mês/Ano não encontrados no HTML.", e); }
 
         processarInteligenciaMensal(); 
         renderizarKanban(cacheServicos);
-    } catch (e) { console.error("Erro ao carregar banco de dados:", e); }
+    } catch (e) { console.error("Erro fatal ao carregar banco de dados do Firebase:", e); }
 }
 
 function processarInteligenciaMensal() {
-    // 🛡️ Segurança: Evita crash caso o HTML não esteja totalmente carregado
-    let finMesEl = document.getElementById('finMes');
-    let finAnoEl = document.getElementById('finAno');
-    if(!finMesEl || !finAnoEl) return;
+    try {
+        // Se os elementos não existirem, abortamos o cálculo financeiro, mas permitimos que o Kanban carregue
+        let finMesEl = document.getElementById('finMes');
+        let finAnoEl = document.getElementById('finAno');
+        if(!finMesEl || !finAnoEl) return;
 
-    let mesSel = finMesEl.value;
-    let anoSel = String(finAnoEl.value);
-    let mesesMap = {"JANEIRO":"01", "FEVEREIRO":"02", "MARÇO":"03", "ABRIL":"04", "MAIO":"05", "JUNHO":"06", "JULHO":"07", "AGOSTO":"08", "SETEMBRO":"09", "OUTUBRO":"10", "NOVEMBRO":"11", "DEZEMBRO":"12"};
-    let numMes = mesesMap[mesSel];
+        let mesSel = finMesEl.value;
+        let anoSel = String(finAnoEl.value);
+        let mesesMap = {"JANEIRO":"01", "FEVEREIRO":"02", "MARÇO":"03", "ABRIL":"04", "MAIO":"05", "JUNHO":"06", "JULHO":"07", "AGOSTO":"08", "SETEMBRO":"09", "OUTUBRO":"10", "NOVEMBRO":"11", "DEZEMBRO":"12"};
+        let numMes = mesesMap[mesSel];
 
-    clientesFieis.clear(); mapaGarantias.clear();
-    let lucroPecas = 0, totalObra = 0, totalPDV = 0, descontosAplicados = 0, abandonados = 0;
-    let receitaBrutaComercio = 0, receitaBrutaServicos = 0;
+        clientesFieis.clear(); mapaGarantias.clear();
+        let lucroPecas = 0, totalObra = 0, totalPDV = 0, descontosAplicados = 0, abandonados = 0;
+        let receitaBrutaComercio = 0, receitaBrutaServicos = 0;
 
-    // Constrói o histórico de fidelidade global
-    let docsCronologicos = [...cacheServicos].reverse(); 
-    docsCronologicos.forEach(d => {
-        if(d.categoria !== 'VENDA_BALCAO' && d.serie) { mapaGarantias.set(String(d.serie).trim(), { os: d.os, data: d.data }); }
-        let s = d.status || "";
-        let finalizado = (s.includes('4') || s.includes('Entregue') || s.includes('5') || s.includes('Devolvido'));
-        if(finalizado && d.cliente) { let nomeKey = String(d.cliente).toUpperCase().trim(); clientesFieis.set(nomeKey, (clientesFieis.get(nomeKey) || 0) + 1); }
-    });
+        let docsCronologicos = [...cacheServicos].reverse(); 
+        docsCronologicos.forEach(d => {
+            if(d.categoria !== 'VENDA_BALCAO' && d.serie) { mapaGarantias.set(String(d.serie).trim(), { os: d.os, data: d.data }); }
+            let s = d.status || "";
+            let finalizado = (s.includes('4') || s.includes('Entregue') || s.includes('5') || s.includes('Devolvido'));
+            if(finalizado && d.cliente) { let nomeKey = String(d.cliente).toUpperCase().trim(); clientesFieis.set(nomeKey, (clientesFieis.get(nomeKey) || 0) + 1); }
+        });
 
-    // Calcula Finanças focadas no Mês/Ano escolhidos
-    cacheServicos.forEach(d => {
-        let s = d.status || "";
-        let finalizado = (s.includes('4') || s.includes('Entregue') || s.includes('5') || s.includes('Devolvido'));
-        
-        if (!finalizado && calcularDias(d.data) > 180 && d.categoria !== 'VENDA_BALCAO') abandonados++;
+        cacheServicos.forEach(d => {
+            let s = d.status || "";
+            let finalizado = (s.includes('4') || s.includes('Entregue') || s.includes('5') || s.includes('Devolvido'));
+            
+            if (!finalizado && calcularDias(d.data) > 180 && d.categoria !== 'VENDA_BALCAO') abandonados++;
 
-        if(finalizado && d.data) { 
-            let partes = String(d.data).split('/');
-            if(partes[1] === numMes && partes[2] === anoSel) {
-                if (d.categoria === 'VENDA_BALCAO') { 
-                    totalPDV += parseFloat(d.total) || 0; 
-                    receitaBrutaComercio += parseFloat(d.total) || 0; 
-                } else {
-                    let vp = parseFloat(d.vPecas) || 0; let vc = parseFloat(d.vCustoPecas) || 0; 
-                    let vo = parseFloat(d.vObra) || 0; let vd = parseFloat(d.vDesc) || 0;
-                    let vvis = parseFloat(d.vVisita) || 0; 
+            if(finalizado && d.data) { 
+                let partes = String(d.data).split('/');
+                if(partes.length === 3 && partes[1] === numMes && partes[2] === anoSel) {
+                    if (d.categoria === 'VENDA_BALCAO') { 
+                        totalPDV += parseFloat(d.total) || 0; 
+                        receitaBrutaComercio += parseFloat(d.total) || 0; 
+                    } else {
+                        let vp = parseFloat(d.vPecas) || 0; let vc = parseFloat(d.vCustoPecas) || 0; 
+                        let vo = parseFloat(d.vObra) || 0; let vd = parseFloat(d.vDesc) || 0;
+                        let vvis = parseFloat(d.vVisita) || 0; 
 
-                    lucroPecas += (vp - vc);
-                    totalObra += (vo + vvis);
-                    descontosAplicados += vd;
+                        lucroPecas += (vp - vc);
+                        totalObra += (vo + vvis);
+                        descontosAplicados += vd;
 
-                    receitaBrutaComercio += vp; 
-                    receitaBrutaServicos += (vo + vvis); 
+                        receitaBrutaComercio += vp; 
+                        receitaBrutaServicos += (vo + vvis); 
+                    }
                 }
             }
+        });
+
+        let totalGeral = (lucroPecas + totalObra - descontosAplicados) + totalPDV;
+        
+        if(document.getElementById('dashLucroPecas')) document.getElementById('dashLucroPecas').innerText = "R$ " + lucroPecas.toFixed(2); 
+        if(document.getElementById('dashObra')) document.getElementById('dashObra').innerText = "R$ " + totalObra.toFixed(2);
+        if(document.getElementById('dashPDV')) document.getElementById('dashPDV').innerText = "R$ " + totalPDV.toFixed(2); 
+        if(document.getElementById('dashTotal')) document.getElementById('dashTotal').innerText = "R$ " + totalGeral.toFixed(2);
+        
+        let elAbandonados = document.getElementById('alertaAbandono');
+        if(elAbandonados) {
+            if(abandonados > 0) { 
+                if(document.getElementById('qtdAbandonados')) document.getElementById('qtdAbandonados').innerText = abandonados; 
+                elAbandonados.style.display = 'block'; 
+            } else { elAbandonados.style.display = 'none'; }
         }
-    });
 
-    let totalGeral = (lucroPecas + totalObra - descontosAplicados) + totalPDV;
-    document.getElementById('dashLucroPecas').innerText = "R$ " + lucroPecas.toFixed(2); 
-    document.getElementById('dashObra').innerText = "R$ " + totalObra.toFixed(2);
-    document.getElementById('dashPDV').innerText = "R$ " + totalPDV.toFixed(2); 
-    document.getElementById('dashTotal').innerText = "R$ " + totalGeral.toFixed(2);
-    
-    let elAbandonados = document.getElementById('alertaAbandono');
-    if(elAbandonados) {
-        if(abandonados > 0) { document.getElementById('qtdAbandonados').innerText = abandonados; elAbandonados.style.display = 'block'; } 
-        else { elAbandonados.style.display = 'none'; }
-    }
+        // AUTO-PREENCHIMENTO DO MEI COM A RECEITA BRUTA
+        if(document.getElementById('meiMes')) document.getElementById('meiMes').value = mesSel;
+        if(document.getElementById('meiAno')) document.getElementById('meiAno').value = anoSel;
+        if(document.getElementById('mei1')) document.getElementById('mei1').value = receitaBrutaComercio.toFixed(2);
+        if(document.getElementById('mei7')) document.getElementById('mei7').value = receitaBrutaServicos.toFixed(2);
 
-    // 🚀 AUTO-PREENCHIMENTO DO MEI COM A RECEITA BRUTA
-    if(document.getElementById('meiMes')) document.getElementById('meiMes').value = mesSel;
-    if(document.getElementById('meiAno')) document.getElementById('meiAno').value = anoSel;
-    
-    if(document.getElementById('mei1')) document.getElementById('mei1').value = receitaBrutaComercio.toFixed(2);
-    if(document.getElementById('mei7')) document.getElementById('mei7').value = receitaBrutaServicos.toFixed(2);
+        if(typeof window.calcMEI === 'function') {
+            window.calcMEI();
+        } else {
+            let m1 = receitaBrutaComercio;
+            let m2 = parseFloat(document.getElementById('mei2')?.value) || 0;
+            if(document.getElementById('mei3')) document.getElementById('mei3').innerText = (m1 + m2).toFixed(2);
 
-    if(typeof window.calcMEI === 'function') {
-        window.calcMEI();
-    } else {
-        let m1 = receitaBrutaComercio;
-        let m2 = parseFloat(document.getElementById('mei2')?.value) || 0;
-        if(document.getElementById('mei3')) document.getElementById('mei3').innerText = (m1 + m2).toFixed(2);
+            let m7 = receitaBrutaServicos;
+            let m8 = parseFloat(document.getElementById('mei8')?.value) || 0;
+            if(document.getElementById('mei9')) document.getElementById('mei9').innerText = (m7 + m8).toFixed(2);
 
-        let m7 = receitaBrutaServicos;
-        let m8 = parseFloat(document.getElementById('mei8')?.value) || 0;
-        if(document.getElementById('mei9')) document.getElementById('mei9').innerText = (m7 + m8).toFixed(2);
+            let m4 = parseFloat(document.getElementById('mei4')?.value) || 0;
+            let m5 = parseFloat(document.getElementById('mei5')?.value) || 0;
+            if(document.getElementById('mei6')) document.getElementById('mei6').innerText = (m4 + m5).toFixed(2);
 
-        let m4 = parseFloat(document.getElementById('mei4')?.value) || 0;
-        let m5 = parseFloat(document.getElementById('mei5')?.value) || 0;
-        if(document.getElementById('mei6')) document.getElementById('mei6').innerText = (m4 + m5).toFixed(2);
-
-        if(document.getElementById('mei10')) document.getElementById('mei10').innerText = ((m1+m2) + (m4+m5) + (m7+m8)).toFixed(2);
-    }
+            if(document.getElementById('mei10')) document.getElementById('mei10').innerText = ((m1+m2) + (m4+m5) + (m7+m8)).toFixed(2);
+        }
+    } catch(err) { console.error("Erro ignorado no processamento financeiro.", err); }
 }
 
 function renderizarKanban(dadosArray, filtroText = "") {
@@ -337,7 +343,7 @@ function renderizarKanban(dadosArray, filtroText = "") {
             let dias = calcularDias(d.data);
             
             if(d.classificacao === 'Retorno em Garantia') {
-                tagExtra += ` <span class="tag" style="background:#dc3545; color:white; font-weight:bold;">🚨 RETORNO DE GARANTIA</span>`;
+                tagExtra += ` <span class="tag" style="background:#dc3545; color:white; font-weight:bold;">🚨 RETORNO</span>`;
             }
 
             if(d.cliente) {
@@ -396,23 +402,36 @@ function renderizarKanban(dadosArray, filtroText = "") {
                 </div>
             </div>`;
 
-            // 🛡️ COMBINAÇÃO ROBUSTA DE STATUS PARA NÃO PERDER NENHUMA OS NO HISTÓRICO
             if (stat.includes('1.') || stat === 'Falta Orçar') { htmlOrcar += card; cOrcar++; }
             else if (stat.includes('2.') || stat === 'Executando') { htmlExec += card; cExec++; }
             else if (stat.includes('3.') || stat === 'Concluída') { htmlConc += card; cConc++; }
             else if (stat.includes('4.') || stat.includes('Entregue')) { htmlEntr += card; cEntr++; }
             else { htmlDevolv += card; cDevolv++; }
 
-        } catch (err) { console.error("OS ignorada na renderização devido a formatação corrompida.", err); }
+        } catch (err) { console.error("OS corrompida ignorada no Kanban.", err); }
     });
 
+    // 🛡️ Injeção Segura: Se uma caixa não for encontrada, o sistema não quebra
     let eOrcar = document.getElementById('kb-orcar');
     if(eOrcar) {
-        eOrcar.innerHTML = htmlOrcar; document.getElementById('countOrcar').innerText = cOrcar;
-        document.getElementById('kb-exec').innerHTML = htmlExec; document.getElementById('countExec').innerText = cExec;
-        document.getElementById('kb-conc').innerHTML = htmlConc; document.getElementById('countConc').innerText = cConc;
-        document.getElementById('kb-entr').innerHTML = htmlEntr; document.getElementById('countEntr').innerText = cEntr;
-        document.getElementById('kb-devolv').innerHTML = htmlDevolv; document.getElementById('countDevolv').innerText = cDevolv;
+        eOrcar.innerHTML = htmlOrcar; 
+        if(document.getElementById('countOrcar')) document.getElementById('countOrcar').innerText = cOrcar;
+        
+        let eExec = document.getElementById('kb-exec');
+        if(eExec) eExec.innerHTML = htmlExec; 
+        if(document.getElementById('countExec')) document.getElementById('countExec').innerText = cExec;
+        
+        let eConc = document.getElementById('kb-conc');
+        if(eConc) eConc.innerHTML = htmlConc; 
+        if(document.getElementById('countConc')) document.getElementById('countConc').innerText = cConc;
+        
+        let eEntr = document.getElementById('kb-entr');
+        if(eEntr) eEntr.innerHTML = htmlEntr; 
+        if(document.getElementById('countEntr')) document.getElementById('countEntr').innerText = cEntr;
+        
+        let eDevolv = document.getElementById('kb-devolv');
+        if(eDevolv) eDevolv.innerHTML = htmlDevolv; 
+        if(document.getElementById('countDevolv')) document.getElementById('countDevolv').innerText = cDevolv;
     }
 }
 
@@ -470,16 +489,20 @@ async function imprimirOS(id) {
         const doc = await db.collection("servicos").doc(id).get();
         if (doc.exists) prepararImpressao(doc.data());
         else alert("Erro: OS não encontrada no banco de dados.");
-    } catch (e) { alert("Erro ao conectar.", e); }
+    } catch (e) { alert("Erro ao conectar com o banco.", e); }
 }
 
 // ----------------------------------------------------------------------
 // BLINDAGEM DE IMPRESSÃO - GARANTE QUE O MEI NÃO VAZE PARA A TELA DA OS
 // ----------------------------------------------------------------------
 function prepararImpressao(d) {
-    document.getElementById('telaDocumentoMEI').classList.add('ocultar-na-impressao');
-    document.getElementById('conteinerPrincipal').classList.add('ocultar-na-impressao');
-    document.getElementById('menuNavegacao').classList.add('ocultar-na-impressao');
+    let tMei = document.getElementById('telaDocumentoMEI');
+    let cPrincipal = document.getElementById('conteinerPrincipal');
+    let mNavegacao = document.getElementById('menuNavegacao');
+    
+    if(tMei) tMei.setAttribute('style', 'display: none !important;');
+    if(cPrincipal) cPrincipal.setAttribute('style', 'display: none !important;');
+    if(mNavegacao) mNavegacao.setAttribute('style', 'display: none !important;');
     
     document.getElementById('telaDocumento').style.display = 'block';
 
@@ -565,7 +588,11 @@ function prepararImpressao(d) {
 
 function fecharImpressao() {
     document.getElementById('telaDocumento').style.display = 'none';
-    document.getElementById('conteinerPrincipal').classList.remove('ocultar-na-impressao');
-    document.getElementById('telaDocumentoMEI').classList.remove('ocultar-na-impressao');
-    document.getElementById('menuNavegacao').classList.remove('ocultar-na-impressao');
+    let cPrincipal = document.getElementById('conteinerPrincipal');
+    let tMei = document.getElementById('telaDocumentoMEI');
+    let mNavegacao = document.getElementById('menuNavegacao');
+    
+    if(cPrincipal) cPrincipal.setAttribute('style', 'display: block !important;');
+    if(tMei) tMei.setAttribute('style', 'display: none !important;');
+    if(mNavegacao) mNavegacao.setAttribute('style', 'display: flex !important;');
 }
