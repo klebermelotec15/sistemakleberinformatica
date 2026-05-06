@@ -12,6 +12,15 @@
 
     <!-- PONTE PARA O ARQUIVO DE ESTILOS -->
     <link rel="stylesheet" href="css/style.css">
+
+    <!-- 🛡️ BLINDAGEM DE IMPRESSÃO -->
+    <style>
+        @media print {
+            .ocultar-na-impressao {
+                display: none !important;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -58,7 +67,7 @@
     
     <div id="alertaBackupInteligente" style="background: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 4px; display: none; color: #856404;"></div>
 
-    <!-- ABA 1: NOVA OS (HÍBRIDA E COM RETORNO EM GARANTIA) -->
+    <!-- ABA 1: NOVA OS -->
     <div id="abaNovaOS" class="aba ativa no-print">
         <div id="avisoEdicao" style="display:none; background: #fff3cd; padding:15px; border-radius:8px; margin-bottom:20px;">
             <div style="display:flex; justify-content: space-between; align-items: center;">
@@ -67,7 +76,6 @@
             </div>
         </div>
 
-        <!-- ATUALIZAÇÃO: SECÇÃO DE CLASSIFICAÇÃO EXPANDIDA -->
         <h3 style="margin-top: 0; border-bottom: 1px solid #ccc;">1. Classificação e Modalidade</h3>
         <div class="grid-3">
             <div>
@@ -227,7 +235,7 @@
         <h2 style="margin-top: 0;">📂 Quadro Kanban & Histórico</h2>
         <input type="text" id="busca" onkeyup="buscar()" placeholder="🔍 Buscar cliente, OS ou equipamento..." style="margin-bottom:15px;">
         
-        <div class="alerta-abandono" id="alertaAbandono">
+        <div class="alerta-abandono" id="alertaAbandono" style="display: none;">
             <strong>🚨 ATENÇÃO:</strong> Existem <span id="qtdAbandonados">0</span> equipamento(s) na loja há mais de 180 dias!
         </div>
 
@@ -428,7 +436,6 @@
         <div style="width: 30%; text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
             <h1 style="margin: 0; font-size: 16px;" id="docTituloPrincipal">Nº DOC</h1>
             <h2 id="resOS" style="margin: 0 0 2px 0; font-size: 22px; color: #d00;">0000</h2>
-            <!-- ATUALIZAÇÃO: REFERÊNCIA DA OS DE ORIGEM (Para Retornos) -->
             <div id="boxOsOrigem" style="display:none; font-size: 12px; color: #d00; font-weight: bold; margin-bottom: 5px;">(Ref: <span id="resOsOrigem"></span>)</div>
             <img id="qrCode" src="" style="width: 45px; height: 45px;">
         </div>
@@ -527,13 +534,13 @@
         <strong>AVISO IMPORTANTE:</strong> Documento gerado eletronicamente. Orçamentos têm validade de 5 dias úteis a partir da emissão. Em caso de abandono de equipamento sem retirada após 180 dias, o mesmo será tratado como sucata para abatimento dos custos, isentando a empresa de obrigações legais.
     </div>
 
-    <!-- BLOCO DE ASSINATURA CUSTOMIZADA DA KLEBER INFORMÁTICA MANTIDO INTACTO -->
+    <!-- BLOCO DE ASSINATURA CUSTOMIZADA COM MIX-BLEND-MODE APLICADO -->
     <div class="pdf-assinaturas" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; page-break-inside: avoid;">
         
         <div style="text-align: center; width: 45%;">
             
             <div style="position: relative; width: 100%; display: flex; flex-direction: column; align-items: center;">
-                <img src="assinatura.png.png" alt="" style="height: 80px; margin-bottom: -15px; position: relative; z-index: 2;">
+                <img src="assinatura.png.png" alt="" style="height: 80px; width: 100%; object-fit: contain; margin-bottom: -15px; position: relative; z-index: 2; mix-blend-mode: multiply;">
                 
                 <div style="width: 100%; border-top: 2px solid #000; position: relative; z-index: 1;"></div>
             </div>
