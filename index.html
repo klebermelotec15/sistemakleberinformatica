@@ -277,7 +277,7 @@
         <label style="margin-top:15px; display:block;"><strong>Métodos de Pagamento:</strong></label>
         <div class="grid-4" style="background:#eef8e5; padding:15px; border-radius:8px; border:1px solid #c3e6cb;">
             <div><label>PIX (R$):</label><input type="number" id="pdvPix"></div>
-            <div><label>Dinheiro (R$):</label><input type="number" id="pdvDin"></div>
+            <div><label>Dinheiro (R$):</label><input type="number" id="osDin"></div>
             <div><label>C. Crédito (R$):</label><input type="number" id="osCred"></div>
             <div><label>C. Débito (R$):</label><input type="number" id="osDeb"></div>
         </div>
@@ -321,7 +321,7 @@
         <div style="display:flex; gap:15px; background:#e8f4fd; padding:15px; border-radius:10px; margin-bottom:20px; border:1px solid #b8daff;">
             <div style="flex:1;">
                 <label style="color:#0056b3; font-weight:bold;">Filtrar por Mês:</label>
-                <select id="finMes" onchange="carregarHistorico()" style="font-size:16px; padding:8px; width:100%;">
+                <select id="finMes" onchange="mudarMesFinanceiro()" style="font-size:16px; padding:8px; width:100%;">
                     <option value="JANEIRO">JANEIRO</option><option value="FEVEREIRO">FEVEREIRO</option>
                     <option value="MARÇO">MARÇO</option><option value="ABRIL">ABRIL</option>
                     <option value="MAIO">MAIO</option><option value="JUNHO">JUNHO</option>
@@ -332,7 +332,7 @@
             </div>
             <div style="flex:1;">
                 <label style="color:#0056b3; font-weight:bold;">Filtrar por Ano:</label>
-                <input type="number" id="finAno" value="2026" onchange="carregarHistorico()" style="font-size:16px; padding:8px; width:100%;">
+                <input type="number" id="finAno" value="2026" onchange="mudarMesFinanceiro()" style="font-size:16px; padding:8px; width:100%;">
             </div>
         </div>
 
@@ -570,7 +570,8 @@
             </div>
         </div>
 
-        <div style="text-align: center; width: 45%; padding-bottom: 18px;">
+        <!-- 🚀 ÁREA DA ASSINATURA DO CLIENTE (OCULTA NO RECIBO DE VENDA) -->
+        <div id="blocoAssinaturaCliente" style="text-align: center; width: 45%; padding-bottom: 18px;">
             <p style="margin: 0; border-top: 2px solid #000; padding-top: 5px;">
                 <strong style="font-size: 14px;">Assinatura do Cliente</strong>
             </p>
