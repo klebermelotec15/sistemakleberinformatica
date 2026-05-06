@@ -515,17 +515,11 @@
     <!-- NOVO BLOCO DE ASSINATURA CUSTOMIZADA DA KLEBER INFORMÁTICA -->
     <div class="pdf-assinaturas" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; page-break-inside: avoid;">
         
-        <!-- ASSINATURA KLEBER (Corrigida com a extensão dupla baseada no GitHub) -->
+        <!-- ASSINATURA KLEBER (Limpa, apenas a imagem manuscrita em cima da linha) -->
         <div style="text-align: center; width: 45%;">
-            <div style="font-size: 14px; margin-bottom: 20px;">
-                <strong>PIX</strong><br>
-                24141755000174
-            </div>
-            <div style="font-weight: bold; font-size: 14px; margin-bottom: 5px;">Belém</div>
             
             <div style="position: relative; width: 100%; display: flex; flex-direction: column; align-items: center;">
-                <!-- AQUI ESTÁ A CORREÇÃO: O servidor estava procurando assinatura.png.png -->
-                <img src="assinatura.png.png" alt="" style="height: 60px; margin-bottom: -15px; position: relative; z-index: 2;">
+                <img src="assinatura.png.png" alt="" style="height: 80px; margin-bottom: -15px; position: relative; z-index: 2;">
                 
                 <div style="width: 100%; border-top: 2px solid #000; position: relative; z-index: 1;"></div>
             </div>
@@ -548,7 +542,7 @@
     <button class="btn-dark no-print" onclick="window.print()" style="margin-top:15px; width:100%;">🖨️ IMPRIMIR DOCUMENTO</button>
 </div>
 
-<!-- TELA DE DOCUMENTO / IMPRESSÃO DO RELATÓRIO MEI - (Oculta por padrão para não interferir) -->
+<!-- TELA DE DOCUMENTO / IMPRESSÃO DO RELATÓRIO MEI -->
 <div id="telaDocumentoMEI" style="display: none;">
     <button class="btn-red no-print" onclick="fecharImpressao()" style="margin-bottom:20px; width:100%; font-size:16px; padding:15px;">⬅️ FECHAR E VOLTAR AO SISTEMA</button>
     
