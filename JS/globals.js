@@ -1,6 +1,20 @@
-// CONFIGURAÇÕES FIREBASE
-const firebaseConfig = { apiKey: "AIzaSyDKxyJBXMgh0Vi6dwOCr7oHthyVaq3hcPE", authDomain: "sistema-kleber-informatica.firebaseapp.com", projectId: "sistema-kleber-informatica", storageBucket: "sistema-kleber-informatica.firebasestorage.app", messagingSenderId: "374020359871", appId: "1:374020359871:web:e0f6c77f0a672e8116749d" };
-firebase.initializeApp(firebaseConfig);
+// JS/globals.js
+// Cérebro Central: Configurações, Conexão Firebase e Variáveis Globais
+
+// CONFIGURAÇÕES FIREBASE (Credenciais Reais Integradas)
+const firebaseConfig = { 
+    apiKey: "AIzaSyDKxyJBXMgh0Vi6dwOCr7oHthyVaq3hcPE", 
+    authDomain: "sistema-kleber-informatica.firebaseapp.com", 
+    projectId: "sistema-kleber-informatica", 
+    storageBucket: "sistema-kleber-informatica.firebasestorage.app", 
+    messagingSenderId: "374020359871", 
+    appId: "1:374020359871:web:e0f6c77f0a672e8116749d" 
+};
+
+// Previne a inicialização duplicada da aplicação
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const db = firebase.firestore();
 
 let editandoId = null;
@@ -15,7 +29,7 @@ let clientesFieis = new Map();
 let mapaGarantias = new Map(); 
 let listaClientesGlobais = [];
 
-// VERIFICAÇÃO DE LOGIN NA NUVEM
+// VERIFICAÇÃO DE LOGIN NA NUVEM E ORQUESTRAÇÃO
 async function fazerLogin() {
     const btn = document.getElementById('btnLogin');
     btn.innerText = "A VERIFICAR...";
@@ -47,13 +61,21 @@ async function fazerLogin() {
         document.getElementById('telaLogin').style.display = 'none';
         document.getElementById('menuNavegacao').style.display = 'flex';
         document.getElementById('conteinerPrincipal').style.display = 'block';
-        aplicarConfiguracoesNaTela();
-        carregarHistorico();
-        carregarMEI();
-        carregarClientesDaNuvem(); 
-        limparFormularioOS();
-        gatilhoInteligenteBackup();
-        atualizarPainelProximoBackup();
+        
+        // Chamadas preservadas da arquitetura original
+        if(typeof aplicarConfiguracoesNaTela === 'function') aplicarConfiguracoesNaTela();
+        if(typeof carregarHistorico === 'function') carregarHistorico();
+        if(typeof carregarMEI === 'function') carregarMEI();
+        if(typeof carregarClientesDaNuvem === 'function') carregarClientesDaNuvem(); 
+        if(typeof limparFormularioOS === 'function') limparFormularioOS();
+        if(typeof gatilhoInteligenteBackup === 'function') gatilhoInteligenteBackup();
+        if(typeof atualizarPainelProximoBackup === 'function') atualizarPainelProximoBackup();
+        
+        // NOVO: Inicializa a esteira de Contratos Recorrentes (B2B)
+        if(typeof carregarContratosB2B === 'function') {
+            carregarContratosB2B(); 
+        }
+        
     } else {
         document.getElementById('erroLogin').style.display = 'block';
         btn.innerText = "ENTRAR";
@@ -109,5 +131,5 @@ async function registarDataBackupNuvem() {
     const dataHoje = new Date().toLocaleDateString('pt-BR');
     configGlobais.ultimoBackupData = dataHoje;
     await db.collection('configuracoes').doc('gerais').set(configGlobais);
-    atualizarPainelProximoBackup();
+    if(typeof atualizarPainelProximoBackup === 'function') atualizarPainelProximoBackup();
 }
