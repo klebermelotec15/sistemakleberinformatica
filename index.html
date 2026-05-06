@@ -78,7 +78,7 @@
             </div>
             <div>
                 <label>OS de Origem (Se for retorno):</label>
-                <input type="text" id="osOrigem" placeholder="Ex: 0045" style="padding: 10px;" onblur="buscarOSOrigem()">
+                <input type="text" id="osOrigem" placeholder="Ex: OS 0045" style="padding: 10px;" onblur="buscarOSOrigem()">
             </div>
             <div>
                 <label>Modalidade Física:</label>
@@ -306,7 +306,7 @@
         <div style="display:flex; gap:15px; background:#e8f4fd; padding:15px; border-radius:10px; margin-bottom:20px; border:1px solid #b8daff;">
             <div style="flex:1;">
                 <label style="color:#0056b3; font-weight:bold;">Filtrar por Mês:</label>
-                <select id="finMes" onchange="carregarHistorico()" style="font-size:16px; padding:8px; width:100%;">
+                <select id="finMes" onchange="mudarMesFinanceiro()" style="font-size:16px; padding:8px; width:100%;">
                     <option value="JANEIRO">JANEIRO</option><option value="FEVEREIRO">FEVEREIRO</option>
                     <option value="MARÇO">MARÇO</option><option value="ABRIL">ABRIL</option>
                     <option value="MAIO">MAIO</option><option value="JUNHO">JUNHO</option>
@@ -317,13 +317,13 @@
             </div>
             <div style="flex:1;">
                 <label style="color:#0056b3; font-weight:bold;">Filtrar por Ano:</label>
-                <input type="number" id="finAno" value="2026" onchange="carregarHistorico()" style="font-size:16px; padding:8px; width:100%;">
+                <input type="number" id="finAno" value="2026" onchange="mudarMesFinanceiro()" style="font-size:16px; padding:8px; width:100%;">
             </div>
         </div>
 
         <div class="dashboard">
             <div class="dash-card dash-blue"><h4>Peças (Lucro)</h4><h2 id="dashLucroPecas">R$ 0,00</h2></div>
-            <div class="dash-card dash-warning"><h4>Mão de Obra + B2B</h4><h2 id="dashObra" style="color:black;">R$ 0,00</h2></div>
+            <div class="dash-card dash-warning"><h4>Mão de Obra + Contratos B2B</h4><h2 id="dashObra" style="color:black;">R$ 0,00</h2></div>
             <div class="dash-card dash-info"><h4>Vendas PDV</h4><h2 id="dashPDV">R$ 0,00</h2></div>
             <div class="dash-card dash-green"><h4>Faturamento Líquido</h4><h2 id="dashTotal">R$ 0,00</h2></div>
         </div>
@@ -536,11 +536,15 @@
     </div>
 
     <div class="pdf-assinaturas" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; page-break-inside: avoid;">
+        
         <div style="text-align: center; width: 45%;">
+            
             <div style="position: relative; width: 100%; display: flex; flex-direction: column; align-items: center;">
                 <img src="assinatura.png.png" alt="" style="height: 80px; width: 100%; object-fit: contain; margin-bottom: -15px; position: relative; z-index: 2; mix-blend-mode: multiply;">
+                
                 <div style="width: 100%; border-top: 2px solid #000; position: relative; z-index: 1;"></div>
             </div>
+            
             <div style="padding-top: 5px;">
                 <strong style="font-size: 14px;">Kleber Informática</strong><br>
                 <span style="font-size: 14px;">Kleber Melo</span>
@@ -552,6 +556,7 @@
                 <strong style="font-size: 14px;">Assinatura do Cliente</strong>
             </p>
         </div>
+
     </div>
 
     <button class="btn-dark no-print" onclick="window.print()" style="margin-top:15px; width:100%;">🖨️ IMPRIMIR DOCUMENTO</button>
