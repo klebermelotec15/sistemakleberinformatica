@@ -1,5 +1,9 @@
 // JS/os.js
-// Cérebro Financeiro e Lógico das Ordens de Serviço (Versão 100% Restaurada)
+// Cérebro Financeiro e Lógico das Ordens de Serviço (Versão Integral - Blindada e Integrada ao MEI)
+
+let cacheServicos = []; // Memória RAM do sistema para cálculos rápidos mensais
+let mapaGarantias = new Map();
+let clientesFieis = new Map();
 
 function calcularDias(dataStr) {
     if(!dataStr || typeof dataStr !== 'string') return 0;
@@ -45,46 +49,33 @@ async function buscarCpfCnpj() {
         
         if (!snapshot.empty) {
             let clienteDados = snapshot.docs[0].data();
-            
             document.getElementById('cliente').value = clienteDados.nome || "";
             document.getElementById('whatsapp').value = clienteDados.zap || "";
             document.getElementById('rg').value = clienteDados.rg || "";
             document.getElementById('cep').value = clienteDados.cep || "";
             document.getElementById('endCliente').value = clienteDados.end || "";
             document.getElementById('bairro').value = clienteDados.bairro || "";
-            
             alert("✅ Dados do Cliente preenchidos automaticamente com base no seu histórico!");
             return; 
         }
-    } catch (error) {
-        console.error("Aviso: Falha ao procurar o documento na nuvem local.", error);
-    }
+    } catch (error) { console.error("Falha ao procurar documento.", error); }
 
     if (numLimpo.length === 14) {
         try {
             let response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${numLimpo}`);
-            
             if (response.ok) {
                 let dados = await response.json();
-                
                 document.getElementById('cliente').value = dados.razao_social || "";
                 document.getElementById('whatsapp').value = dados.ddd_telefone_1 || "";
                 document.getElementById('cep').value = dados.cep || "";
-                
                 let endCompleto = dados.logradouro;
                 if (dados.numero) endCompleto += ", " + dados.numero;
                 if (dados.complemento) endCompleto += " - " + dados.complemento;
                 document.getElementById('endCliente').value = endCompleto;
-                
                 document.getElementById('bairro').value = dados.bairro || "";
-                
                 alert("✅ Empresa nova detectada! Dados preenchidos via Receita Federal.");
-            } else {
-                console.log("CNPJ não localizado na API Externa.");
             }
-        } catch (error) {
-            console.error("Aviso: Falha ao consultar a BrasilAPI para o CNPJ.", error);
-        }
+        } catch (error) { console.error("Falha API Externa.", error); }
     }
 }
 
@@ -152,33 +143,21 @@ async function salvarOS(tipoDoc) {
     const dados = {
         os: numOS, categoria: 'SERVICO', 
         status: document.getElementById('status').value,
-        
         classificacao: document.getElementById('classificacao').value,
         osOrigem: document.getElementById('osOrigem').value,
         modalidade: document.getElementById('modalidade').value, 
-        
         cliente: document.getElementById('cliente').value, cpf: document.getElementById('cpf').value,
         rg: document.getElementById('rg').value, whatsapp: document.getElementById('whatsapp').value,
         endCliente: document.getElementById('endCliente').value, bairro: document.getElementById('bairro').value,
         cep: document.getElementById('cep').value, equip: document.getElementById('equip').value,
         modelo: document.getElementById('modelo').value, serie: document.getElementById('serie').value,
-        chkList: chkArr.join(', '), 
-        aces: document.getElementById('aces').value,
-        inspecao: {
-            liga: document.getElementById('insLiga').value,
-            imagem: document.getElementById('insImagem').value,
-            barulho: document.getElementById('insBarulho').value,
-            temp: document.getElementById('insTemp').value,
-            led: document.getElementById('insLed').value
-        },
-        emprestimo: document.getElementById('emprestimo').value,
-        defeito: document.getElementById('defeito').value,
-        laudo: document.getElementById('laudo').value, 
-        servicos: document.getElementById('servicos').value,
+        chkList: chkArr.join(', '), aces: document.getElementById('aces').value,
+        inspecao: { liga: document.getElementById('insLiga').value, imagem: document.getElementById('insImagem').value, barulho: document.getElementById('insBarulho').value, temp: document.getElementById('insTemp').value, led: document.getElementById('insLed').value },
+        emprestimo: document.getElementById('emprestimo').value, defeito: document.getElementById('defeito').value,
+        laudo: document.getElementById('laudo').value, servicos: document.getElementById('servicos').value,
         diarioBordo: document.getElementById('diarioBordo').value, 
         vPecas: vp, vCustoPecas: vcusto, vObra: vo, vVisita: vVisita, vDesc: vd, 
-        vSinal: totalPago, total: totalOS, faltaPagar: totalOS - totalPago,
-        pagamentos: { pix, din, cred, deb },
+        vSinal: totalPago, total: totalOS, faltaPagar: totalOS - totalPago, pagamentos: { pix, din, cred, deb },
         garP: document.getElementById('garPecas').value, garO: document.getElementById('garObra').value,
         data: dataFormatada, dataPrev: dataPrevFormatada, tipo: tipoDoc
     };
@@ -187,10 +166,7 @@ async function salvarOS(tipoDoc) {
 
     if(dados.cliente) {
         let nomeKey = dados.cliente.toUpperCase().trim();
-        db.collection("clientes").doc(nomeKey).set({
-            nome: dados.cliente, zap: dados.whatsapp, cpf: dados.cpf,
-            rg: dados.rg, cep: dados.cep, end: dados.endCliente, bairro: dados.bairro
-        }).then(() => carregarClientesDaNuvem()); 
+        db.collection("clientes").doc(nomeKey).set({ nome: dados.cliente, zap: dados.whatsapp, cpf: dados.cpf, rg: dados.rg, cep: dados.cep, end: dados.endCliente, bairro: dados.bairro }).then(() => carregarClientesDaNuvem()); 
     }
 
     if(editandoId) {
@@ -203,15 +179,10 @@ async function salvarOS(tipoDoc) {
     }
     
     carregarHistorico();
-
-    if (tipoDoc === 'SAIDA' || tipoDoc === 'ENTRADA' || tipoDoc === 'RECIBO_PAGAMENTO') {
-        prepararImpressao(dados);
-    }
+    if (tipoDoc === 'SAIDA' || tipoDoc === 'ENTRADA' || tipoDoc === 'RECIBO_PAGAMENTO') prepararImpressao(dados);
 }
 
-function salvarEdicao(tipo) { 
-    salvarOS(tipo || tipoDocOriginal); 
-}
+function salvarEdicao(tipo) { salvarOS(tipo || tipoDocOriginal); }
 
 function limparFormularioOS() {
     editandoId = null;
@@ -219,113 +190,70 @@ function limparFormularioOS() {
     document.getElementById('botoesCriar').style.display = 'flex';
     document.getElementById('botaoSalvarEdicao').style.display = 'none';
     document.querySelectorAll('#abaNovaOS input[type=text], #abaNovaOS input[type=number], #abaNovaOS textarea, #abaNovaOS input[type=date]').forEach(el => el.value = '');
-    
     document.querySelectorAll('.chk-item').forEach(el => el.checked = false);
     
     document.getElementById('classificacao').value = "Novo Serviço";
     document.getElementById('osOrigem').value = "";
     document.getElementById('modalidade').value = "Realizado na Loja";
-    
-    document.getElementById('insLiga').value = "-";
-    document.getElementById('insImagem').value = "-";
-    document.getElementById('insBarulho').value = "-";
-    document.getElementById('insTemp').value = "-";
-    document.getElementById('insLed').value = "-";
-
+    document.getElementById('insLiga').value = "-"; document.getElementById('insImagem').value = "-"; document.getElementById('insBarulho').value = "-"; document.getElementById('insTemp').value = "-"; document.getElementById('insLed').value = "-";
     document.getElementById('status').value = "1. Falta Orçar";
-    document.getElementById('garObra').value = "90 Dias";
-    document.getElementById('garPecas').value = "3 meses";
+    document.getElementById('garObra').value = "90 Dias"; document.getElementById('garPecas').value = "3 meses";
     document.getElementById('dataEntrada').value = new Date().toISOString().split('T')[0];
 }
 
 async function imprimirOS(id) {
     try {
         const doc = await db.collection("servicos").doc(id).get();
-        if (doc.exists) {
-            prepararImpressao(doc.data());
-        } else {
-            alert("Erro: OS não encontrada no banco de dados.");
-        }
-    } catch (e) {
-        alert("Erro ao conectar com o servidor para impressão.");
-        console.error(e);
-    }
+        if (doc.exists) prepararImpressao(doc.data());
+        else alert("Erro: OS não encontrada no banco de dados.");
+    } catch (e) { alert("Erro ao conectar com o servidor para impressão."); console.error(e); }
 }
 
 function prepararImpressao(d) {
-    // 🛡️ BLINDAGEM DE IMPRESSÃO: Garante que o MEI e o Sistema base fiquem invisíveis no PDF
-    document.getElementById('conteinerPrincipal').classList.add('ocultar-na-impressao');
-    document.getElementById('telaDocumentoMEI').classList.add('ocultar-na-impressao');
-    document.getElementById('menuNavegacao').classList.add('ocultar-na-impressao');
-
-    // Liga a tela de impressão da OS
-    document.getElementById('telaDocumento').style.display = 'block';
+    // 🛡️ A REGRA ABSOLUTA DE IMPRESSÃO: Oculta abas no HTML inline e injeta a classe !important
+    document.getElementById('telaDocumentoMEI').setAttribute('style', 'display: none !important;');
+    document.getElementById('conteinerPrincipal').setAttribute('style', 'display: none !important;');
+    document.getElementById('menuNavegacao').setAttribute('style', 'display: none !important;');
+    
+    document.getElementById('telaDocumento').setAttribute('style', 'display: block !important;');
 
     if(configGlobais.logo) { document.getElementById('docLogo').src = configGlobais.logo; document.getElementById('docLogo').style.display = 'inline-block'; }
     document.getElementById('docEnd').innerText = configGlobais.end || ""; document.getElementById('docTel').innerText = configGlobais.tel || "";
     document.getElementById('resOS').innerText = String(d.os).padStart(4, '0');
     document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=OS:${d.os}-Cliente:${encodeURIComponent(d.cliente || '')}`;
 
-    if(d.osOrigem) {
-        document.getElementById('boxOsOrigem').style.display = 'block';
-        document.getElementById('resOsOrigem').innerText = d.osOrigem;
-    } else {
-        document.getElementById('boxOsOrigem').style.display = 'none';
-    }
+    if(d.osOrigem) { document.getElementById('boxOsOrigem').style.display = 'block'; document.getElementById('resOsOrigem').innerText = d.osOrigem; } 
+    else { document.getElementById('boxOsOrigem').style.display = 'none'; }
 
-    let vd = parseFloat(d.vDesc) || 0;
-    let vpec = parseFloat(d.vPecas) || 0;
-    let vobr = parseFloat(d.vObra) || 0;
-    let vvis = parseFloat(d.vVisita) || 0; 
-    let vtot = parseFloat(d.total) || 0;
-    let vfal = parseFloat(d.faltaPagar) || 0;
-    let vsin = parseFloat(d.vSinal) || 0;
+    let vd = parseFloat(d.vDesc) || 0; let vpec = parseFloat(d.vPecas) || 0; let vobr = parseFloat(d.vObra) || 0; let vvis = parseFloat(d.vVisita) || 0; 
+    let vtot = parseFloat(d.total) || 0; let vfal = parseFloat(d.faltaPagar) || 0; let vsin = parseFloat(d.vSinal) || 0;
 
     let s = String(d.status).trim();
-    if (s === '5. Devolvido sem reparo') {
-        document.getElementById('alertaDevolvidoPDF').style.display = 'block';
-    } else {
-        document.getElementById('alertaDevolvidoPDF').style.display = 'none';
-    }
+    if (s === '5. Devolvido sem reparo') { document.getElementById('alertaDevolvidoPDF').style.display = 'block'; } 
+    else { document.getElementById('alertaDevolvidoPDF').style.display = 'none'; }
 
-    document.getElementById('boxLaudo').style.display = 'block';
-    document.getElementById('secEquipamento').style.display = 'block';
-    document.getElementById('termoJuridico').style.display = 'block'; 
-    document.getElementById('rowGarantias').style.display = 'flex';
+    document.getElementById('boxLaudo').style.display = 'block'; document.getElementById('secEquipamento').style.display = 'block';
+    document.getElementById('termoJuridico').style.display = 'block'; document.getElementById('rowGarantias').style.display = 'flex';
 
     if(d.categoria === 'VENDA_BALCAO') {
-        document.getElementById('secEquipamento').style.display = 'none'; 
-        document.getElementById('tituloTecnico').innerText = "PRODUTOS VENDIDOS";
-        document.getElementById('lblDefeito').innerText = "Descrição dos Itens"; 
-        document.getElementById('boxLaudo').style.display = 'none';
-        document.getElementById('termoJuridico').style.display = 'none'; 
-        document.getElementById('rowGarantias').style.display = 'none';
-        document.getElementById('lblObra').innerText = "Valor da Venda (R$)"; 
-        document.getElementById('lblPecas').innerText = "Outros Custos"; 
-        document.getElementById('resPecas').innerText = "-";
-        document.getElementById('lblDesc').innerText = "Desconto (R$)"; 
-        document.getElementById('resDesc').innerText = vd ? vd.toFixed(2) : "0.00";
+        document.getElementById('secEquipamento').style.display = 'none'; document.getElementById('tituloTecnico').innerText = "PRODUTOS VENDIDOS";
+        document.getElementById('lblDefeito').innerText = "Descrição dos Itens"; document.getElementById('boxLaudo').style.display = 'none';
+        document.getElementById('termoJuridico').style.display = 'none'; document.getElementById('rowGarantias').style.display = 'none';
+        document.getElementById('lblObra').innerText = "Valor da Venda (R$)"; document.getElementById('lblPecas').innerText = "Outros Custos"; 
+        document.getElementById('resPecas').innerText = "-"; document.getElementById('lblDesc').innerText = "Desconto (R$)"; document.getElementById('resDesc').innerText = vd ? vd.toFixed(2) : "0.00";
     } else {
-        document.getElementById('tituloTecnico').innerText = "3. DETALHES TÉCNICOS DO ATENDIMENTO";
-        document.getElementById('lblDefeito').innerText = "3.1. Defeito Relatado / Produto"; 
-        document.getElementById('lblObra').innerText = "Mão de Obra (R$)"; 
-        document.getElementById('lblPecas').innerText = "Peças (R$)";
-        document.getElementById('resPecas').innerText = vpec ? vpec.toFixed(2) : "0.00";
-        document.getElementById('lblDesc').innerText = "Desconto (R$)"; 
-        document.getElementById('resDesc').innerText = vd ? vd.toFixed(2) : "0.00";
+        document.getElementById('tituloTecnico').innerText = "3. DETALHES TÉCNICOS DO ATENDIMENTO"; document.getElementById('lblDefeito').innerText = "3.1. Defeito Relatado / Produto"; 
+        document.getElementById('lblObra').innerText = "Mão de Obra (R$)"; document.getElementById('lblPecas').innerText = "Peças (R$)";
+        document.getElementById('resPecas').innerText = vpec ? vpec.toFixed(2) : "0.00"; document.getElementById('lblDesc').innerText = "Desconto (R$)"; document.getElementById('resDesc').innerText = vd ? vd.toFixed(2) : "0.00";
         
         if (d.tipo === 'RECIBO_PAGAMENTO') {
-            document.getElementById('docTituloPrincipal').innerText = "RECIBO DE PAGAMENTO";
-            document.getElementById('rowInspecao').style.display = 'none'; 
-            document.getElementById('boxLaudo').style.display = 'none'; 
-            document.getElementById('termoJuridico').innerHTML = `<strong>TERMO DE QUITAÇÃO:</strong> Declaramos para os devidos fins que os valores descritos neste documento referentes à prestação de serviços foram recebidos, dando plena e total quitação.`;
+            document.getElementById('docTituloPrincipal').innerText = "RECIBO DE PAGAMENTO"; document.getElementById('rowInspecao').style.display = 'none'; document.getElementById('boxLaudo').style.display = 'none'; 
+            document.getElementById('termoJuridico').innerHTML = `<strong>TERMO DE QUITAÇÃO:</strong> Declaramos que os valores descritos neste documento referentes à prestação de serviços foram recebidos, dando plena e total quitação.`;
         } else if (d.classificacao === 'Retorno em Garantia') {
-            document.getElementById('docTituloPrincipal').innerText = "RETORNO EM GARANTIA";
-            document.getElementById('rowInspecao').style.display = 'flex';
+            document.getElementById('docTituloPrincipal').innerText = "RETORNO EM GARANTIA"; document.getElementById('rowInspecao').style.display = 'flex';
             document.getElementById('termoJuridico').innerHTML = `<strong>AVISO IMPORTANTE:</strong> Documento gerado eletronicamente para acionamento de garantia. O equipamento será avaliado tecnicamente para confirmação do defeito na peça ou serviço previamente executado.`;
         } else {
-            document.getElementById('docTituloPrincipal').innerText = "ORDEM DE SERVIÇO"; 
-            document.getElementById('rowInspecao').style.display = 'flex';
+            document.getElementById('docTituloPrincipal').innerText = "ORDEM DE SERVIÇO"; document.getElementById('rowInspecao').style.display = 'flex';
             document.getElementById('termoJuridico').innerHTML = `<strong>AVISO IMPORTANTE:</strong> Documento gerado eletronicamente. Orçamentos têm validade de 5 dias úteis a partir da emissão. Em caso de abandono de equipamento sem retirada após 180 dias, o mesmo será tratado como sucata para abatimento dos custos, isentando a empresa de obrigações legais.`;
         }
     }
@@ -333,10 +261,7 @@ function prepararImpressao(d) {
     document.getElementById('resCliente').innerText = d.cliente || ""; document.getElementById('resCpf').innerText = d.cpf || ""; document.getElementById('resRg').innerText = d.rg || "";
     document.getElementById('resEndCli').innerText = d.endCliente || ""; document.getElementById('resBairro').innerText = d.bairro || "";
     document.getElementById('resCep').innerText = d.cep || ""; document.getElementById('resZap').innerText = d.whatsapp || "";
-    
-    document.getElementById('resModalidade').innerText = d.modalidade || "Realizado na Loja";
-    document.getElementById('resVisita').innerText = vvis ? vvis.toFixed(2) : "0.00";
-
+    document.getElementById('resModalidade').innerText = d.modalidade || "Realizado na Loja"; document.getElementById('resVisita').innerText = vvis ? vvis.toFixed(2) : "0.00";
     document.getElementById('resEquip').innerText = d.equip || ""; document.getElementById('resModelo').innerText = d.modelo || ""; document.getElementById('resSerie').innerText = d.serie || ""; 
     
     let acesArr = []; if (d.chkList) acesArr.push(d.chkList); else { if (d.chkFonte === "Sim") acesArr.push("Fonte"); if (d.chkCapa === "Sim") acesArr.push("Capa"); }
@@ -348,21 +273,13 @@ function prepararImpressao(d) {
     if(d.emprestimo) { document.getElementById('rowEmprestimo').style.display = 'flex'; document.getElementById('resEmprestimo').innerText = d.emprestimo; } 
     else { document.getElementById('rowEmprestimo').style.display = 'none'; }
 
-    document.getElementById('resDefeito').innerText = d.defeito || ""; 
-    document.getElementById('resLaudo').innerText = d.laudo || ""; 
-    document.getElementById('resServicos').innerText = d.servicos || "";
+    document.getElementById('resDefeito').innerText = d.defeito || ""; document.getElementById('resLaudo').innerText = d.laudo || ""; document.getElementById('resServicos').innerText = d.servicos || "";
     
-    if(d.diarioBordo && d.categoria !== 'VENDA_BALCAO') {
-        document.getElementById('boxDiario').style.display = 'block';
-        document.getElementById('resDiario').innerText = d.diarioBordo;
-    } else {
-        document.getElementById('boxDiario').style.display = 'none';
-    }
+    if(d.diarioBordo && d.categoria !== 'VENDA_BALCAO') { document.getElementById('boxDiario').style.display = 'block'; document.getElementById('resDiario').innerText = d.diarioBordo; } 
+    else { document.getElementById('boxDiario').style.display = 'none'; }
 
-    document.getElementById('resObra').innerText = vobr ? vobr.toFixed(2) : "0.00"; 
-    document.getElementById('resTotal').innerText = "R$ " + (vtot ? vtot.toFixed(2) : "0.00");
-    document.getElementById('resSinal').innerText = vsin ? "R$ " + vsin.toFixed(2) : "R$ 0.00"; 
-    document.getElementById('resFaltaPagar').innerText = vfal ? "R$ " + vfal.toFixed(2) : "R$ 0.00";
+    document.getElementById('resObra').innerText = vobr ? vobr.toFixed(2) : "0.00"; document.getElementById('resTotal').innerText = "R$ " + (vtot ? vtot.toFixed(2) : "0.00");
+    document.getElementById('resSinal').innerText = vsin ? "R$ " + vsin.toFixed(2) : "R$ 0.00"; document.getElementById('resFaltaPagar').innerText = vfal ? "R$ " + vfal.toFixed(2) : "R$ 0.00";
     document.getElementById('resGarO').innerText = d.garO || ""; document.getElementById('resGarP').innerText = d.garP || ""; document.getElementById('resDataPrev').innerText = d.dataPrev || "Sem previsão";
     
     let cidadeLocal = configGlobais.cidade || "Sua Cidade";
@@ -371,10 +288,8 @@ function prepararImpressao(d) {
 
     let pagText = [];
     if(d.pagamentos) {
-        let vPix = parseFloat(d.pagamentos.pix) || 0; let vDin = parseFloat(d.pagamentos.din) || 0;
-        let vCred = parseFloat(d.pagamentos.cred) || 0; let vDeb = parseFloat(d.pagamentos.deb) || 0;
-        if(vPix > 0) pagText.push(`PIX: R$ ${vPix.toFixed(2)}`); if(vDin > 0) pagText.push(`DIN: R$ ${vDin.toFixed(2)}`);
-        if(vCred > 0) pagText.push(`CRÉD: R$ ${vCred.toFixed(2)}`); if(vDeb > 0) pagText.push(`DÉB: R$ ${vDeb.toFixed(2)}`);
+        let vPix = parseFloat(d.pagamentos.pix) || 0; let vDin = parseFloat(d.pagamentos.din) || 0; let vCred = parseFloat(d.pagamentos.cred) || 0; let vDeb = parseFloat(d.pagamentos.deb) || 0;
+        if(vPix > 0) pagText.push(`PIX: R$ ${vPix.toFixed(2)}`); if(vDin > 0) pagText.push(`DIN: R$ ${vDin.toFixed(2)}`); if(vCred > 0) pagText.push(`CRÉD: R$ ${vCred.toFixed(2)}`); if(vDeb > 0) pagText.push(`DÉB: R$ ${vDeb.toFixed(2)}`);
     }
     if(pagText.length > 0) { document.getElementById('rowMetodosPagamento').style.display = 'flex'; document.getElementById('resMeiosPag').innerText = pagText.join(' | '); } 
     else { document.getElementById('rowMetodosPagamento').style.display = 'none'; }
@@ -383,42 +298,65 @@ function prepararImpressao(d) {
 }
 
 function fecharImpressao() {
-    // 🛡️ Remove as blindagens para o sistema voltar ao normal na tela
-    document.getElementById('telaDocumento').style.display = 'none';
-    document.getElementById('conteinerPrincipal').classList.remove('ocultar-na-impressao');
-    document.getElementById('telaDocumentoMEI').classList.remove('ocultar-na-impressao');
-    document.getElementById('menuNavegacao').classList.remove('ocultar-na-impressao');
+    // 🛡️ Remove as travas estruturais de impressão
+    document.getElementById('telaDocumento').setAttribute('style', 'display: none !important;');
+    document.getElementById('conteinerPrincipal').setAttribute('style', 'display: block !important;');
+    document.getElementById('menuNavegacao').setAttribute('style', 'display: flex !important;');
 }
 
 async function carregarHistorico() {
     try {
         const snap = await db.collection("servicos").orderBy("os", "desc").get();
-        processarInteligencia(snap); 
-        renderizarKanban(snap);
+        cacheServicos = [];
+        snap.forEach(doc => { cacheServicos.push({ id: doc.id, ...doc.data() }); });
+
+        // Ajusta o mês/ano para o atual, se for a primeira vez que a página carrega
+        const date = new Date();
+        const mesesStr = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
+        if (!document.getElementById('finMes').dataset.loaded) {
+            document.getElementById('finMes').value = mesesStr[date.getMonth()];
+            document.getElementById('finAno').value = date.getFullYear();
+            document.getElementById('finMes').dataset.loaded = "true";
+        }
+
+        processarInteligenciaMensal(); 
+        renderizarKanban(cacheServicos);
     } catch (e) { console.error("Erro ao carregar banco de dados:", e); }
 }
 
-function processarInteligencia(snap) {
-    try {
-        clientesFieis.clear(); mapaGarantias.clear();
-        let lucroPecas = 0, totalObra = 0, totalPDV = 0, descontosAplicados = 0, abandonados = 0;
-        let docs = []; snap.forEach(d => docs.push(d.data()));
-        let docsCronologicos = [...docs].reverse(); 
+function processarInteligenciaMensal() {
+    let mesSel = document.getElementById('finMes').value;
+    let anoSel = String(document.getElementById('finAno').value);
+    let mesesMap = {"JANEIRO":"01", "FEVEREIRO":"02", "MARÇO":"03", "ABRIL":"04", "MAIO":"05", "JUNHO":"06", "JULHO":"07", "AGOSTO":"08", "SETEMBRO":"09", "OUTUBRO":"10", "NOVEMBRO":"11", "DEZEMBRO":"12"};
+    let numMes = mesesMap[mesSel];
+
+    clientesFieis.clear(); mapaGarantias.clear();
+    let lucroPecas = 0, totalObra = 0, totalPDV = 0, descontosAplicados = 0, abandonados = 0;
+    let receitaBrutaComercio = 0, receitaBrutaServicos = 0;
+
+    let docsCronologicos = [...cacheServicos].reverse(); 
+    docsCronologicos.forEach(d => {
+        if(d.categoria !== 'VENDA_BALCAO' && d.serie) { mapaGarantias.set(String(d.serie).trim(), { os: d.os, data: d.data }); }
+        let s = d.status || "";
+        let finalizado = (s.includes('4') || s.includes('Entregue ao Cliente') || s.includes('5'));
+        if(finalizado && d.cliente) { let nomeKey = String(d.cliente).toUpperCase().trim(); clientesFieis.set(nomeKey, (clientesFieis.get(nomeKey) || 0) + 1); }
+    });
+
+    cacheServicos.forEach(d => {
+        let s = d.status || "";
+        let finalizado = (s.includes('4') || s.includes('Entregue ao Cliente') || s.includes('5'));
         
-        docsCronologicos.forEach(d => {
-            if(d.categoria !== 'VENDA_BALCAO' && d.serie) { mapaGarantias.set(String(d.serie).trim(), { os: d.os, data: d.data }); }
-            let s = d.status || "";
-            let finalizado = (s === '4. Entregue com sucesso de reparo' || s === 'Entregue ao Cliente' || s === '5. Devolvido sem reparo');
-            if(finalizado && d.cliente) { let nomeKey = String(d.cliente).toUpperCase().trim(); clientesFieis.set(nomeKey, (clientesFieis.get(nomeKey) || 0) + 1); }
-        });
+        // Verifica alerta de abandono no Kanban independentemente do mês
+        if (!finalizado && calcularDias(d.data) > 180 && d.categoria !== 'VENDA_BALCAO') abandonados++;
 
-        docs.forEach(d => {
-            let s = d.status || "";
-            let finalizado = (s === '4. Entregue com sucesso de reparo' || s === 'Entregue ao Cliente' || s === '5. Devolvido sem reparo');
-
-            if(finalizado) { 
-                if (d.categoria === 'VENDA_BALCAO') { totalPDV += parseFloat(d.total) || 0; } 
-                else {
+        // Calcula Finanças apenas para os equipamentos Finalizados no mês escolhido
+        if(finalizado && d.data) { 
+            let partes = String(d.data).split('/');
+            if(partes[1] === numMes && partes[2] === anoSel) {
+                if (d.categoria === 'VENDA_BALCAO') { 
+                    totalPDV += parseFloat(d.total) || 0; 
+                    receitaBrutaComercio += parseFloat(d.total) || 0; // Vai direto para o MEI Comércio
+                } else {
                     let vp = parseFloat(d.vPecas) || 0; let vc = parseFloat(d.vCustoPecas) || 0; 
                     let vo = parseFloat(d.vObra) || 0; let vd = parseFloat(d.vDesc) || 0;
                     let vvis = parseFloat(d.vVisita) || 0; 
@@ -426,26 +364,59 @@ function processarInteligencia(snap) {
                     lucroPecas += (vp - vc);
                     totalObra += (vo + vvis);
                     descontosAplicados += vd;
-                }
-            } else if (calcularDias(d.data) > 180 && d.categoria !== 'VENDA_BALCAO') { abandonados++; }
-        });
 
-        let totalGeral = (lucroPecas + totalObra - descontosAplicados) + totalPDV;
-        document.getElementById('dashLucroPecas').innerText = "R$ " + lucroPecas.toFixed(2); document.getElementById('dashObra').innerText = "R$ " + totalObra.toFixed(2);
-        document.getElementById('dashPDV').innerText = "R$ " + totalPDV.toFixed(2); document.getElementById('dashTotal').innerText = "R$ " + totalGeral.toFixed(2);
-        
-        if(abandonados > 0) { document.getElementById('qtdAbandonados').innerText = abandonados; document.getElementById('alertaAbandono').style.display = 'block'; } 
-        else { document.getElementById('alertaAbandono').style.display = 'none'; }
-    } catch (error) { console.error("Ignorando erro de dados antigos na Inteligência:", error); }
+                    receitaBrutaComercio += vp; // Valor da peça cobrado pro cliente vai pro MEI Comércio
+                    receitaBrutaServicos += (vo + vvis); // Mão de obra + visita vai pro MEI Serviços
+                }
+            }
+        }
+    });
+
+    // 1. Atualiza Dashboard Financeiro com a matemática de lucro
+    let totalGeral = (lucroPecas + totalObra - descontosAplicados) + totalPDV;
+    document.getElementById('dashLucroPecas').innerText = "R$ " + lucroPecas.toFixed(2); 
+    document.getElementById('dashObra').innerText = "R$ " + totalObra.toFixed(2);
+    document.getElementById('dashPDV').innerText = "R$ " + totalPDV.toFixed(2); 
+    document.getElementById('dashTotal').innerText = "R$ " + totalGeral.toFixed(2);
+    
+    if(abandonados > 0) { document.getElementById('qtdAbandonados').innerText = abandonados; document.getElementById('alertaAbandono').style.display = 'block'; } 
+    else { document.getElementById('alertaAbandono').style.display = 'none'; }
+
+    // 2. 🚀 MÁGICA: AUTO-PREENCHIMENTO DO MEI COM A RECEITA BRUTA
+    if(document.getElementById('meiMes')) document.getElementById('meiMes').value = mesSel;
+    if(document.getElementById('meiAno')) document.getElementById('meiAno').value = anoSel;
+    
+    // Injeta os valores Sem Nota Fiscal (Padrão para OS normais)
+    if(document.getElementById('mei1')) document.getElementById('mei1').value = receitaBrutaComercio.toFixed(2);
+    if(document.getElementById('mei7')) document.getElementById('mei7').value = receitaBrutaServicos.toFixed(2);
+
+    // Efetua a soma matemática para a tela do MEI
+    if(typeof window.calcMEI === 'function') {
+        window.calcMEI();
+    } else {
+        // Fallback de Segurança caso a função externa calcMEI ainda não esteja carregada
+        let m1 = receitaBrutaComercio;
+        let m2 = parseFloat(document.getElementById('mei2')?.value) || 0;
+        if(document.getElementById('mei3')) document.getElementById('mei3').innerText = (m1 + m2).toFixed(2);
+
+        let m7 = receitaBrutaServicos;
+        let m8 = parseFloat(document.getElementById('mei8')?.value) || 0;
+        if(document.getElementById('mei9')) document.getElementById('mei9').innerText = (m7 + m8).toFixed(2);
+
+        let m4 = parseFloat(document.getElementById('mei4')?.value) || 0;
+        let m5 = parseFloat(document.getElementById('mei5')?.value) || 0;
+        if(document.getElementById('mei6')) document.getElementById('mei6').innerText = (m4 + m5).toFixed(2);
+
+        if(document.getElementById('mei10')) document.getElementById('mei10').innerText = ((m1+m2) + (m4+m5) + (m7+m8)).toFixed(2);
+    }
 }
 
-function renderizarKanban(snap, filtroText = "") {
+function renderizarKanban(dadosArray, filtroText = "") {
     let htmlOrcar = "", htmlExec = "", htmlConc = "", htmlEntr = "", htmlDevolv = "";
     let cOrcar = 0, cExec = 0, cConc = 0, cEntr = 0, cDevolv = 0;
 
-    snap.forEach(doc => {
+    dadosArray.forEach(d => {
         try {
-            const d = doc.data();
             let searchTarget = `${d.cliente || ""} ${d.os || ""} ${d.equip || ""} ${d.defeito || ""}`.toUpperCase();
             if (filtroText && !searchTarget.includes(filtroText)) return;
 
@@ -506,9 +477,9 @@ function renderizarKanban(snap, filtroText = "") {
                     <div style="margin-top:5px;">${tagExtra} ${previsaoTag} ${garantiaTag}</div>
                 </div>
                 <div style="display:flex; gap:5px; margin-top:10px;">
-                    <button class="btn-dark btn-small" style="padding:4px;" onclick="imprimirOS('${doc.id}')">🖨️ PDF</button>
-                    <button class="btn-blue btn-small" style="padding:4px;" onclick="editarOS('${doc.id}')">✏️ Editar</button>
-                    <button class="btn-red btn-small" style="padding:4px; flex:none;" onclick="excluirOS('${doc.id}')">🗑️</button>
+                    <button class="btn-dark btn-small" style="padding:4px;" onclick="imprimirOS('${d.id}')">🖨️ PDF</button>
+                    <button class="btn-blue btn-small" style="padding:4px;" onclick="editarOS('${d.id}')">✏️ Editar</button>
+                    <button class="btn-red btn-small" style="padding:4px; flex:none;" onclick="excluirOS('${d.id}')">🗑️</button>
                 </div>
             </div>`;
 
@@ -518,7 +489,7 @@ function renderizarKanban(snap, filtroText = "") {
             else if (finalizadoComSucesso) { htmlEntr += card; cEntr++; }
             else if (finalizadoSemReparo) { htmlDevolv += card; cDevolv++; }
 
-        } catch (err) { console.error("OS ignorada na renderização por erro de formato:", doc.id, err); }
+        } catch (err) { console.error("OS ignorada na renderização por erro de formato:", err); }
     });
 
     if(document.getElementById('kb-orcar')) {
@@ -532,8 +503,7 @@ function renderizarKanban(snap, filtroText = "") {
 
 async function buscar() {
     const t = document.getElementById('busca').value.toUpperCase();
-    const snap = await db.collection("servicos").orderBy("os", "desc").get();
-    renderizarKanban(snap, t);
+    renderizarKanban(cacheServicos, t);
 }
 
 async function excluirOS(id) { if(confirm("Excluir permanentemente?")) { await db.collection("servicos").doc(id).delete(); carregarHistorico(); } }
