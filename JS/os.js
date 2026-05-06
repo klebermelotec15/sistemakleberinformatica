@@ -1,5 +1,5 @@
 // JS/os.js
-// Cérebro Financeiro e Lógico das Ordens de Serviço (Agora Híbridas)
+// Cérebro Financeiro e Lógico das Ordens de Serviço (Híbridas e Automatizadas)
 
 function calcularDias(dataStr) {
     if(!dataStr || typeof dataStr !== 'string') return 0;
@@ -31,7 +31,79 @@ async function obterProximaOS() {
     return snap.empty ? 1 : snap.docs[0].data().os + 1;
 }
 
-// ... Função salvarVendaPDV (mantida igual) ...
+/*
+ * NOVA FUNÇÃO EDUCACIONAL E DE AUTOMAÇÃO: buscarCpfCnpj()
+ * Esta função atua como um detetive de dados. Disparada quando o utilizador sai do campo de CPF/CNPJ.
+ */
+async function buscarCpfCnpj() {
+    // 1. Captura o valor que o técnico digitou e remove pontos e traços para fazer uma busca limpa
+    let docInput = document.getElementById('cpf').value;
+    let numLimpo = docInput.replace(/\D/g, ''); 
+
+    // Se o número for muito pequeno, encerra a função sem fazer pesquisas inúteis
+    if (numLimpo.length < 11) return; 
+
+    // 2. TENTATIVA 1: Busca no Banco de Dados Próprio (Firebase)
+    // Protegemos a requisição com try/catch para não quebrar a página em caso de erro na nuvem
+    try {
+        // Tenta encontrar o cliente procurando pelo número sujo ou limpo na base
+        let snapshot = await db.collection("clientes").where("cpf", "==", docInput).get();
+        if (snapshot.empty && docInput !== numLimpo) {
+            snapshot = await db.collection("clientes").where("cpf", "==", numLimpo).get();
+        }
+        
+        // Se a "foto" da base de dados não estiver vazia, significa que achámos o cliente!
+        if (!snapshot.empty) {
+            let clienteDados = snapshot.docs[0].data();
+            
+            // Injeção dos dados recuperados nos campos visuais da tela
+            document.getElementById('cliente').value = clienteDados.nome || "";
+            document.getElementById('whatsapp').value = clienteDados.zap || "";
+            document.getElementById('rg').value = clienteDados.rg || "";
+            document.getElementById('cep').value = clienteDados.cep || "";
+            document.getElementById('endCliente').value = clienteDados.end || "";
+            document.getElementById('bairro').value = clienteDados.bairro || "";
+            
+            alert("✅ Dados do Cliente preenchidos automaticamente com base no seu histórico!");
+            return; // Encerra a função, pois o objetivo já foi atingido
+        }
+    } catch (error) {
+        console.error("Aviso: Falha ao procurar o documento na nuvem local.", error);
+    }
+
+    // 3. TENTATIVA 2: Busca na Receita Federal (Apenas se for um CNPJ, ou seja, 14 dígitos)
+    if (numLimpo.length === 14) {
+        try {
+            // Utilizamos a API pública BrasilAPI que retorna dados públicos de empresas
+            let response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${numLimpo}`);
+            
+            // Se o servidor do governo responder com "OK" (200), lemos o pacote JSON
+            if (response.ok) {
+                let dados = await response.json();
+                
+                // Distribuição dos dados públicos para os campos do sistema
+                document.getElementById('cliente').value = dados.razao_social || "";
+                document.getElementById('whatsapp').value = dados.ddd_telefone_1 || "";
+                document.getElementById('cep').value = dados.cep || "";
+                
+                // Concatenação inteligente da morada com o número e o complemento (se houver)
+                let endCompleto = dados.logradouro;
+                if (dados.numero) endCompleto += ", " + dados.numero;
+                if (dados.complemento) endCompleto += " - " + dados.complemento;
+                document.getElementById('endCliente').value = endCompleto;
+                
+                document.getElementById('bairro').value = dados.bairro || "";
+                
+                alert("✅ Empresa nova detectada! Dados preenchidos via Receita Federal.");
+            } else {
+                console.log("CNPJ não localizado na API Externa.");
+            }
+        } catch (error) {
+            console.error("Aviso: Falha ao consultar a BrasilAPI para o CNPJ.", error);
+        }
+    }
+}
+
 async function salvarVendaPDV(imprimirRecibo) {
     const desc = document.getElementById('pdvProduto').value;
     const venda = parseFloat(document.getElementById('pdvVenda').value) || 0;
@@ -70,11 +142,10 @@ async function salvarVendaPDV(imprimirRecibo) {
 }
 
 async function salvarOS(tipoDoc) {
-    // Captura dos novos valores financeiros
     const vp = parseFloat(document.getElementById('vPecas').value) || 0;
     const vcusto = parseFloat(document.getElementById('vCustoPecas').value) || 0;
     const vo = parseFloat(document.getElementById('vObra').value) || 0;
-    const vVisita = parseFloat(document.getElementById('vVisita').value) || 0; // NOVO: Taxa de Visita
+    const vVisita = parseFloat(document.getElementById('vVisita').value) || 0; 
     const vd = parseFloat(document.getElementById('vDesc').value) || 0;
     
     const pix = parseFloat(document.getElementById('osPix').value) || 0;
@@ -92,13 +163,12 @@ async function salvarOS(tipoDoc) {
 
     let numOS = editandoId ? parseInt(document.getElementById('idEdicao').innerText) : await obterProximaOS();
 
-    // NOVA MATEMÁTICA: Peças + Mão de Obra + Visita - Desconto
     const totalOS = (vp + vo + vVisita) - vd;
 
     const dados = {
         os: numOS, categoria: 'SERVICO', 
         status: document.getElementById('status').value,
-        modalidade: document.getElementById('modalidade').value, // NOVO: Guarda se foi na loja ou visita
+        modalidade: document.getElementById('modalidade').value, 
         cliente: document.getElementById('cliente').value, cpf: document.getElementById('cpf').value,
         rg: document.getElementById('rg').value, whatsapp: document.getElementById('whatsapp').value,
         endCliente: document.getElementById('endCliente').value, bairro: document.getElementById('bairro').value,
@@ -117,9 +187,7 @@ async function salvarOS(tipoDoc) {
         defeito: document.getElementById('defeito').value,
         laudo: document.getElementById('laudo').value, 
         servicos: document.getElementById('servicos').value,
-        diarioBordo: document.getElementById('diarioBordo').value, // NOVO: Histórico de Visitas
-        
-        // NOVO: Adicionado vVisita na base de dados
+        diarioBordo: document.getElementById('diarioBordo').value, 
         vPecas: vp, vCustoPecas: vcusto, vObra: vo, vVisita: vVisita, vDesc: vd, 
         vSinal: totalPago, total: totalOS, faltaPagar: totalOS - totalPago,
         pagamentos: { pix, din, cred, deb },
@@ -148,14 +216,12 @@ async function salvarOS(tipoDoc) {
     
     carregarHistorico();
 
-    // Se o tipo escolhido for imprimir recibo, ou for saída normal, prepara impressão
     if (tipoDoc === 'SAIDA' || tipoDoc === 'ENTRADA' || tipoDoc === 'RECIBO_PAGAMENTO') {
         prepararImpressao(dados);
     }
 }
 
 function salvarEdicao(tipo) { 
-    // Passa o tipo clicado (SAIDA ou RECIBO_PAGAMENTO) para a função salvarOS
     salvarOS(tipo || tipoDocOriginal); 
 }
 
@@ -168,7 +234,6 @@ function limparFormularioOS() {
     
     document.querySelectorAll('.chk-item').forEach(el => el.checked = false);
     
-    // Resets Padrão
     document.getElementById('modalidade').value = "Realizado na Loja";
     document.getElementById('insLiga').value = "-";
     document.getElementById('insImagem').value = "-";
@@ -205,7 +270,7 @@ function prepararImpressao(d) {
     let vd = parseFloat(d.vDesc) || 0;
     let vpec = parseFloat(d.vPecas) || 0;
     let vobr = parseFloat(d.vObra) || 0;
-    let vvis = parseFloat(d.vVisita) || 0; // NOVO: Captura Taxa de Visita
+    let vvis = parseFloat(d.vVisita) || 0; 
     let vtot = parseFloat(d.total) || 0;
     let vfal = parseFloat(d.faltaPagar) || 0;
     let vsin = parseFloat(d.vSinal) || 0;
@@ -217,8 +282,7 @@ function prepararImpressao(d) {
         document.getElementById('alertaDevolvidoPDF').style.display = 'none';
     }
 
-    // A MÁGICA DO RECIBO E DOS LAUDOS
-    document.getElementById('docTituloPrincipal').innerText = "ORDEM DE SERVIÇO"; // Padrão
+    document.getElementById('docTituloPrincipal').innerText = "ORDEM DE SERVIÇO"; 
     document.getElementById('boxLaudo').style.display = 'block';
     document.getElementById('secEquipamento').style.display = 'block';
     document.getElementById('termoJuridico').style.display = 'block'; 
@@ -245,14 +309,12 @@ function prepararImpressao(d) {
         document.getElementById('lblDesc').innerText = "Desconto (R$)"; 
         document.getElementById('resDesc').innerText = vd ? vd.toFixed(2) : "0.00";
         
-        // Exibição do Recibo Limpo para o Cliente
         if (d.tipo === 'RECIBO_PAGAMENTO') {
             document.getElementById('docTituloPrincipal').innerText = "RECIBO DE PAGAMENTO";
-            document.getElementById('rowInspecao').style.display = 'none'; // Esconde inspeção de balcão
-            document.getElementById('boxLaudo').style.display = 'none'; // Esconde laudo técnico para não gerar confusão após o pagamento
+            document.getElementById('rowInspecao').style.display = 'none'; 
+            document.getElementById('boxLaudo').style.display = 'none'; 
             document.getElementById('termoJuridico').innerHTML = `<strong>TERMO DE QUITAÇÃO:</strong> Declaramos para os devidos fins que os valores descritos neste documento referentes à prestação de serviços foram recebidos, dando plena e total quitação.`;
         } else {
-            // Se for entrada/saída normal, mostra tudo
             document.getElementById('rowInspecao').style.display = 'flex';
             document.getElementById('termoJuridico').innerHTML = `<strong>AVISO IMPORTANTE:</strong> Documento gerado eletronicamente. Orçamentos têm validade de 5 dias úteis a partir da emissão. Em caso de abandono de equipamento sem retirada após 180 dias, o mesmo será tratado como sucata para abatimento dos custos, isentando a empresa de obrigações legais.`;
         }
@@ -262,7 +324,6 @@ function prepararImpressao(d) {
     document.getElementById('resEndCli').innerText = d.endCliente || ""; document.getElementById('resBairro').innerText = d.bairro || "";
     document.getElementById('resCep').innerText = d.cep || ""; document.getElementById('resZap').innerText = d.whatsapp || "";
     
-    // Injeta os Fallbacks de Segurança para compatibilidade com dados antigos
     document.getElementById('resModalidade').innerText = d.modalidade || "Realizado na Loja";
     document.getElementById('resVisita').innerText = vvis ? vvis.toFixed(2) : "0.00";
 
@@ -281,7 +342,6 @@ function prepararImpressao(d) {
     document.getElementById('resLaudo').innerText = d.laudo || ""; 
     document.getElementById('resServicos').innerText = d.servicos || "";
     
-    // Exibe ou oculta o diário de bordo
     if(d.diarioBordo && d.categoria !== 'VENDA_BALCAO') {
         document.getElementById('boxDiario').style.display = 'block';
         document.getElementById('resDiario').innerText = d.diarioBordo;
@@ -315,7 +375,6 @@ function prepararImpressao(d) {
     window.scrollTo(0, 0);
 }
 
-// ... Restante das funções de Inteligência e Kanban mantidas integralmente ...
 async function carregarHistorico() {
     try {
         const snap = await db.collection("servicos").orderBy("os", "desc").get();
@@ -347,7 +406,7 @@ function processarInteligencia(snap) {
                 else {
                     let vp = parseFloat(d.vPecas) || 0; let vc = parseFloat(d.vCustoPecas) || 0; 
                     let vo = parseFloat(d.vObra) || 0; let vd = parseFloat(d.vDesc) || 0;
-                    let vvis = parseFloat(d.vVisita) || 0; // Adiciona as taxas de visita ganhas no total de mão de obra
+                    let vvis = parseFloat(d.vVisita) || 0; 
 
                     lucroPecas += (vp - vc);
                     totalObra += (vo + vvis);
@@ -472,7 +531,6 @@ async function editarOS(id) {
     if(s === "Entregue ao Cliente") s = "4. Entregue com sucesso de reparo";
     document.getElementById('status').value = s; 
     
-    // Tratamento Inteligente (Fallback) para OS antigas que não tinham modalidade, diário ou taxa de visita
     document.getElementById('modalidade').value = d.modalidade || "Realizado na Loja";
     document.getElementById('diarioBordo').value = d.diarioBordo || "";
     document.getElementById('vVisita').value = d.vVisita || "";
