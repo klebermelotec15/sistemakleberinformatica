@@ -88,9 +88,12 @@
                     <button class="btn-blue btn-small" onclick="abrirBuscaCliente()" style="padding: 10px; font-size: 16px;" title="Buscar Cliente Cadastrado">🔍</button>
                 </div>
             </div>
+            
+            <!-- ATUALIZAÇÃO NO CAMPO CPF/CNPJ COM ONBLUR E NOVA ETIQUETA -->
+            <div><label>CPF / CNPJ (Busca Auto):</label><input type="text" id="cpf" onblur="buscarCpfCnpj()" placeholder="Apenas números"></div>
+            <div><label>RG / IE:</label><input type="text" id="rg"></div>
             <div><label>WhatsApp:</label><input type="text" id="whatsapp" placeholder="Ex: 91988887777"></div>
-            <div><label>CPF:</label><input type="text" id="cpf"></div>
-            <div><label>RG:</label><input type="text" id="rg"></div>
+            
             <div style="grid-column: span 2;"><label>Endereço:</label><input type="text" id="endCliente"></div>
             <div><label>Bairro:</label><input type="text" id="bairro"></div>
         </div>
@@ -421,8 +424,8 @@
         <div class="pdf-title">1. INFORMAÇÕES DO CLIENTE</div>
         <div class="pdf-row">
             <div class="pdf-col" style="flex:2;"><span class="pdf-label">Nome</span><span class="pdf-value" id="resCliente"></span></div>
-            <div class="pdf-col"><span class="pdf-label">CPF</span><span class="pdf-value" id="resCpf"></span></div>
-            <div class="pdf-col"><span class="pdf-label">RG</span><span class="pdf-value" id="resRg"></span></div>
+            <div class="pdf-col"><span class="pdf-label">CPF / CNPJ</span><span class="pdf-value" id="resCpf"></span></div>
+            <div class="pdf-col"><span class="pdf-label">RG / IE</span><span class="pdf-value" id="resRg"></span></div>
         </div>
         <div class="pdf-row">
             <div class="pdf-col" style="flex:2;"><span class="pdf-label">Endereço</span><span class="pdf-value" id="resEndCli"></span></div>
