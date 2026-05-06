@@ -58,7 +58,7 @@
     
     <div id="alertaBackupInteligente" style="background: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 4px; display: none; color: #856404;"></div>
 
-    <!-- ABA 1: NOVA OS (AGORA HÍBRIDA) -->
+    <!-- ABA 1: NOVA OS (HÍBRIDA) -->
     <div id="abaNovaOS" class="aba ativa no-print">
         <div id="avisoEdicao" style="display:none; background: #fff3cd; padding:15px; border-radius:8px; margin-bottom:20px;">
             <div style="display:flex; justify-content: space-between; align-items: center;">
@@ -89,7 +89,6 @@
                 </div>
             </div>
             
-            <!-- ATUALIZAÇÃO NO CAMPO CPF/CNPJ COM ONBLUR E NOVA ETIQUETA -->
             <div><label>CPF / CNPJ (Busca Auto):</label><input type="text" id="cpf" onblur="buscarCpfCnpj()" placeholder="Apenas números"></div>
             <div><label>RG / IE:</label><input type="text" id="rg"></div>
             <div><label>WhatsApp:</label><input type="text" id="whatsapp" placeholder="Ex: 91988887777"></div>
@@ -401,8 +400,8 @@
 
 </div>
 
-<!-- TELA DE DOCUMENTO / IMPRESSÃO DA OS -->
-<div id="telaDocumento">
+<!-- TELA DE DOCUMENTO / IMPRESSÃO DA OS - (Oculta por padrão para não interferir) -->
+<div id="telaDocumento" style="display: none;">
     <button class="btn-red no-print" onclick="fecharImpressao()" style="margin-bottom:20px; width:100%; font-size:16px; padding:15px;">⬅️ FECHAR IMPRESSÃO E VOLTAR</button>
     
     <div class="pdf-header">
@@ -513,11 +512,43 @@
         <strong>AVISO IMPORTANTE:</strong> Documento gerado eletronicamente. Orçamentos têm validade de 5 dias úteis a partir da emissão. Em caso de abandono de equipamento sem retirada após 180 dias, o mesmo será tratado como sucata para abatimento dos custos, isentando a empresa de obrigações legais.
     </div>
 
+    <!-- NOVO BLOCO DE ASSINATURA CUSTOMIZADA DA KLEBER INFORMÁTICA -->
+    <div class="pdf-assinaturas" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; page-break-inside: avoid;">
+        
+        <!-- ASSINATURA KLEBER (Conforme a sua Imagem Original) -->
+        <div style="text-align: center; width: 45%;">
+            <div style="font-size: 14px; margin-bottom: 25px;">
+                <strong>PIX</strong><br>
+                24141755000174
+            </div>
+            <div style="display: inline-block; text-align: center; width: 100%; position: relative;">
+                <div style="font-weight: bold; font-size: 14px; margin-bottom: 5px;">Belém</div>
+                
+                <!-- A imagem da sua assinatura manuscrita -->
+                <img src="assinatura.png" alt="Assinatura Kleber Melo" style="max-height: 70px; display: block; margin: 0 auto; margin-bottom: -15px; position: relative; z-index: 2;">
+                
+                <!-- A linha e a identificação -->
+                <div style="border-top: 2px solid #000; padding-top: 5px; position: relative; z-index: 1;">
+                    <strong style="font-size: 14px;">Kleber Informática</strong><br>
+                    <span style="font-size: 14px;">Kleber Melo</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ASSINATURA DO CLIENTE (Mantida para controle de recolha de equipamento) -->
+        <div style="text-align: center; width: 45%; padding-bottom: 18px;">
+            <p style="margin: 0; border-top: 2px solid #000; padding-top: 5px;">
+                <strong style="font-size: 14px;">Assinatura do Cliente</strong>
+            </p>
+        </div>
+
+    </div>
+
     <button class="btn-dark no-print" onclick="window.print()" style="margin-top:15px; width:100%;">🖨️ IMPRIMIR DOCUMENTO</button>
 </div>
 
-<!-- TELA DE DOCUMENTO / IMPRESSÃO DO RELATÓRIO MEI -->
-<div id="telaDocumentoMEI">
+<!-- TELA DE DOCUMENTO / IMPRESSÃO DO RELATÓRIO MEI - (Oculta por padrão para não interferir) -->
+<div id="telaDocumentoMEI" style="display: none;">
     <button class="btn-red no-print" onclick="fecharImpressao()" style="margin-bottom:20px; width:100%; font-size:16px; padding:15px;">⬅️ FECHAR E VOLTAR AO SISTEMA</button>
     
     <table class="tabela-mei">
