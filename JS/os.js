@@ -1,3 +1,6 @@
+// JS/os.js
+// Cérebro Financeiro e Lógico das Ordens de Serviço (Agora Híbridas)
+
 function calcularDias(dataStr) {
     if(!dataStr || typeof dataStr !== 'string') return 0;
     const partes = dataStr.split('/');
@@ -28,6 +31,7 @@ async function obterProximaOS() {
     return snap.empty ? 1 : snap.docs[0].data().os + 1;
 }
 
+// ... Função salvarVendaPDV (mantida igual) ...
 async function salvarVendaPDV(imprimirRecibo) {
     const desc = document.getElementById('pdvProduto').value;
     const venda = parseFloat(document.getElementById('pdvVenda').value) || 0;
@@ -35,8 +39,8 @@ async function salvarVendaPDV(imprimirRecibo) {
     
     const pix = parseFloat(document.getElementById('pdvPix').value) || 0;
     const din = parseFloat(document.getElementById('pdvDin').value) || 0;
-    const cred = parseFloat(document.getElementById('pdvCred').value) || 0;
-    const deb = parseFloat(document.getElementById('pdvDeb').value) || 0;
+    const cred = parseFloat(document.getElementById('osCred').value) || 0;
+    const deb = parseFloat(document.getElementById('osDeb').value) || 0;
     const totalPago = pix + din + cred + deb;
 
     if(!desc) return alert("Digite o produto vendido.");
@@ -51,7 +55,7 @@ async function salvarVendaPDV(imprimirRecibo) {
         vPecas: 0, vCustoPecas: 0, vObra: venda, vDesc: descPDV, total: totalVenda, faltaPagar: totalVenda - totalPago, vSinal: totalPago,
         pagamentos: { pix, din, cred, deb },
         data: new Date().toLocaleDateString('pt-BR'),
-        tipo: 'RECIBO'
+        tipo: 'RECIBO_PAGAMENTO'
     };
 
     await db.collection("servicos").add(dados);
@@ -66,9 +70,11 @@ async function salvarVendaPDV(imprimirRecibo) {
 }
 
 async function salvarOS(tipoDoc) {
+    // Captura dos novos valores financeiros
     const vp = parseFloat(document.getElementById('vPecas').value) || 0;
     const vcusto = parseFloat(document.getElementById('vCustoPecas').value) || 0;
     const vo = parseFloat(document.getElementById('vObra').value) || 0;
+    const vVisita = parseFloat(document.getElementById('vVisita').value) || 0; // NOVO: Taxa de Visita
     const vd = parseFloat(document.getElementById('vDesc').value) || 0;
     
     const pix = parseFloat(document.getElementById('osPix').value) || 0;
@@ -86,10 +92,13 @@ async function salvarOS(tipoDoc) {
 
     let numOS = editandoId ? parseInt(document.getElementById('idEdicao').innerText) : await obterProximaOS();
 
-    const totalOS = (vp + vo) - vd;
+    // NOVA MATEMÁTICA: Peças + Mão de Obra + Visita - Desconto
+    const totalOS = (vp + vo + vVisita) - vd;
 
     const dados = {
-        os: numOS, categoria: 'SERVICO', status: document.getElementById('status').value,
+        os: numOS, categoria: 'SERVICO', 
+        status: document.getElementById('status').value,
+        modalidade: document.getElementById('modalidade').value, // NOVO: Guarda se foi na loja ou visita
         cliente: document.getElementById('cliente').value, cpf: document.getElementById('cpf').value,
         rg: document.getElementById('rg').value, whatsapp: document.getElementById('whatsapp').value,
         endCliente: document.getElementById('endCliente').value, bairro: document.getElementById('bairro').value,
@@ -106,8 +115,13 @@ async function salvarOS(tipoDoc) {
         },
         emprestimo: document.getElementById('emprestimo').value,
         defeito: document.getElementById('defeito').value,
-        laudo: document.getElementById('laudo').value, servicos: document.getElementById('servicos').value,
-        vPecas: vp, vCustoPecas: vcusto, vObra: vo, vDesc: vd, vSinal: totalPago, total: totalOS, faltaPagar: totalOS - totalPago,
+        laudo: document.getElementById('laudo').value, 
+        servicos: document.getElementById('servicos').value,
+        diarioBordo: document.getElementById('diarioBordo').value, // NOVO: Histórico de Visitas
+        
+        // NOVO: Adicionado vVisita na base de dados
+        vPecas: vp, vCustoPecas: vcusto, vObra: vo, vVisita: vVisita, vDesc: vd, 
+        vSinal: totalPago, total: totalOS, faltaPagar: totalOS - totalPago,
         pagamentos: { pix, din, cred, deb },
         garP: document.getElementById('garPecas').value, garO: document.getElementById('garObra').value,
         data: dataFormatada, dataPrev: dataPrevFormatada, tipo: tipoDoc
@@ -125,17 +139,25 @@ async function salvarOS(tipoDoc) {
 
     if(editandoId) {
         await db.collection("servicos").doc(editandoId).update(dados);
-        limparFormularioOS();
-        mudarAba('abaHistorico'); 
+        if (tipoDoc !== 'RECIBO_PAGAMENTO') limparFormularioOS();
+        if (tipoDoc !== 'RECIBO_PAGAMENTO') mudarAba('abaHistorico'); 
     } else {
         await db.collection("servicos").add(dados);
-        prepararImpressao(dados);
-        limparFormularioOS();
+        if (tipoDoc !== 'RECIBO_PAGAMENTO') limparFormularioOS();
     }
+    
     carregarHistorico();
+
+    // Se o tipo escolhido for imprimir recibo, ou for saída normal, prepara impressão
+    if (tipoDoc === 'SAIDA' || tipoDoc === 'ENTRADA' || tipoDoc === 'RECIBO_PAGAMENTO') {
+        prepararImpressao(dados);
+    }
 }
 
-function salvarEdicao() { salvarOS(tipoDocOriginal); }
+function salvarEdicao(tipo) { 
+    // Passa o tipo clicado (SAIDA ou RECIBO_PAGAMENTO) para a função salvarOS
+    salvarOS(tipo || tipoDocOriginal); 
+}
 
 function limparFormularioOS() {
     editandoId = null;
@@ -146,6 +168,8 @@ function limparFormularioOS() {
     
     document.querySelectorAll('.chk-item').forEach(el => el.checked = false);
     
+    // Resets Padrão
+    document.getElementById('modalidade').value = "Realizado na Loja";
     document.getElementById('insLiga').value = "-";
     document.getElementById('insImagem').value = "-";
     document.getElementById('insBarulho').value = "-";
@@ -181,6 +205,7 @@ function prepararImpressao(d) {
     let vd = parseFloat(d.vDesc) || 0;
     let vpec = parseFloat(d.vPecas) || 0;
     let vobr = parseFloat(d.vObra) || 0;
+    let vvis = parseFloat(d.vVisita) || 0; // NOVO: Captura Taxa de Visita
     let vtot = parseFloat(d.total) || 0;
     let vfal = parseFloat(d.faltaPagar) || 0;
     let vsin = parseFloat(d.vSinal) || 0;
@@ -192,24 +217,55 @@ function prepararImpressao(d) {
         document.getElementById('alertaDevolvidoPDF').style.display = 'none';
     }
 
+    // A MÁGICA DO RECIBO E DOS LAUDOS
+    document.getElementById('docTituloPrincipal').innerText = "ORDEM DE SERVIÇO"; // Padrão
+    document.getElementById('boxLaudo').style.display = 'block';
+    document.getElementById('secEquipamento').style.display = 'block';
+    document.getElementById('termoJuridico').style.display = 'block'; 
+    document.getElementById('rowGarantias').style.display = 'flex';
+
     if(d.categoria === 'VENDA_BALCAO') {
-        document.getElementById('secEquipamento').style.display = 'none'; document.getElementById('tituloTecnico').innerText = "PRODUTOS VENDIDOS";
-        document.getElementById('lblDefeito').innerText = "Descrição dos Itens"; document.getElementById('boxLaudo').style.display = 'none';
-        document.getElementById('termoJuridico').style.display = 'none'; document.getElementById('rowGarantias').style.display = 'none';
-        document.getElementById('lblObra').innerText = "Valor da Venda (R$)"; document.getElementById('lblPecas').innerText = "Outros Custos"; document.getElementById('resPecas').innerText = "-";
-        document.getElementById('lblDesc').innerText = "Desconto (R$)"; document.getElementById('resDesc').innerText = vd ? vd.toFixed(2) : "0.00";
+        document.getElementById('secEquipamento').style.display = 'none'; 
+        document.getElementById('tituloTecnico').innerText = "PRODUTOS VENDIDOS";
+        document.getElementById('lblDefeito').innerText = "Descrição dos Itens"; 
+        document.getElementById('boxLaudo').style.display = 'none';
+        document.getElementById('termoJuridico').style.display = 'none'; 
+        document.getElementById('rowGarantias').style.display = 'none';
+        document.getElementById('lblObra').innerText = "Valor da Venda (R$)"; 
+        document.getElementById('lblPecas').innerText = "Outros Custos"; 
+        document.getElementById('resPecas').innerText = "-";
+        document.getElementById('lblDesc').innerText = "Desconto (R$)"; 
+        document.getElementById('resDesc').innerText = vd ? vd.toFixed(2) : "0.00";
     } else {
-        document.getElementById('secEquipamento').style.display = 'block'; document.getElementById('tituloTecnico').innerText = "3. DETALHES TÉCNICOS DO ATENDIMENTO";
-        document.getElementById('lblDefeito').innerText = "3.1. Defeito Relatado / Produto"; document.getElementById('boxLaudo').style.display = 'block';
-        document.getElementById('termoJuridico').style.display = 'block'; document.getElementById('rowGarantias').style.display = 'flex';
-        document.getElementById('lblObra').innerText = "Mão de Obra (R$)"; document.getElementById('lblPecas').innerText = "Peças (R$)";
+        document.getElementById('tituloTecnico').innerText = "3. DETALHES TÉCNICOS DO ATENDIMENTO";
+        document.getElementById('lblDefeito').innerText = "3.1. Defeito Relatado / Produto"; 
+        document.getElementById('lblObra').innerText = "Mão de Obra (R$)"; 
+        document.getElementById('lblPecas').innerText = "Peças (R$)";
         document.getElementById('resPecas').innerText = vpec ? vpec.toFixed(2) : "0.00";
-        document.getElementById('lblDesc').innerText = "Desconto (R$)"; document.getElementById('resDesc').innerText = vd ? vd.toFixed(2) : "0.00";
+        document.getElementById('lblDesc').innerText = "Desconto (R$)"; 
+        document.getElementById('resDesc').innerText = vd ? vd.toFixed(2) : "0.00";
+        
+        // Exibição do Recibo Limpo para o Cliente
+        if (d.tipo === 'RECIBO_PAGAMENTO') {
+            document.getElementById('docTituloPrincipal').innerText = "RECIBO DE PAGAMENTO";
+            document.getElementById('rowInspecao').style.display = 'none'; // Esconde inspeção de balcão
+            document.getElementById('boxLaudo').style.display = 'none'; // Esconde laudo técnico para não gerar confusão após o pagamento
+            document.getElementById('termoJuridico').innerHTML = `<strong>TERMO DE QUITAÇÃO:</strong> Declaramos para os devidos fins que os valores descritos neste documento referentes à prestação de serviços foram recebidos, dando plena e total quitação.`;
+        } else {
+            // Se for entrada/saída normal, mostra tudo
+            document.getElementById('rowInspecao').style.display = 'flex';
+            document.getElementById('termoJuridico').innerHTML = `<strong>AVISO IMPORTANTE:</strong> Documento gerado eletronicamente. Orçamentos têm validade de 5 dias úteis a partir da emissão. Em caso de abandono de equipamento sem retirada após 180 dias, o mesmo será tratado como sucata para abatimento dos custos, isentando a empresa de obrigações legais.`;
+        }
     }
 
     document.getElementById('resCliente').innerText = d.cliente || ""; document.getElementById('resCpf').innerText = d.cpf || ""; document.getElementById('resRg').innerText = d.rg || "";
     document.getElementById('resEndCli').innerText = d.endCliente || ""; document.getElementById('resBairro').innerText = d.bairro || "";
     document.getElementById('resCep').innerText = d.cep || ""; document.getElementById('resZap').innerText = d.whatsapp || "";
+    
+    // Injeta os Fallbacks de Segurança para compatibilidade com dados antigos
+    document.getElementById('resModalidade').innerText = d.modalidade || "Realizado na Loja";
+    document.getElementById('resVisita').innerText = vvis ? vvis.toFixed(2) : "0.00";
+
     document.getElementById('resEquip').innerText = d.equip || ""; document.getElementById('resModelo').innerText = d.modelo || ""; document.getElementById('resSerie').innerText = d.serie || ""; 
     
     let acesArr = []; if (d.chkList) acesArr.push(d.chkList); else { if (d.chkFonte === "Sim") acesArr.push("Fonte"); if (d.chkCapa === "Sim") acesArr.push("Capa"); }
@@ -221,7 +277,18 @@ function prepararImpressao(d) {
     if(d.emprestimo) { document.getElementById('rowEmprestimo').style.display = 'flex'; document.getElementById('resEmprestimo').innerText = d.emprestimo; } 
     else { document.getElementById('rowEmprestimo').style.display = 'none'; }
 
-    document.getElementById('resDefeito').innerText = d.defeito || ""; document.getElementById('resLaudo').innerText = d.laudo || ""; document.getElementById('resServicos').innerText = d.servicos || "";
+    document.getElementById('resDefeito').innerText = d.defeito || ""; 
+    document.getElementById('resLaudo').innerText = d.laudo || ""; 
+    document.getElementById('resServicos').innerText = d.servicos || "";
+    
+    // Exibe ou oculta o diário de bordo
+    if(d.diarioBordo && d.categoria !== 'VENDA_BALCAO') {
+        document.getElementById('boxDiario').style.display = 'block';
+        document.getElementById('resDiario').innerText = d.diarioBordo;
+    } else {
+        document.getElementById('boxDiario').style.display = 'none';
+    }
+
     document.getElementById('resObra').innerText = vobr ? vobr.toFixed(2) : "0.00"; 
     document.getElementById('resTotal').innerText = "R$ " + (vtot ? vtot.toFixed(2) : "0.00");
     document.getElementById('resSinal').innerText = vsin ? "R$ " + vsin.toFixed(2) : "R$ 0.00"; 
@@ -229,23 +296,15 @@ function prepararImpressao(d) {
     document.getElementById('resGarO').innerText = d.garO || ""; document.getElementById('resGarP').innerText = d.garP || ""; document.getElementById('resDataPrev').innerText = d.dataPrev || "Sem previsão";
     
     let cidadeLocal = configGlobais.cidade || "Sua Cidade";
-    if(document.getElementById('resLocalData')) {
-        document.getElementById('resLocalData').innerText = cidadeLocal;
-    }
-    
+    if(document.getElementById('resLocalData')) { document.getElementById('resLocalData').innerText = cidadeLocal; }
     document.getElementById('resData').innerText = d.data || new Date().toLocaleDateString('pt-BR');
 
     let pagText = [];
     if(d.pagamentos) {
-        let vPix = parseFloat(d.pagamentos.pix) || 0;
-        let vDin = parseFloat(d.pagamentos.din) || 0;
-        let vCred = parseFloat(d.pagamentos.cred) || 0;
-        let vDeb = parseFloat(d.pagamentos.deb) || 0;
-        
-        if(vPix > 0) pagText.push(`PIX: R$ ${vPix.toFixed(2)}`); 
-        if(vDin > 0) pagText.push(`DIN: R$ ${vDin.toFixed(2)}`);
-        if(vCred > 0) pagText.push(`CRÉD: R$ ${vCred.toFixed(2)}`); 
-        if(vDeb > 0) pagText.push(`DÉB: R$ ${vDeb.toFixed(2)}`);
+        let vPix = parseFloat(d.pagamentos.pix) || 0; let vDin = parseFloat(d.pagamentos.din) || 0;
+        let vCred = parseFloat(d.pagamentos.cred) || 0; let vDeb = parseFloat(d.pagamentos.deb) || 0;
+        if(vPix > 0) pagText.push(`PIX: R$ ${vPix.toFixed(2)}`); if(vDin > 0) pagText.push(`DIN: R$ ${vDin.toFixed(2)}`);
+        if(vCred > 0) pagText.push(`CRÉD: R$ ${vCred.toFixed(2)}`); if(vDeb > 0) pagText.push(`DÉB: R$ ${vDeb.toFixed(2)}`);
     }
     if(pagText.length > 0) { document.getElementById('rowMetodosPagamento').style.display = 'flex'; document.getElementById('resMeiosPag').innerText = pagText.join(' | '); } 
     else { document.getElementById('rowMetodosPagamento').style.display = 'none'; }
@@ -256,35 +315,27 @@ function prepararImpressao(d) {
     window.scrollTo(0, 0);
 }
 
+// ... Restante das funções de Inteligência e Kanban mantidas integralmente ...
 async function carregarHistorico() {
     try {
         const snap = await db.collection("servicos").orderBy("os", "desc").get();
         processarInteligencia(snap); 
         renderizarKanban(snap);
-    } catch (e) {
-        console.error("Erro ao carregar banco de dados:", e);
-    }
+    } catch (e) { console.error("Erro ao carregar banco de dados:", e); }
 }
 
 function processarInteligencia(snap) {
     try {
         clientesFieis.clear(); mapaGarantias.clear();
-        
         let lucroPecas = 0, totalObra = 0, totalPDV = 0, descontosAplicados = 0, abandonados = 0;
-        
         let docs = []; snap.forEach(d => docs.push(d.data()));
         let docsCronologicos = [...docs].reverse(); 
         
         docsCronologicos.forEach(d => {
-            if(d.categoria !== 'VENDA_BALCAO' && d.serie) {
-                mapaGarantias.set(String(d.serie).trim(), { os: d.os, data: d.data });
-            }
+            if(d.categoria !== 'VENDA_BALCAO' && d.serie) { mapaGarantias.set(String(d.serie).trim(), { os: d.os, data: d.data }); }
             let s = d.status || "";
             let finalizado = (s === '4. Entregue com sucesso de reparo' || s === 'Entregue ao Cliente' || s === '5. Devolvido sem reparo');
-            if(finalizado && d.cliente) {
-                let nomeKey = String(d.cliente).toUpperCase().trim();
-                clientesFieis.set(nomeKey, (clientesFieis.get(nomeKey) || 0) + 1);
-            }
+            if(finalizado && d.cliente) { let nomeKey = String(d.cliente).toUpperCase().trim(); clientesFieis.set(nomeKey, (clientesFieis.get(nomeKey) || 0) + 1); }
         });
 
         docs.forEach(d => {
@@ -292,40 +343,26 @@ function processarInteligencia(snap) {
             let finalizado = (s === '4. Entregue com sucesso de reparo' || s === 'Entregue ao Cliente' || s === '5. Devolvido sem reparo');
 
             if(finalizado) { 
-                if (d.categoria === 'VENDA_BALCAO') {
-                    totalPDV += parseFloat(d.total) || 0; 
-                } else {
-                    let vp = parseFloat(d.vPecas) || 0;
-                    let vc = parseFloat(d.vCustoPecas) || 0; 
-                    let vo = parseFloat(d.vObra) || 0;
-                    let vd = parseFloat(d.vDesc) || 0;
+                if (d.categoria === 'VENDA_BALCAO') { totalPDV += parseFloat(d.total) || 0; } 
+                else {
+                    let vp = parseFloat(d.vPecas) || 0; let vc = parseFloat(d.vCustoPecas) || 0; 
+                    let vo = parseFloat(d.vObra) || 0; let vd = parseFloat(d.vDesc) || 0;
+                    let vvis = parseFloat(d.vVisita) || 0; // Adiciona as taxas de visita ganhas no total de mão de obra
 
                     lucroPecas += (vp - vc);
-                    totalObra += vo;
+                    totalObra += (vo + vvis);
                     descontosAplicados += vd;
                 }
-            } 
-            else if (calcularDias(d.data) > 180 && d.categoria !== 'VENDA_BALCAO') { 
-                abandonados++; 
-            }
+            } else if (calcularDias(d.data) > 180 && d.categoria !== 'VENDA_BALCAO') { abandonados++; }
         });
 
         let totalGeral = (lucroPecas + totalObra - descontosAplicados) + totalPDV;
-
-        document.getElementById('dashLucroPecas').innerText = "R$ " + lucroPecas.toFixed(2);
-        document.getElementById('dashObra').innerText = "R$ " + totalObra.toFixed(2);
-        document.getElementById('dashPDV').innerText = "R$ " + totalPDV.toFixed(2);
-        document.getElementById('dashTotal').innerText = "R$ " + totalGeral.toFixed(2);
+        document.getElementById('dashLucroPecas').innerText = "R$ " + lucroPecas.toFixed(2); document.getElementById('dashObra').innerText = "R$ " + totalObra.toFixed(2);
+        document.getElementById('dashPDV').innerText = "R$ " + totalPDV.toFixed(2); document.getElementById('dashTotal').innerText = "R$ " + totalGeral.toFixed(2);
         
-        if(abandonados > 0) { 
-            document.getElementById('qtdAbandonados').innerText = abandonados; 
-            document.getElementById('alertaAbandono').style.display = 'block'; 
-        } else { 
-            document.getElementById('alertaAbandono').style.display = 'none'; 
-        }
-    } catch (error) {
-        console.error("Ignorando erro de dados antigos na Inteligência:", error);
-    }
+        if(abandonados > 0) { document.getElementById('qtdAbandonados').innerText = abandonados; document.getElementById('alertaAbandono').style.display = 'block'; } 
+        else { document.getElementById('alertaAbandono').style.display = 'none'; }
+    } catch (error) { console.error("Ignorando erro de dados antigos na Inteligência:", error); }
 }
 
 function renderizarKanban(snap, filtroText = "") {
@@ -343,9 +380,7 @@ function renderizarKanban(snap, filtroText = "") {
             
             if(d.cliente) {
                 let nomeKey = String(d.cliente).toUpperCase().trim();
-                if (clientesFieis.get(nomeKey) >= 5) {
-                    fidelidadeTag = `<span class="tag" style="background:#ffc107; color:#000;">⭐ Fiel</span>`;
-                }
+                if (clientesFieis.get(nomeKey) >= 5) { fidelidadeTag = `<span class="tag" style="background:#ffc107; color:#000;">⭐ Fiel</span>`; }
             }
 
             let stat = String(d.status).trim();
@@ -358,28 +393,21 @@ function renderizarKanban(snap, filtroText = "") {
                 if(ultimaDaSerie && ultimaDaSerie.os !== d.os) {
                     let diffDiasAnterior = calcularDias(ultimaDaSerie.data);
                     if(diffDiasAnterior <= 90 && !finalizadoComSucesso && !finalizadoSemReparo) {
-                        garantiaTag = `<br><span class="tag" style="background:#dc3545;">⚠️ POSSÍVEL RETORNO/GARANTIA</span>`;
+                        garantiaTag = `<br><span class="tag" style="background:#dc3545;">⚠️ RETORNO/GARANTIA</span>`;
                     }
                 }
             }
 
-            if(d.categoria === 'VENDA_BALCAO') { 
-                tagExtra = `<span class="tag" style="background:#6c757d;">🛒 VENDA</span>`; 
-            } else if(finalizadoComSucesso) {
-                let gO = converterParaDias(d.garO); 
-                let gP = converterParaDias(d.garP);
-                let obraAtiva = gO > 0 && dias <= gO;
-                let pecasAtiva = gP > 0 && dias <= gP;
-
+            if(d.categoria === 'VENDA_BALCAO') { tagExtra = `<span class="tag" style="background:#6c757d;">🛒 VENDA</span>`; } 
+            else if(finalizadoComSucesso) {
+                let gO = converterParaDias(d.garO); let gP = converterParaDias(d.garP);
+                let obraAtiva = gO > 0 && dias <= gO; let pecasAtiva = gP > 0 && dias <= gP;
                 if (obraAtiva && pecasAtiva) tagExtra = `<span class="tag" style="background:#28a745;">🛡️ Garantia: AMBAS</span>`;
                 else if (obraAtiva && !pecasAtiva) tagExtra = `<span class="tag" style="background:#17a2b8;">🛡️ Garantia: MÃO DE OBRA</span>`;
                 else if (!obraAtiva && pecasAtiva) tagExtra = `<span class="tag" style="background:#6f42c1;">🛡️ Garantia: PEÇAS</span>`;
                 else tagExtra = `<span class="tag" style="background:#6c757d;">❌ GARANTIA EXPIRADA</span>`;
-            } else if(finalizadoSemReparo) {
-                tagExtra = `<span class="tag" style="background:#000;">⚫ SEM REPARO</span>`;
-            } else if(dias > 180) { 
-                tagExtra = `<span class="tag" style="background:red;">🚨 ABANDONADO</span>`; 
-            }
+            } else if(finalizadoSemReparo) { tagExtra = `<span class="tag" style="background:#000;">⚫ SEM REPARO</span>`; } 
+            else if(dias > 180) { tagExtra = `<span class="tag" style="background:red;">🚨 ABANDONADO</span>`; }
             
             let previsaoTag = "";
             if(d.dataPrev && stat !== '3. Concluída' && stat !== 'Concluída' && !finalizadoComSucesso && !finalizadoSemReparo) {
@@ -412,9 +440,7 @@ function renderizarKanban(snap, filtroText = "") {
             else if (finalizadoComSucesso) { htmlEntr += card; cEntr++; }
             else if (finalizadoSemReparo) { htmlDevolv += card; cDevolv++; }
 
-        } catch (err) {
-            console.error("OS ignorada na renderização por erro de formato:", doc.id, err);
-        }
+        } catch (err) { console.error("OS ignorada na renderização por erro de formato:", doc.id, err); }
     });
 
     if(document.getElementById('kb-orcar')) {
@@ -446,6 +472,11 @@ async function editarOS(id) {
     if(s === "Entregue ao Cliente") s = "4. Entregue com sucesso de reparo";
     document.getElementById('status').value = s; 
     
+    // Tratamento Inteligente (Fallback) para OS antigas que não tinham modalidade, diário ou taxa de visita
+    document.getElementById('modalidade').value = d.modalidade || "Realizado na Loja";
+    document.getElementById('diarioBordo').value = d.diarioBordo || "";
+    document.getElementById('vVisita').value = d.vVisita || "";
+
     document.getElementById('cliente').value = d.cliente || "";
     document.getElementById('cpf').value = d.cpf || ""; document.getElementById('rg').value = d.rg || "";
     document.getElementById('whatsapp').value = d.whatsapp || ""; document.getElementById('endCliente').value = d.endCliente || "";
@@ -463,6 +494,7 @@ async function editarOS(id) {
     
     document.getElementById('defeito').value = d.defeito || ""; document.getElementById('laudo').value = d.laudo || ""; document.getElementById('servicos').value = d.servicos || "";
     document.getElementById('emprestimo').value = d.emprestimo || "";
+    
     document.getElementById('vPecas').value = d.vPecas || ""; 
     document.getElementById('vCustoPecas').value = d.vCustoPecas || ""; 
     document.getElementById('vObra').value = d.vObra || ""; 
