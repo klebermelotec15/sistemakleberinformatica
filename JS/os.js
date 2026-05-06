@@ -1,5 +1,5 @@
 // JS/os.js
-// Cérebro Financeiro e Lógico (Motor Original Mantido - Sem Variáveis Globais - Busca de OS Origem Adicionada)
+// Cérebro Financeiro e Lógico (Motor Original Mantido - Sem Variáveis Globais - Ocultação de Assinatura na Saída)
 
 // 🚀 FUNÇÃO DE AUTOMAÇÃO DE RETORNO EM GARANTIA
 async function buscarOSOrigem() {
@@ -180,21 +180,15 @@ async function salvarOS(tipoDoc) {
     let chkArr = [];
     document.querySelectorAll('.chk-item:checked').forEach(el => chkArr.push(el.value));
 
-    // Proteção de variável global
-    let numOS = (typeof editandoId !== 'undefined' && editandoId) ? parseInt(document.getElementById('idEdicao').innerText) : await obterProximaOS();
-
+    let numOS = window.editandoId ? parseInt(document.getElementById('idEdicao').innerText) : await obterProximaOS();
     const totalOS = (vp + vo + vVisita) - vd;
 
-    // Lógica do Regime de Caixa
     let statusAtual = document.getElementById('status').value;
-    let dataPagFinal = (typeof window.dataPagamentoAtual !== 'undefined') ? window.dataPagamentoAtual : "";
+    let dataPagFinal = window.dataPagamentoAtual || "";
     let pago = (statusAtual === '4. Entregue com sucesso de reparo' || statusAtual === 'Entregue ao Cliente');
     
-    if (pago && !dataPagFinal) {
-        dataPagFinal = new Date().toLocaleDateString('pt-BR');
-    } else if (!pago) {
-        dataPagFinal = ""; 
-    }
+    if (pago && !dataPagFinal) { dataPagFinal = new Date().toLocaleDateString('pt-BR'); } 
+    else if (!pago) { dataPagFinal = ""; }
 
     const dados = {
         os: numOS, categoria: 'SERVICO', 
@@ -241,8 +235,8 @@ async function salvarOS(tipoDoc) {
         }).then(() => carregarClientesDaNuvem()); 
     }
 
-    if(typeof editandoId !== 'undefined' && editandoId) {
-        await db.collection("servicos").doc(editandoId).update(dados);
+    if(window.editandoId) {
+        await db.collection("servicos").doc(window.editandoId).update(dados);
         if (tipoDoc !== 'RECIBO_PAGAMENTO') limparFormularioOS();
         if (tipoDoc !== 'RECIBO_PAGAMENTO') mudarAba('abaHistorico'); 
     } else {
@@ -267,7 +261,7 @@ function salvarEdicao(tipo) {
 
 function limparFormularioOS() {
     if(typeof editandoId !== 'undefined') editandoId = null;
-    window.dataPagamentoAtual = "";
+    window.dataPagamentoAtual = ""; 
     document.getElementById('avisoEdicao').style.display = 'none';
     document.getElementById('botoesCriar').style.display = 'flex';
     document.getElementById('botaoSalvarEdicao').style.display = 'none';
@@ -344,7 +338,7 @@ function prepararImpressao(d) {
     document.getElementById('termoJuridico').style.display = 'block'; 
     document.getElementById('rowGarantias').style.display = 'flex';
 
-    // 🚀 Lógica de Ocultar a Assinatura do Cliente
+    // 🚀 LÓGICA DE ASSINATURA: Oculta o campo de assinatura do cliente para Saídas, Recibos e Vendas
     let blocoAssinatura = document.getElementById('blocoAssinaturaCliente');
 
     if(d.categoria === 'VENDA_BALCAO') {
@@ -379,12 +373,12 @@ function prepararImpressao(d) {
             document.getElementById('docTituloPrincipal').innerText = "RETORNO EM GARANTIA";
             document.getElementById('rowInspecao').style.display = 'flex';
             document.getElementById('termoJuridico').innerHTML = `<strong>AVISO IMPORTANTE:</strong> Documento gerado eletronicamente para acionamento de garantia. O equipamento será avaliado tecnicamente para confirmação do defeito na peça ou serviço previamente executado.`;
-            if(blocoAssinatura) blocoAssinatura.style.display = 'block'; // Mostra na OS
+            if(blocoAssinatura) blocoAssinatura.style.display = (d.tipo === 'SAIDA') ? 'none' : 'block'; // Oculta se for gerar OS de Saída
         } else {
             document.getElementById('docTituloPrincipal').innerText = "ORDEM DE SERVIÇO"; 
             document.getElementById('rowInspecao').style.display = 'flex';
             document.getElementById('termoJuridico').innerHTML = `<strong>AVISO IMPORTANTE:</strong> Documento gerado eletronicamente. Orçamentos têm validade de 5 dias úteis a partir da emissão. Em caso de abandono de equipamento sem retirada após 180 dias, o mesmo será tratado como sucata para abatimento dos custos, isentando a empresa de obrigações legais.`;
-            if(blocoAssinatura) blocoAssinatura.style.display = 'block'; // Mostra na OS
+            if(blocoAssinatura) blocoAssinatura.style.display = (d.tipo === 'SAIDA') ? 'none' : 'block'; // Oculta se for gerar OS de Saída
         }
     }
 
@@ -601,7 +595,7 @@ function renderizarKanban(snap) {
 }
 
 // ----------------------------------------------------------------------
-// FUNÇÃO FINANCEIRA ISOLADA (MEI, B2B E REGIME DE CAIXA)
+// FUNÇÃO FINANCEIRA ISOLADA E INQUEBRÁVEL (MEI, B2B E REGIME DE CAIXA)
 // ----------------------------------------------------------------------
 async function processarInteligenciaFinanceiraSegura(snap) {
     try {
@@ -621,8 +615,7 @@ async function processarInteligenciaFinanceiraSegura(snap) {
             let pago = (s === '4. Entregue com sucesso de reparo' || s === 'Entregue ao Cliente');
             
             if(pago || d.categoria === 'VENDA_BALCAO') { 
-                
-                // 🚀 LÓGICA DO REGIME DE CAIXA: Olha para a data de Pagamento
+                // Regime de caixa
                 let dataRef = d.dataPagamento || d.data; 
                 if(dataRef && numMes && anoSel) {
                     let partes = String(dataRef).split('/');
@@ -647,7 +640,7 @@ async function processarInteligenciaFinanceiraSegura(snap) {
             } 
         });
 
-        // 🚀 SOMAR CONTRATOS B2B ATIVOS NA MÃO DE OBRA
+        // SOMAR CONTRATOS B2B ATIVOS
         try {
             const snapB2B = await db.collection("contratos").where("status", "==", "Ativo").get();
             let totalMensalContratos = 0;
@@ -657,7 +650,7 @@ async function processarInteligenciaFinanceiraSegura(snap) {
             });
             totalObra += totalMensalContratos;
             receitaBrutaServicos += totalMensalContratos;
-        } catch(e) { console.log("B2B não processado."); }
+        } catch(e) { console.log("B2B não processado no momento."); }
 
         let totalGeral = (lucroPecas + totalObra - descontosAplicados) + totalPDV;
         
@@ -674,7 +667,7 @@ async function processarInteligenciaFinanceiraSegura(snap) {
 
         if(typeof window.calcMEI === 'function') { window.calcMEI(); } 
 
-    } catch (error) { console.error("Erro no processamento financeiro:", error); }
+    } catch (error) { console.error("Erro no processamento financeiro isolado:", error); }
 }
 
 async function buscar() {
