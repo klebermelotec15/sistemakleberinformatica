@@ -1,5 +1,5 @@
 // JS/os.js
-// Cérebro Seguro (Variáveis Globais protegidas com 'var' para evitar Syntax Error)
+// Cérebro Seguro (Variáveis protegidas com 'var' para evitar bloqueios de execução)
 
 var cacheServicos = cacheServicos || []; 
 var mapaGarantias = mapaGarantias || new Map();
@@ -442,11 +442,11 @@ async function imprimirOS(id) {
     try {
         const doc = await db.collection("servicos").doc(id).get();
         if (doc.exists) prepararImpressao(doc.data());
-    } catch (e) { alert("Erro de rede."); console.error(e); }
+    } catch (e) { alert("Erro ao carregar documento."); console.error(e); }
 }
 
 // ----------------------------------------------------------------------
-// IMPRESSÃO PROTEGIDA 
+// IMPRESSÃO PROTEGIDA (!important)
 // ----------------------------------------------------------------------
 function prepararImpressao(d) {
     let tMei = document.getElementById('telaDocumentoMEI');
@@ -550,7 +550,7 @@ function fecharImpressao() {
     if(mNav) mNav.setAttribute('style', 'display: flex !important;');
 }
 
-// 🛡️ GATILHO DE SEGURANÇA: Garante que o histórico carrega sozinho
+// 🛡️ GATILHO DE SEGURANÇA: Dispara o histórico sozinho quando a página carrega
 document.addEventListener("DOMContentLoaded", function() {
-    setTimeout(() => { if(typeof carregarHistorico === 'function') carregarHistorico(); }, 500);
+    setTimeout(() => { if(typeof carregarHistorico === 'function') carregarHistorico(); }, 800);
 });
