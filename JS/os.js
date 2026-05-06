@@ -1,15 +1,17 @@
 // JS/os.js
-// Cérebro Financeiro e Lógico (Versão: Regime de Caixa, MEI Automático e Data de Pagamento Invisível)
+// Cérebro Financeiro e Lógico (Versão: Busca Inquebrável, Regime de Caixa e Integração MEI)
 
-var cacheServicos = cacheServicos || []; 
-var mapaGarantias = mapaGarantias || new Map();
-var clientesFieis = clientesFieis || new Map();
-var editandoId = editandoId || null;
-var tipoDocOriginal = tipoDocOriginal || 'ENTRADA';
+// 1. Variáveis Globais de Segurança (Evita Crash de Referência)
+var cacheServicos = []; 
+var mapaGarantias = new Map();
+var clientesFieis = new Map();
+var editandoId = null;
+var tipoDocOriginal = 'ENTRADA';
+var dataPagamentoAtual = ""; // Guarda o dia em que o cliente pagou a OS
 
-// Variável global para guardar a data de pagamento da OS enquanto a editamos
-var dataPagamentoAtual = "";
-
+// ============================================================================
+// FERRAMENTAS DE CÁLCULO E DATA
+// ============================================================================
 function calcularDias(dataStr) {
     if(!dataStr || typeof dataStr !== 'string') return 0;
     const partes = dataStr.split('/');
@@ -40,9 +42,9 @@ async function obterProximaOS() {
     return snap.empty ? 1 : snap.docs[0].data().os + 1;
 }
 
-// ----------------------------------------------------------------------
-// INTEGRAÇÃO COM BRASIL API E HISTÓRICO LOCAL
-// ----------------------------------------------------------------------
+// ============================================================================
+// BUSCA AUTOMÁTICA DE CLIENTE (BRASIL API E FIREBASE)
+// ============================================================================
 async function buscarCpfCnpj() {
     let docInput = document.getElementById('cpf').value;
     let numLimpo = docInput.replace(/\D/g, ''); 
@@ -56,17 +58,17 @@ async function buscarCpfCnpj() {
         }
         
         if (!snapshot.empty) {
-            let d = snapshot.docs[0].data();
-            document.getElementById('cliente').value = d.nome || "";
-            document.getElementById('whatsapp').value = d.zap || "";
-            document.getElementById('rg').value = d.rg || "";
-            document.getElementById('cep').value = d.cep || "";
-            document.getElementById('endCliente').value = d.end || "";
-            document.getElementById('bairro').value = d.bairro || "";
-            alert("✅ Dados do Cliente preenchidos automaticamente!");
+            let clienteDados = snapshot.docs[0].data();
+            document.getElementById('cliente').value = clienteDados.nome || "";
+            document.getElementById('whatsapp').value = clienteDados.zap || "";
+            document.getElementById('rg').value = clienteDados.rg || "";
+            document.getElementById('cep').value = clienteDados.cep || "";
+            document.getElementById('endCliente').value = clienteDados.end || "";
+            document.getElementById('bairro').value = clienteDados.bairro || "";
+            alert("✅ Dados do Cliente preenchidos automaticamente com base no seu histórico!");
             return; 
         }
-    } catch (error) { console.error("Falha ao procurar documento na nuvem."); }
+    } catch (error) { console.error("Aviso: Falha ao procurar o documento na nuvem local.", error); }
 
     if (numLimpo.length === 14) {
         try {
@@ -78,17 +80,18 @@ async function buscarCpfCnpj() {
                 document.getElementById('cep').value = dados.cep || "";
                 let endCompleto = dados.logradouro;
                 if (dados.numero) endCompleto += ", " + dados.numero;
+                if (dados.complemento) endCompleto += " - " + dados.complemento;
                 document.getElementById('endCliente').value = endCompleto;
                 document.getElementById('bairro').value = dados.bairro || "";
-                alert("✅ Empresa preenchida via Receita Federal.");
+                alert("✅ Empresa nova detectada! Dados preenchidos via Receita Federal.");
             }
-        } catch (error) { console.error("Falha API Externa."); }
+        } catch (error) { console.error("Aviso: Falha ao consultar a BrasilAPI para o CNPJ.", error); }
     }
 }
 
-// ----------------------------------------------------------------------
-// SALVAR DADOS (PDV E OS)
-// ----------------------------------------------------------------------
+// ============================================================================
+// SALVAMENTO DE DADOS E REGIME DE CAIXA
+// ============================================================================
 async function salvarVendaPDV(imprimirRecibo) {
     const desc = document.getElementById('pdvProduto').value;
     const venda = parseFloat(document.getElementById('pdvVenda').value) || 0;
@@ -110,17 +113,20 @@ async function salvarVendaPDV(imprimirRecibo) {
         os: numOS, categoria: 'VENDA_BALCAO', status: '4. Entregue com sucesso de reparo',
         cliente: document.getElementById('pdvCliente').value, defeito: desc, 
         vPecas: 0, vCustoPecas: 0, vObra: venda, vDesc: descPDV, total: totalVenda, faltaPagar: totalVenda - totalPago, vSinal: totalPago,
-        pagamentos: { pix, din, cred, deb }, 
-        data: dataAtual, 
-        dataPagamento: dataAtual, // Venda balcão é paga no dia
+        pagamentos: { pix, din, cred, deb },
+        data: dataAtual, dataPagamento: dataAtual, // Venda balcão entra no caixa no mesmo dia
         tipo: 'RECIBO_PAGAMENTO'
     };
 
     await db.collection("servicos").add(dados);
     alert("Venda registada com sucesso!");
     
-    document.querySelectorAll('#abaPDV input[type=number], #abaPDV textarea').forEach(el => el.value = '');
-    if(imprimirRecibo) prepararImpressao(dados); else carregarHistorico();
+    document.getElementById('pdvProduto').value = ""; document.getElementById('pdvVenda').value = "";
+    document.getElementById('pdvDesc').value = ""; document.getElementById('pdvPix').value = ""; 
+    document.getElementById('pdvDin').value = ""; document.getElementById('pdvCred').value = ""; 
+    document.getElementById('pdvDeb').value = "";
+
+    if(imprimirRecibo) { prepararImpressao(dados); } else { carregarHistorico(); }
 }
 
 async function salvarOS(tipoDoc) {
@@ -146,13 +152,13 @@ async function salvarOS(tipoDoc) {
     let numOS = editandoId ? parseInt(document.getElementById('idEdicao').innerText) : await obterProximaOS();
     const totalOS = (vp + vo + vVisita) - vd;
 
-    // 🚀 LÓGICA DO REGIME DE CAIXA: Grava invisivelmente a data em que o status mudou para Entregue (4)
+    // 🚀 LÓGICA DO REGIME DE CAIXA: Grava invisivelmente a data em que você mudou para "Entregue"
     let statusAtual = document.getElementById('status').value;
     let dataPagFinal = dataPagamentoAtual;
-    if ((statusAtual.includes('4') || statusAtual.includes('Entregue')) && !dataPagFinal) {
-        dataPagFinal = new Date().toLocaleDateString('pt-BR');
-    } else if (!statusAtual.includes('4') && !statusAtual.includes('Entregue')) {
-        dataPagFinal = ""; // Se voltar pra orçar, remove o pagamento
+    if ((statusAtual.includes('4') || statusAtual.toUpperCase().includes('ENTREGUE')) && !dataPagFinal) {
+        dataPagFinal = new Date().toLocaleDateString('pt-BR'); // Marca o pagamento hoje
+    } else if (!statusAtual.includes('4') && !statusAtual.toUpperCase().includes('ENTREGUE')) {
+        dataPagFinal = ""; // Se não estiver entregue, anula o pagamento
     }
 
     const dados = {
@@ -165,14 +171,17 @@ async function salvarOS(tipoDoc) {
         emprestimo: document.getElementById('emprestimo').value, defeito: document.getElementById('defeito').value, laudo: document.getElementById('laudo').value, servicos: document.getElementById('servicos').value, diarioBordo: document.getElementById('diarioBordo').value, 
         vPecas: vp, vCustoPecas: vcusto, vObra: vo, vVisita: vVisita, vDesc: vd, vSinal: totalPago, total: totalOS, faltaPagar: totalOS - totalPago, pagamentos: { pix, din, cred, deb },
         garP: document.getElementById('garPecas').value, garO: document.getElementById('garObra').value, data: dataFormatada, dataPrev: dataPrevFormatada, tipo: tipoDoc,
-        dataPagamento: dataPagFinal // Campo oculto gravado no Firebase
+        dataPagamento: dataPagFinal // Campo Oculto para o Financeiro
     };
 
     if(!dados.cliente) return alert("Digite o nome do cliente!");
 
     if(dados.cliente) {
         let nomeKey = dados.cliente.toUpperCase().trim();
-        db.collection("clientes").doc(nomeKey).set({ nome: dados.cliente, zap: dados.whatsapp, cpf: dados.cpf, rg: dados.rg, cep: dados.cep, end: dados.endCliente, bairro: dados.bairro }).then(() => carregarClientesDaNuvem()); 
+        db.collection("clientes").doc(nomeKey).set({
+            nome: dados.cliente, zap: dados.whatsapp, cpf: dados.cpf,
+            rg: dados.rg, cep: dados.cep, end: dados.endCliente, bairro: dados.bairro
+        }).then(() => carregarClientesDaNuvem()); 
     }
 
     if(editandoId) {
@@ -184,29 +193,41 @@ async function salvarOS(tipoDoc) {
     }
     
     carregarHistorico();
-    if (tipoDoc === 'SAIDA' || tipoDoc === 'ENTRADA' || tipoDoc === 'RECIBO_PAGAMENTO') prepararImpressao(dados);
+
+    if (tipoDoc === 'SAIDA' || tipoDoc === 'ENTRADA' || tipoDoc === 'RECIBO_PAGAMENTO') {
+        prepararImpressao(dados);
+    }
 }
 
 function salvarEdicao(tipo) { salvarOS(tipo || tipoDocOriginal); }
 
 function limparFormularioOS() {
     editandoId = null;
-    dataPagamentoAtual = ""; // Limpa a variável invisível
+    dataPagamentoAtual = ""; // Limpa a data de memória
     document.getElementById('avisoEdicao').style.display = 'none';
     document.getElementById('botoesCriar').style.display = 'flex';
     document.getElementById('botaoSalvarEdicao').style.display = 'none';
     document.querySelectorAll('#abaNovaOS input[type=text], #abaNovaOS input[type=number], #abaNovaOS textarea, #abaNovaOS input[type=date]').forEach(el => el.value = '');
+    
     document.querySelectorAll('.chk-item').forEach(el => el.checked = false);
     
-    document.getElementById('classificacao').value = "Novo Serviço"; document.getElementById('osOrigem').value = ""; document.getElementById('modalidade').value = "Realizado na Loja";
+    document.getElementById('classificacao').value = "Novo Serviço";
+    document.getElementById('osOrigem').value = "";
+    document.getElementById('modalidade').value = "Realizado na Loja";
     document.getElementById('insLiga').value = "-"; document.getElementById('insImagem').value = "-"; document.getElementById('insBarulho').value = "-"; document.getElementById('insTemp').value = "-"; document.getElementById('insLed').value = "-";
-    document.getElementById('status').value = "1. Falta Orçar"; document.getElementById('garObra').value = "90 Dias"; document.getElementById('garPecas').value = "3 meses";
+    document.getElementById('status').value = "1. Falta Orçar";
+    document.getElementById('garObra').value = "90 Dias"; document.getElementById('garPecas').value = "3 meses";
     document.getElementById('dataEntrada').value = new Date().toISOString().split('T')[0];
 }
 
-// ----------------------------------------------------------------------
-// GESTÃO DE HISTÓRICO, KANBAN E INTELIGÊNCIA FINANCEIRA DO MEI
-// ----------------------------------------------------------------------
+// ============================================================================
+// INTELIGÊNCIA: KANBAN E FINANCEIRO (MEI)
+// ============================================================================
+// Atalho para recarregar valores quando troca o mês no Select do HTML
+window.mudarMesFinanceiro = function() {
+    processarInteligenciaMensal();
+};
+
 async function carregarHistorico() {
     try {
         const snap = await db.collection("servicos").orderBy("os", "desc").get();
@@ -232,15 +253,15 @@ async function carregarHistorico() {
         } catch(e) {}
 
         processarInteligenciaMensal(); 
-        renderizarKanban(cacheServicos);
-    } catch (e) { alert("Erro de conexão com o banco de dados."); console.error(e); }
+        renderizarKanban(cacheServicos); // Renderiza com array seguro
+    } catch (e) { console.error("Erro ao carregar banco de dados:", e); }
 }
 
 function processarInteligenciaMensal() {
     try {
         let finMesEl = document.getElementById('finMes');
         let finAnoEl = document.getElementById('finAno');
-        if(!finMesEl || !finAnoEl) return; 
+        if(!finMesEl || !finAnoEl) return;
 
         let mesSel = finMesEl.value;
         let anoSel = String(finAnoEl.value);
@@ -254,23 +275,20 @@ function processarInteligenciaMensal() {
         let docsCronologicos = [...cacheServicos].reverse(); 
         docsCronologicos.forEach(d => {
             if(d.categoria !== 'VENDA_BALCAO' && d.serie) { mapaGarantias.set(String(d.serie).trim(), { os: d.os, data: d.data }); }
-            let s = String(d.status || "");
-            // Fiel engloba entregues e devolvidos, pois trouxeram a máquina à loja
-            let finalizadoGeral = (s.includes('4') || s.includes('Entregue') || s.includes('5') || s.includes('Devolvido'));
+            let s = String(d.status || "").toUpperCase();
+            let finalizadoGeral = (s.includes('4') || s.includes('ENTREGUE') || s.includes('5') || s.includes('DEVOLVIDO'));
             if(finalizadoGeral && d.cliente) { let nomeKey = String(d.cliente).toUpperCase().trim(); clientesFieis.set(nomeKey, (clientesFieis.get(nomeKey) || 0) + 1); }
         });
 
         cacheServicos.forEach(d => {
-            let s = String(d.status || "");
-            let finalizadoGeral = (s.includes('4') || s.includes('Entregue') || s.includes('5') || s.includes('Devolvido'));
-            
-            // 🚀 REGRA DE CAIXA: Só gera dinheiro e MEI se o status for 4. Entregue e pago.
-            let pagoComSucesso = (s.includes('4') || s.includes('Entregue'));
+            let s = String(d.status || "").toUpperCase();
+            let finalizadoGeral = (s.includes('4') || s.includes('ENTREGUE') || s.includes('5') || s.includes('DEVOLVIDO'));
+            let pagoComSucesso = (s.includes('4') || s.includes('ENTREGUE')); // Apenas quem pagou
             
             if (!finalizadoGeral && calcularDias(d.data) > 180 && d.categoria !== 'VENDA_BALCAO') abandonados++;
 
             if(pagoComSucesso) { 
-                // Acha o mês em que realmente foi pago. Se não tiver (OS velha), usa a data de entrada
+                // Usa a Data Invisível de Pagamento. Se a OS for antiga e não tiver, usa a de entrada.
                 let dataReferencia = d.dataPagamento || d.data;
 
                 if(dataReferencia) { 
@@ -306,6 +324,7 @@ function processarInteligenciaMensal() {
             } else { elAbandono.style.display = 'none'; }
         }
 
+        // INTEGRAÇÃO MEI
         if(document.getElementById('meiMes')) document.getElementById('meiMes').value = mesSel;
         if(document.getElementById('meiAno')) document.getElementById('meiAno').value = anoSel;
         if(document.getElementById('mei1')) document.getElementById('mei1').value = receitaBrutaComercio.toFixed(2);
@@ -321,7 +340,7 @@ function processarInteligenciaMensal() {
             if(document.getElementById('mei6')) document.getElementById('mei6').innerText = (m4 + m5).toFixed(2);
             if(document.getElementById('mei10')) document.getElementById('mei10').innerText = ((m1+m2) + (m4+m5) + (m7+m8)).toFixed(2);
         }
-    } catch(err) { console.error("Processamento financeiro ignorado.", err); }
+    } catch(err) { console.error("Processamento financeiro bloqueado.", err); }
 }
 
 function renderizarKanban(dadosArray, filtroText = "") {
@@ -334,9 +353,11 @@ function renderizarKanban(dadosArray, filtroText = "") {
             let equipSeguro = String(d.equip || "Balcão");
             let osSegura = String(d.os || "0").padStart(4, '0');
             let dataSegura = String(d.data || "");
-            let stat = String(d.status || "").trim();
+            
+            // 🚀 MATCHING INQUEBRÁVEL - Removemos a igualdade estrita para usar includes
+            let stat = String(d.status || "").trim().toUpperCase();
 
-            let searchTarget = `${clienteSeguro} ${osSegura} ${equipSeguro.toUpperCase()} ${String(d.defeito || "").toUpperCase()}`;
+            let searchTarget = `${clienteSeguro} ${osSegura} ${equipSeguro} ${String(d.defeito || "").toUpperCase()}`;
             if (filtroText && !searchTarget.includes(filtroText)) return;
 
             let tagExtra = "", garantiaTag = "", fidelidadeTag = "";
@@ -345,8 +366,8 @@ function renderizarKanban(dadosArray, filtroText = "") {
             if(d.classificacao === 'Retorno em Garantia') { tagExtra += ` <span class="tag" style="background:#dc3545; color:white; font-weight:bold;">🚨 RETORNO</span>`; }
             if (clientesFieis.get(clienteSeguro) >= 5) { fidelidadeTag = `<span class="tag" style="background:#ffc107; color:#000;">⭐ Fiel</span>`; }
 
-            let finalizadoComSucesso = (stat.includes('4') || stat.includes('Entregue'));
-            let finalizadoSemReparo = (stat.includes('5') || stat.includes('Devolvido'));
+            let finalizadoComSucesso = (stat.includes('4') || stat.includes('ENTREGUE'));
+            let finalizadoSemReparo = (stat.includes('5') || stat.includes('DEVOLVIDO'));
 
             if(d.serie && d.categoria !== 'VENDA_BALCAO') {
                 let serieKey = String(d.serie).trim();
@@ -395,13 +416,14 @@ function renderizarKanban(dadosArray, filtroText = "") {
                 </div>
             </div>`;
 
-            if (stat.includes('1') || stat.toUpperCase().includes('ORÇAR')) { htmlOrcar += card; cOrcar++; }
-            else if (stat.includes('2') || stat.toUpperCase().includes('EXECUTA')) { htmlExec += card; cExec++; }
-            else if (stat.includes('3') || stat.toUpperCase().includes('CONCLU')) { htmlConc += card; cConc++; }
-            else if (stat.includes('4') || stat.toUpperCase().includes('ENTREG')) { htmlEntr += card; cEntr++; }
+            // 🚀 AQUI A MÁGICA: Independente de como foi salvo (com/sem espaço), o Kanban captura a palavra!
+            if (stat.includes('1') || stat.includes('ORÇAR')) { htmlOrcar += card; cOrcar++; }
+            else if (stat.includes('2') || stat.includes('EXECUTA')) { htmlExec += card; cExec++; }
+            else if (stat.includes('3') || stat.includes('CONCLU')) { htmlConc += card; cConc++; }
+            else if (stat.includes('4') || stat.includes('ENTREG')) { htmlEntr += card; cEntr++; }
             else { htmlDevolv += card; cDevolv++; }
 
-        } catch (err) { console.error("OS ignorada na renderização", err); } 
+        } catch (err) { console.error("OS com formatação corrompida ignorada:", err); } 
     });
 
     try { if(document.getElementById('kb-orcar')) document.getElementById('kb-orcar').innerHTML = htmlOrcar; } catch(e){}
@@ -428,8 +450,8 @@ async function editarOS(id) {
     if(d.categoria === 'VENDA_BALCAO') return alert("Vendas de balcão não podem ser editadas, exclua e refaça.");
     tipoDocOriginal = d.tipo || 'ENTRADA'; editandoId = id;
     
-    // Puxa a data de pagamento da base de dados se ela já existir, ou força fallback da data antiga
-    dataPagamentoAtual = d.dataPagamento || (d.status && (d.status.includes('4') || d.status.includes('Entregue')) ? d.data : "");
+    // Recupera a data de pagamento se existir
+    dataPagamentoAtual = d.dataPagamento || (d.status && (d.status.includes('4') || d.status.toUpperCase().includes('ENTREGUE')) ? d.data : "");
     
     let s = d.status || "1. Falta Orçar";
     if(s.includes("Falta")) s = "1. Falta Orçar";
@@ -454,7 +476,8 @@ async function editarOS(id) {
     document.getElementById('aces').value = d.aces || "";
     document.getElementById('insLiga').value = d.inspecao?.liga || "-"; document.getElementById('insImagem').value = d.inspecao?.imagem || "-"; document.getElementById('insBarulho').value = d.inspecao?.barulho || "-"; document.getElementById('insTemp').value = d.inspecao?.temp || "-"; document.getElementById('insLed').value = d.inspecao?.led || "-";
     
-    document.getElementById('defeito').value = d.defeito || ""; document.getElementById('laudo').value = d.laudo || ""; document.getElementById('servicos').value = d.servicos || ""; document.getElementById('diarioBordo').value = d.diarioBordo || ""; document.getElementById('emprestimo').value = d.emprestimo || "";
+    document.getElementById('defeito').value = d.defeito || ""; document.getElementById('laudo').value = d.laudo || ""; document.getElementById('servicos').value = d.servicos || "";
+    document.getElementById('emprestimo').value = d.emprestimo || "";
     
     document.getElementById('vPecas').value = d.vPecas || ""; document.getElementById('vCustoPecas').value = d.vCustoPecas || ""; document.getElementById('vObra').value = d.vObra || ""; document.getElementById('vVisita').value = d.vVisita || ""; document.getElementById('vDesc').value = d.vDesc || "";
     document.getElementById('osPix').value = d.pagamentos?.pix || ""; document.getElementById('osDin').value = d.pagamentos?.din || ""; document.getElementById('osCred').value = d.pagamentos?.cred || ""; document.getElementById('osDeb').value = d.pagamentos?.deb || "";
@@ -475,9 +498,6 @@ async function imprimirOS(id) {
     } catch (e) { alert("Erro ao carregar documento."); console.error(e); }
 }
 
-// ----------------------------------------------------------------------
-// IMPRESSÃO PROTEGIDA 
-// ----------------------------------------------------------------------
 function prepararImpressao(d) {
     let tMei = document.getElementById('telaDocumentoMEI');
     let cPrin = document.getElementById('conteinerPrincipal');
@@ -580,7 +600,7 @@ function fecharImpressao() {
     if(mNav) mNav.setAttribute('style', 'display: flex !important;');
 }
 
-// 🛡️ GATILHO FINAL: Força a base de dados a ler as OS assim que abrir o site
+// 🛡️ GATILHO DE SEGURANÇA: Força o navegador a puxar e renderizar as OS ao iniciar o sistema
 document.addEventListener("DOMContentLoaded", function() {
     setTimeout(() => { if(typeof carregarHistorico === 'function') carregarHistorico(); }, 800);
 });
