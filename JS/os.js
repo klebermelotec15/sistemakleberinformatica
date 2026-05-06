@@ -1,9 +1,11 @@
 // JS/os.js
-// Cérebro Financeiro e Kanban (Versão Blindada, Segura e 100% Completa)
+// Cérebro Seguro (Variáveis Globais protegidas com 'var' para evitar Syntax Error)
 
-let cacheServicos = []; 
-let mapaGarantias = new Map();
-let clientesFieis = new Map();
+var cacheServicos = cacheServicos || []; 
+var mapaGarantias = mapaGarantias || new Map();
+var clientesFieis = clientesFieis || new Map();
+var editandoId = editandoId || null;
+var tipoDocOriginal = tipoDocOriginal || 'ENTRADA';
 
 function calcularDias(dataStr) {
     if(!dataStr || typeof dataStr !== 'string') return 0;
@@ -36,7 +38,7 @@ async function obterProximaOS() {
 }
 
 // ----------------------------------------------------------------------
-// BUSCA AUTOMÁTICA
+// INTEGRAÇÃO COM BRASIL API E HISTÓRICO LOCAL
 // ----------------------------------------------------------------------
 async function buscarCpfCnpj() {
     let docInput = document.getElementById('cpf').value;
@@ -82,7 +84,7 @@ async function buscarCpfCnpj() {
 }
 
 // ----------------------------------------------------------------------
-// SALVAMENTO SEGURO
+// SALVAR DADOS (PDV E OS)
 // ----------------------------------------------------------------------
 async function salvarVendaPDV(imprimirRecibo) {
     const desc = document.getElementById('pdvProduto').value;
@@ -185,21 +187,19 @@ function limparFormularioOS() {
 }
 
 // ----------------------------------------------------------------------
-// GESTÃO DE HISTÓRICO E KANBAN BLINDADO CONTRA CRASHES (TRY...CATCH)
+// GESTÃO DE HISTÓRICO E KANBAN BLINDADO (TRY...CATCH)
 // ----------------------------------------------------------------------
 async function carregarHistorico() {
     try {
         const snap = await db.collection("servicos").orderBy("os", "desc").get();
         cacheServicos = [];
         
-        // 🛡️ Preenchimento super seguro do Array de cache
         snap.forEach(doc => { 
             let dataObj = doc.data();
-            dataObj.id = doc.id; // Garante que a ID do firebase não se perde
+            dataObj.id = doc.id; 
             cacheServicos.push(dataObj); 
         });
 
-        // Configuração Inicial de Data para a Aba Financeira (Ignora se HTML faltar)
         try {
             const date = new Date();
             const mesesStr = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
@@ -215,14 +215,14 @@ async function carregarHistorico() {
 
         processarInteligenciaMensal(); 
         renderizarKanban(cacheServicos);
-    } catch (e) { alert("Erro de conexão ao carregar Histórico."); console.error(e); }
+    } catch (e) { alert("Erro de conexão com o banco de dados."); console.error(e); }
 }
 
 function processarInteligenciaMensal() {
     try {
         let finMesEl = document.getElementById('finMes');
         let finAnoEl = document.getElementById('finAno');
-        if(!finMesEl || !finAnoEl) return; // Se a tela ainda não estiver pronta, não quebra o sistema.
+        if(!finMesEl || !finAnoEl) return; 
 
         let mesSel = finMesEl.value;
         let anoSel = String(finAnoEl.value);
@@ -233,7 +233,6 @@ function processarInteligenciaMensal() {
         let lucroPecas = 0, totalObra = 0, totalPDV = 0, descontosAplicados = 0, abandonados = 0;
         let receitaBrutaComercio = 0, receitaBrutaServicos = 0;
 
-        // Construção de inteligência em toda a base de dados
         let docsCronologicos = [...cacheServicos].reverse(); 
         docsCronologicos.forEach(d => {
             if(d.categoria !== 'VENDA_BALCAO' && d.serie) { mapaGarantias.set(String(d.serie).trim(), { os: d.os, data: d.data }); }
@@ -242,7 +241,6 @@ function processarInteligenciaMensal() {
             if(finalizado && d.cliente) { let nomeKey = String(d.cliente).toUpperCase().trim(); clientesFieis.set(nomeKey, (clientesFieis.get(nomeKey) || 0) + 1); }
         });
 
-        // Filtragem estrita para a aba Financeira e MEI (somente do mês atual)
         cacheServicos.forEach(d => {
             let s = String(d.status || "");
             let finalizado = (s.includes('4') || s.includes('Entregue') || s.includes('5') || s.includes('Devolvido'));
@@ -267,7 +265,6 @@ function processarInteligenciaMensal() {
             }
         });
 
-        // Injeta na UI de forma segura
         let totalGeral = (lucroPecas + totalObra - descontosAplicados) + totalPDV;
         if(document.getElementById('dashLucroPecas')) document.getElementById('dashLucroPecas').innerText = "R$ " + lucroPecas.toFixed(2); 
         if(document.getElementById('dashObra')) document.getElementById('dashObra').innerText = "R$ " + totalObra.toFixed(2);
@@ -282,7 +279,6 @@ function processarInteligenciaMensal() {
             } else { elAbandono.style.display = 'none'; }
         }
 
-        // INTEGRAÇÃO MEI SEGURA
         if(document.getElementById('meiMes')) document.getElementById('meiMes').value = mesSel;
         if(document.getElementById('meiAno')) document.getElementById('meiAno').value = anoSel;
         if(document.getElementById('mei1')) document.getElementById('mei1').value = receitaBrutaComercio.toFixed(2);
@@ -298,7 +294,7 @@ function processarInteligenciaMensal() {
             if(document.getElementById('mei6')) document.getElementById('mei6').innerText = (m4 + m5).toFixed(2);
             if(document.getElementById('mei10')) document.getElementById('mei10').innerText = ((m1+m2) + (m4+m5) + (m7+m8)).toFixed(2);
         }
-    } catch(err) { console.error("Processamento financeiro bloqueou erro silencioso.", err); }
+    } catch(err) { console.error("Processamento financeiro ignorado.", err); }
 }
 
 function renderizarKanban(dadosArray, filtroText = "") {
@@ -306,7 +302,6 @@ function renderizarKanban(dadosArray, filtroText = "") {
     let cOrcar = 0, cExec = 0, cConc = 0, cEntr = 0, cDevolv = 0;
 
     dadosArray.forEach(d => {
-        // 🛡️ O TRY...CATCH AQUI GARANTE QUE NENHUMA OS QUEBRA O SEU HISTÓRICO
         try {
             let clienteSeguro = String(d.cliente || "Sem Nome").toUpperCase().trim();
             let equipSeguro = String(d.equip || "Balcão");
@@ -373,16 +368,15 @@ function renderizarKanban(dadosArray, filtroText = "") {
                 </div>
             </div>`;
 
-            if (stat.includes('1') || stat.includes('Orçar')) { htmlOrcar += card; cOrcar++; }
-            else if (stat.includes('2') || stat.includes('Executando')) { htmlExec += card; cExec++; }
-            else if (stat.includes('3') || stat.includes('Concluída')) { htmlConc += card; cConc++; }
-            else if (stat.includes('4') || stat.includes('Entregue')) { htmlEntr += card; cEntr++; }
+            if (stat.includes('1') || stat.toUpperCase().includes('ORÇAR')) { htmlOrcar += card; cOrcar++; }
+            else if (stat.includes('2') || stat.toUpperCase().includes('EXECUTA')) { htmlExec += card; cExec++; }
+            else if (stat.includes('3') || stat.toUpperCase().includes('CONCLU')) { htmlConc += card; cConc++; }
+            else if (stat.includes('4') || stat.toUpperCase().includes('ENTREG')) { htmlEntr += card; cEntr++; }
             else { htmlDevolv += card; cDevolv++; }
 
-        } catch (err) {} // OS silenciosamente ignorada e o sistema continua a renderizar o resto
+        } catch (err) { console.error("OS ignorada na renderização", err); } 
     });
 
-    // 🛡️ Injeção de Segurança Máxima (Totalmente separada para não causar efeito dominó)
     try { if(document.getElementById('kb-orcar')) document.getElementById('kb-orcar').innerHTML = htmlOrcar; } catch(e){}
     try { if(document.getElementById('countOrcar')) document.getElementById('countOrcar').innerText = cOrcar; } catch(e){}
     try { if(document.getElementById('kb-exec')) document.getElementById('kb-exec').innerHTML = htmlExec; } catch(e){}
@@ -448,12 +442,11 @@ async function imprimirOS(id) {
     try {
         const doc = await db.collection("servicos").doc(id).get();
         if (doc.exists) prepararImpressao(doc.data());
-        else alert("Erro: OS não encontrada no banco de dados.");
     } catch (e) { alert("Erro de rede."); console.error(e); }
 }
 
 // ----------------------------------------------------------------------
-// IMPRESSÃO E PROTEÇÃO VISUAL DO MEI (!important via DOM)
+// IMPRESSÃO PROTEGIDA 
 // ----------------------------------------------------------------------
 function prepararImpressao(d) {
     let tMei = document.getElementById('telaDocumentoMEI');
@@ -556,3 +549,8 @@ function fecharImpressao() {
     if(tMei) tMei.setAttribute('style', 'display: none !important;');
     if(mNav) mNav.setAttribute('style', 'display: flex !important;');
 }
+
+// 🛡️ GATILHO DE SEGURANÇA: Garante que o histórico carrega sozinho
+document.addEventListener("DOMContentLoaded", function() {
+    setTimeout(() => { if(typeof carregarHistorico === 'function') carregarHistorico(); }, 500);
+});
