@@ -1,11 +1,12 @@
 // JS/os.js
-// Cérebro Financeiro (Kanban Blindado, Regime de Caixa, MEI Automático, Contratos B2B e Trava de Assinatura)
+// Cérebro Financeiro e Lógico (Kanban Blindado + Regime de Caixa + Contratos B2B + Assinatura Ocultável)
 
-let editandoId = null;
-let tipoDocOriginal = 'ENTRADA';
-let dataPagamentoAtual = "";
-let mapaGarantias = new Map();
-let clientesFieis = new Map();
+var cacheServicos = []; 
+var mapaGarantias = new Map();
+var clientesFieis = new Map();
+var editandoId = null;
+var tipoDocOriginal = 'ENTRADA';
+var dataPagamentoAtual = "";
 
 function calcularDias(dataStr) {
     if(!dataStr || typeof dataStr !== 'string') return 0;
@@ -38,7 +39,7 @@ async function obterProximaOS() {
 }
 
 // ----------------------------------------------------------------------
-// INTEGRAÇÃO COM BRASIL API
+// INTEGRAÇÃO COM BRASIL API E HISTÓRICO LOCAL
 // ----------------------------------------------------------------------
 async function buscarCpfCnpj() {
     let docInput = document.getElementById('cpf').value;
@@ -60,7 +61,7 @@ async function buscarCpfCnpj() {
             document.getElementById('cep').value = clienteDados.cep || "";
             document.getElementById('endCliente').value = clienteDados.end || "";
             document.getElementById('bairro').value = clienteDados.bairro || "";
-            alert("✅ Dados do Cliente preenchidos automaticamente!");
+            alert("✅ Dados do Cliente preenchidos automaticamente com base no seu histórico!");
             return; 
         }
     } catch (error) { console.error("Falha ao procurar documento na nuvem."); }
@@ -78,14 +79,14 @@ async function buscarCpfCnpj() {
                 if (dados.complemento) endCompleto += " - " + dados.complemento;
                 document.getElementById('endCliente').value = endCompleto;
                 document.getElementById('bairro').value = dados.bairro || "";
-                alert("✅ Empresa detectada via Receita Federal.");
+                alert("✅ Empresa nova detectada! Dados preenchidos via Receita Federal.");
             }
         } catch (error) { console.error("Falha API Externa."); }
     }
 }
 
 // ----------------------------------------------------------------------
-// SALVAR OS E VENDA (GRAVANDO DATA DE PAGAMENTO INVISÍVEL)
+// SALVAR DADOS E REGIME DE CAIXA (Gravando Pagamento Oculto)
 // ----------------------------------------------------------------------
 async function salvarVendaPDV(imprimirRecibo) {
     const desc = document.getElementById('pdvProduto').value;
@@ -102,21 +103,25 @@ async function salvarVendaPDV(imprimirRecibo) {
     
     const numOS = await obterProximaOS();
     const totalVenda = venda - descPDV;
-    const dataHoje = new Date().toLocaleDateString('pt-BR');
+    const dataAtual = new Date().toLocaleDateString('pt-BR');
 
     const dados = {
         os: numOS, categoria: 'VENDA_BALCAO', status: '4. Entregue com sucesso de reparo',
         cliente: document.getElementById('pdvCliente').value, defeito: desc, 
         vPecas: 0, vCustoPecas: 0, vObra: venda, vDesc: descPDV, total: totalVenda, faltaPagar: totalVenda - totalPago, vSinal: totalPago,
         pagamentos: { pix, din, cred, deb },
-        data: dataHoje, dataPagamento: dataHoje, // Regime de Caixa PDV
+        data: dataAtual, dataPagamento: dataAtual, // Venda balcão entra no caixa no mesmo dia
         tipo: 'RECIBO_PAGAMENTO'
     };
 
     await db.collection("servicos").add(dados);
     alert("Venda registada com sucesso!");
     
-    document.querySelectorAll('#abaPDV input[type=number], #abaPDV textarea').forEach(el => el.value = '');
+    document.getElementById('pdvProduto').value = ""; document.getElementById('pdvVenda').value = "";
+    document.getElementById('pdvDesc').value = ""; document.getElementById('pdvPix').value = ""; 
+    document.getElementById('pdvDin').value = ""; document.getElementById('pdvCred').value = ""; 
+    document.getElementById('pdvDeb').value = "";
+
     if(imprimirRecibo) { prepararImpressao(dados); } else { carregarHistorico(); }
 }
 
@@ -143,12 +148,14 @@ async function salvarOS(tipoDoc) {
     let numOS = editandoId ? parseInt(document.getElementById('idEdicao').innerText) : await obterProximaOS();
     const totalOS = (vp + vo + vVisita) - vd;
 
-    // 🚀 LÓGICA DO REGIME DE CAIXA: Grava invisivelmente a data de entrega
+    // 🚀 LÓGICA DO REGIME DE CAIXA: Grava invisivelmente a data do pagamento se o status for finalizado
     let statusAtual = document.getElementById('status').value;
     let dataPagFinal = dataPagamentoAtual;
-    if (statusAtual === '4. Entregue com sucesso de reparo' || statusAtual === 'Entregue ao Cliente') {
-        if (!dataPagFinal) dataPagFinal = new Date().toLocaleDateString('pt-BR');
-    } else {
+    let pago = (statusAtual.includes('4') || statusAtual.toUpperCase().includes('ENTREGUE'));
+    
+    if (pago && !dataPagFinal) {
+        dataPagFinal = new Date().toLocaleDateString('pt-BR');
+    } else if (!pago) {
         dataPagFinal = ""; 
     }
 
@@ -162,10 +169,11 @@ async function salvarOS(tipoDoc) {
         emprestimo: document.getElementById('emprestimo').value, defeito: document.getElementById('defeito').value, laudo: document.getElementById('laudo').value, servicos: document.getElementById('servicos').value, diarioBordo: document.getElementById('diarioBordo').value, 
         vPecas: vp, vCustoPecas: vcusto, vObra: vo, vVisita: vVisita, vDesc: vd, vSinal: totalPago, total: totalOS, faltaPagar: totalOS - totalPago, pagamentos: { pix, din, cred, deb },
         garP: document.getElementById('garPecas').value, garO: document.getElementById('garObra').value, data: dataFormatada, dataPrev: dataPrevFormatada, tipo: tipoDoc,
-        dataPagamento: dataPagFinal // Campo Oculto de Contabilidade
+        dataPagamento: dataPagFinal
     };
 
     if(!dados.cliente) return alert("Digite o nome do cliente!");
+
     if(dados.cliente) {
         let nomeKey = dados.cliente.toUpperCase().trim();
         db.collection("clientes").doc(nomeKey).set({
@@ -206,14 +214,15 @@ function limparFormularioOS() {
 async function imprimirOS(id) {
     try {
         const doc = await db.collection("servicos").doc(id).get();
-        if (doc.exists) prepararImpressao(doc.data());
-    } catch (e) { alert("Erro de conexão."); console.error(e); }
+        if (doc.exists) { prepararImpressao(doc.data()); } else { alert("Erro: OS não encontrada no banco de dados."); }
+    } catch (e) { alert("Erro ao conectar com o servidor para impressão."); console.error(e); }
 }
 
 function prepararImpressao(d) {
     document.getElementById('conteinerPrincipal').setAttribute('style', 'display: none !important;');
     document.getElementById('telaDocumentoMEI').setAttribute('style', 'display: none !important;');
     document.getElementById('menuNavegacao').setAttribute('style', 'display: none !important;');
+
     document.getElementById('telaDocumento').style.display = 'block';
 
     if(configGlobais.logo) { document.getElementById('docLogo').src = configGlobais.logo; document.getElementById('docLogo').style.display = 'inline-block'; }
@@ -226,17 +235,17 @@ function prepararImpressao(d) {
 
     let vd = parseFloat(d.vDesc) || 0; let vpec = parseFloat(d.vPecas) || 0; let vobr = parseFloat(d.vObra) || 0; let vvis = parseFloat(d.vVisita) || 0; 
     let vtot = parseFloat(d.total) || 0; let vfal = parseFloat(d.faltaPagar) || 0; let vsin = parseFloat(d.vSinal) || 0;
-    let s = String(d.status).trim();
 
-    if (s === '5. Devolvido sem reparo') { document.getElementById('alertaDevolvidoPDF').style.display = 'block'; } 
+    let s = String(d.status).trim();
+    if (s.includes('5') || s.includes('Devolvido')) { document.getElementById('alertaDevolvidoPDF').style.display = 'block'; } 
     else { document.getElementById('alertaDevolvidoPDF').style.display = 'none'; }
 
     document.getElementById('boxLaudo').style.display = 'block';
     document.getElementById('secEquipamento').style.display = 'block';
     document.getElementById('termoJuridico').style.display = 'block'; 
     document.getElementById('rowGarantias').style.display = 'flex';
-
-    // 🚀 LÓGICA DE OCULTAR A ASSINATURA DO CLIENTE NO RECIBO
+    
+    // 🚀 LÓGICA DE ASSINATURA: Oculta o campo de assinatura do cliente para recibos
     let blocoAssinatura = document.getElementById('blocoAssinaturaCliente');
 
     if(d.categoria === 'VENDA_BALCAO') {
@@ -254,15 +263,15 @@ function prepararImpressao(d) {
         if (d.tipo === 'RECIBO_PAGAMENTO') {
             document.getElementById('docTituloPrincipal').innerText = "RECIBO DE PAGAMENTO"; document.getElementById('rowInspecao').style.display = 'none'; document.getElementById('boxLaudo').style.display = 'none'; 
             document.getElementById('termoJuridico').innerHTML = `<strong>TERMO DE QUITAÇÃO:</strong> Declaramos para os devidos fins que os valores descritos neste documento referentes à prestação de serviços foram recebidos, dando plena e total quitação.`;
-            if(blocoAssinatura) blocoAssinatura.style.display = 'none'; // Esconde no Recibo OS
+            if(blocoAssinatura) blocoAssinatura.style.display = 'none'; // Esconde no Recibo
         } else if (d.classificacao === 'Retorno em Garantia') {
             document.getElementById('docTituloPrincipal').innerText = "RETORNO EM GARANTIA"; document.getElementById('rowInspecao').style.display = 'flex';
             document.getElementById('termoJuridico').innerHTML = `<strong>AVISO IMPORTANTE:</strong> Documento gerado eletronicamente para acionamento de garantia. O equipamento será avaliado tecnicamente para confirmação do defeito na peça ou serviço previamente executado.`;
-            if(blocoAssinatura) blocoAssinatura.style.display = 'block'; // Mostra na OS normal
+            if(blocoAssinatura) blocoAssinatura.style.display = 'block'; // Mostra na OS
         } else {
             document.getElementById('docTituloPrincipal').innerText = "ORDEM DE SERVIÇO"; document.getElementById('rowInspecao').style.display = 'flex';
             document.getElementById('termoJuridico').innerHTML = `<strong>AVISO IMPORTANTE:</strong> Documento gerado eletronicamente. Orçamentos têm validade de 5 dias úteis a partir da emissão. Em caso de abandono de equipamento sem retirada após 180 dias, o mesmo será tratado como sucata para abatimento dos custos, isentando a empresa de obrigações legais.`;
-            if(blocoAssinatura) blocoAssinatura.style.display = 'block'; // Mostra na OS normal
+            if(blocoAssinatura) blocoAssinatura.style.display = 'block'; // Mostra na OS
         }
     }
 
@@ -274,7 +283,6 @@ function prepararImpressao(d) {
     
     let acesArr = []; if (d.chkList) acesArr.push(d.chkList); else { if (d.chkFonte === "Sim") acesArr.push("Fonte"); if (d.chkCapa === "Sim") acesArr.push("Capa"); }
     if (d.aces) acesArr.push(d.aces); document.getElementById('resAcesFull').innerText = acesArr.join(' | ') || "Nenhum acessório";
-
     document.getElementById('resInsLiga').innerText = d.inspecao?.liga || "-"; document.getElementById('resInsImagem').innerText = d.inspecao?.imagem || "-";
     document.getElementById('resInsBarulho').innerText = d.inspecao?.barulho || "-"; document.getElementById('resInsTemp').innerText = d.inspecao?.temp || "-"; document.getElementById('resInsLed').innerText = d.inspecao?.led || "-";
 
@@ -282,7 +290,6 @@ function prepararImpressao(d) {
     else { document.getElementById('rowEmprestimo').style.display = 'none'; }
 
     document.getElementById('resDefeito').innerText = d.defeito || ""; document.getElementById('resLaudo').innerText = d.laudo || ""; document.getElementById('resServicos').innerText = d.servicos || "";
-    
     if(d.diarioBordo && d.categoria !== 'VENDA_BALCAO') { document.getElementById('boxDiario').style.display = 'block'; document.getElementById('resDiario').innerText = d.diarioBordo; } 
     else { document.getElementById('boxDiario').style.display = 'none'; }
 
@@ -308,6 +315,7 @@ function prepararImpressao(d) {
 }
 
 function fecharImpressao() {
+    document.getElementById('telaDocumento').style.display = 'none';
     let cPrin = document.getElementById('conteinerPrincipal');
     let tMei = document.getElementById('telaDocumentoMEI');
     let mNav = document.getElementById('menuNavegacao');
@@ -315,152 +323,16 @@ function fecharImpressao() {
     if(cPrin) cPrin.setAttribute('style', 'display: block !important;');
     if(tMei) tMei.setAttribute('style', 'display: none !important;');
     if(mNav) mNav.setAttribute('style', 'display: flex !important;');
-    document.getElementById('telaDocumento').style.display = 'none';
 }
 
 // ----------------------------------------------------------------------
-// GESTÃO DE HISTÓRICO: O SEU CÓDIGO NATIVO ORIGINAL (ISOLADO DO FINANCEIRO)
+// INTEGRAÇÃO FINANCEIRA: REGIME DE CAIXA + B2B (Separado do Kanban)
 // ----------------------------------------------------------------------
 window.mudarMesFinanceiro = async function() {
-    const snap = await db.collection("servicos").orderBy("os", "desc").get();
-    processarFinanceiroEMEISeguro(snap); // Apenas recalcula as finanças, não mexe no Kanban
+    await carregarHistorico();
 };
 
-async function carregarHistorico() {
-    try {
-        const snap = await db.collection("servicos").orderBy("os", "desc").get();
-        
-        // 1. Renderiza o Kanban (Intocável, código original garantido)
-        renderizarKanbanOriginal(snap);
-        
-        // 2. Processa as Finanças separadamente no Regime de Caixa
-        processarFinanceiroEMEISeguro(snap);
-
-    } catch (e) { console.error("Erro ao carregar banco de dados:", e); }
-}
-
-function renderizarKanbanOriginal(snap) {
-    clientesFieis.clear(); 
-    mapaGarantias.clear();
-    let abandonados = 0;
-
-    // Primeira passada para alimentar os Mapas EXATAMENTE como original
-    let docs = [];
-    snap.forEach(doc => docs.push(doc.data()));
-    let docsCronologicos = [...docs].reverse(); 
-    
-    docsCronologicos.forEach(d => {
-        if(d.categoria !== 'VENDA_BALCAO' && d.serie) { 
-            mapaGarantias.set(String(d.serie).trim(), { os: d.os, data: d.data }); 
-        }
-        let s = d.status || "";
-        let finalizado = (s === '4. Entregue com sucesso de reparo' || s === 'Entregue ao Cliente' || s === '5. Devolvido sem reparo');
-        if(finalizado && d.cliente) { 
-            let nomeKey = String(d.cliente).toUpperCase().trim(); 
-            clientesFieis.set(nomeKey, (clientesFieis.get(nomeKey) || 0) + 1); 
-        }
-    });
-
-    let htmlOrcar = "", htmlExec = "", htmlConc = "", htmlEntr = "", htmlDevolv = "";
-    let cOrcar = 0, cExec = 0, cConc = 0, cEntr = 0, cDevolv = 0;
-
-    snap.forEach(doc => {
-        const d = doc.data();
-        let tagExtra = "", garantiaTag = "", fidelidadeTag = "";
-        let dias = calcularDias(d.data);
-        
-        if(d.classificacao === 'Retorno em Garantia') {
-            tagExtra += ` <span class="tag" style="background:#dc3545; color:white; font-weight:bold;">🚨 RETORNO DE GARANTIA</span>`;
-        }
-
-        if(d.cliente) {
-            let nomeKey = String(d.cliente).toUpperCase().trim();
-            if (clientesFieis.get(nomeKey) >= 5) { fidelidadeTag = `<span class="tag" style="background:#ffc107; color:#000;">⭐ Fiel</span>`; }
-        }
-
-        let stat = String(d.status).trim();
-        let finalizadoComSucesso = (stat === '4. Entregue com sucesso de reparo' || stat === 'Entregue ao Cliente');
-        let finalizadoSemReparo = (stat === '5. Devolvido sem reparo');
-
-        // Conta abandonados isoladamente
-        if (!finalizadoComSucesso && !finalizadoSemReparo && d.categoria !== 'VENDA_BALCAO' && dias > 180) { 
-            abandonados++; 
-        }
-
-        if(d.serie && d.categoria !== 'VENDA_BALCAO') {
-            let serieKey = String(d.serie).trim();
-            let ultimaDaSerie = mapaGarantias.get(serieKey);
-            if(ultimaDaSerie && ultimaDaSerie.os !== d.os) {
-                let diffDiasAnterior = calcularDias(ultimaDaSerie.data);
-                if(diffDiasAnterior <= 90 && !finalizadoComSucesso && !finalizadoSemReparo && d.classificacao !== 'Retorno em Garantia') {
-                    garantiaTag = `<br><span class="tag" style="background:#dc3545;">⚠️ ALERTA: SÉRIE JÁ ATENDIDA RECENTEMENTE</span>`;
-                }
-            }
-        }
-
-        if(d.categoria === 'VENDA_BALCAO') { tagExtra += ` <span class="tag" style="background:#6c757d;">🛒 VENDA</span>`; } 
-        else if(finalizadoComSucesso) {
-            let gO = converterParaDias(d.garO); let gP = converterParaDias(d.garP);
-            let obraAtiva = gO > 0 && dias <= gO; let pecasAtiva = gP > 0 && dias <= gP;
-            if (obraAtiva && pecasAtiva) tagExtra += ` <span class="tag" style="background:#28a745;">🛡️ Garantia: AMBAS</span>`;
-            else if (obraAtiva && !pecasAtiva) tagExtra += ` <span class="tag" style="background:#17a2b8;">🛡️ Garantia: MÃO DE OBRA</span>`;
-            else if (!obraAtiva && pecasAtiva) tagExtra += ` <span class="tag" style="background:#6f42c1;">🛡️ Garantia: PEÇAS</span>`;
-            else tagExtra += ` <span class="tag" style="background:#6c757d;">❌ GARANTIA EXPIRADA</span>`;
-        } else if(finalizadoSemReparo) { tagExtra += ` <span class="tag" style="background:#000;">⚫ SEM REPARO</span>`; } 
-        else if(dias > 180) { tagExtra += ` <span class="tag" style="background:red;">🚨 ABANDONADO</span>`; }
-        
-        let previsaoTag = "";
-        if(d.dataPrev && stat !== '3. Concluída' && stat !== 'Concluída' && !finalizadoComSucesso && !finalizadoSemReparo) {
-            let dataObj = converterParaDataObj(d.dataPrev);
-            if (dataObj) {
-                let diasParaEntrega = Math.floor((dataObj - new Date()) / (1000 * 60 * 60 * 24));
-                if(diasParaEntrega < 0) previsaoTag = `<span class="tag" style="background:#dc3545;">⏰ ATRASADO!</span>`;
-                else if(diasParaEntrega === 0) previsaoTag = `<span class="tag" style="background:#ffc107; color:black;">⏰ ENTREGA HOJE</span>`;
-                else previsaoTag = `<span class="tag" style="background:#17a2b8;">⏳ Prev: ${d.dataPrev}</span>`;
-            }
-        }
-
-        // O seu DOM de botões original intocável
-        let card = `
-        <div class="os-card">
-            <div style="margin-bottom:8px;">
-                <strong style="font-size:14px;">#${String(d.os).padStart(4, '0')} - ${d.cliente || "Sem Nome"}</strong> ${fidelidadeTag} <br>
-                <span style="color:#666;">${d.equip || "Balcão"} | ${d.data || ""}</span>
-                <div style="margin-top:5px;">${tagExtra} ${previsaoTag} ${garantiaTag}</div>
-            </div>
-            <div style="display:flex; gap:5px; margin-top:10px;">
-                <button class="btn-dark btn-small" style="padding:4px;" onclick="imprimirOS('${doc.id}')">🖨️ PDF</button>
-                <button class="btn-blue btn-small" style="padding:4px;" onclick="editarOS('${doc.id}')">✏️ Editar</button>
-                <button class="btn-red btn-small" style="padding:4px; flex:none;" onclick="excluirOS('${doc.id}')">🗑️</button>
-            </div>
-        </div>`;
-
-        // A condição original inquebrável
-        if (stat === '1. Falta Orçar' || stat === 'Falta Orçar') { htmlOrcar += card; cOrcar++; }
-        else if (stat === '2. Executando' || stat === 'Executando') { htmlExec += card; cExec++; }
-        else if (stat === '3. Concluída' || stat === 'Concluída') { htmlConc += card; cConc++; }
-        else if (finalizadoComSucesso) { htmlEntr += card; cEntr++; }
-        else if (finalizadoSemReparo) { htmlDevolv += card; cDevolv++; }
-    });
-
-    if(document.getElementById('kb-orcar')) {
-        document.getElementById('kb-orcar').innerHTML = htmlOrcar; document.getElementById('countOrcar').innerText = cOrcar;
-        document.getElementById('kb-exec').innerHTML = htmlExec; document.getElementById('countExec').innerText = cExec;
-        document.getElementById('kb-conc').innerHTML = htmlConc; document.getElementById('countConc').innerText = cConc;
-        document.getElementById('kb-entr').innerHTML = htmlEntr; document.getElementById('countEntr').innerText = cEntr;
-        document.getElementById('kb-devolv').innerHTML = htmlDevolv; document.getElementById('countDevolv').innerText = cDevolv;
-    }
-
-    let elAbandonados = document.getElementById('alertaAbandono');
-    if(elAbandonados) {
-        if(abandonados > 0) { 
-            if(document.getElementById('qtdAbandonados')) document.getElementById('qtdAbandonados').innerText = abandonados; 
-            elAbandonados.style.display = 'block'; 
-        } else { elAbandonados.style.display = 'none'; }
-    }
-}
-
-async function processarFinanceiroEMEISeguro(snap) {
+async function processarFinanceiroEMEISeguro() {
     try {
         let lucroPecas = 0, totalObra = 0, totalPDV = 0, descontosAplicados = 0;
         let receitaBrutaComercio = 0, receitaBrutaServicos = 0;
@@ -481,13 +353,12 @@ async function processarFinanceiroEMEISeguro(snap) {
         let mesesMap = {"JANEIRO":"01", "FEVEREIRO":"02", "MARÇO":"03", "ABRIL":"04", "MAIO":"05", "JUNHO":"06", "JULHO":"07", "AGOSTO":"08", "SETEMBRO":"09", "OUTUBRO":"10", "NOVEMBRO":"11", "DEZEMBRO":"12"};
         let numMes = mesSel ? mesesMap[mesSel] : null;
 
-        snap.forEach(doc => {
-            let d = doc.data();
-            let s = String(d.status || "").trim();
-            let pago = (s === '4. Entregue com sucesso de reparo' || s === 'Entregue ao Cliente');
+        cacheServicos.forEach(d => {
+            let s = String(d.status || "").trim().toUpperCase();
+            let pago = (s.includes('4') || s.includes('ENTREGUE'));
             
             if(pago || d.categoria === 'VENDA_BALCAO') { 
-                // 🚀 LÓGICA DO REGIME DE CAIXA: Olha para a data de Pagamento primeiro
+                // 🚀 LÓGICA DO REGIME DE CAIXA
                 let dataRef = d.dataPagamento || d.data; 
                 if(dataRef && numMes && anoSel) {
                     let partes = String(dataRef).split('/');
@@ -500,12 +371,8 @@ async function processarFinanceiroEMEISeguro(snap) {
                             let vo = parseFloat(d.vObra) || 0; let vd = parseFloat(d.vDesc) || 0;
                             let vvis = parseFloat(d.vVisita) || 0; 
 
-                            lucroPecas += (vp - vc);
-                            totalObra += (vo + vvis);
-                            descontosAplicados += vd;
-                            
-                            receitaBrutaComercio += vp; 
-                            receitaBrutaServicos += (vo + vvis); 
+                            lucroPecas += (vp - vc); totalObra += (vo + vvis); descontosAplicados += vd;
+                            receitaBrutaComercio += vp; receitaBrutaServicos += (vo + vvis); 
                         }
                     }
                 }
@@ -522,7 +389,7 @@ async function processarFinanceiroEMEISeguro(snap) {
             });
             totalObra += totalMensalContratos;
             receitaBrutaServicos += totalMensalContratos;
-        } catch(e) { console.log("B2B não processado no momento."); }
+        } catch(e) { console.log("Módulo B2B não encontrado ou vazio."); }
 
         let totalGeral = (lucroPecas + totalObra - descontosAplicados) + totalPDV;
         
@@ -539,156 +406,143 @@ async function processarFinanceiroEMEISeguro(snap) {
 
         if(typeof window.calcMEI === 'function') { window.calcMEI(); } 
 
-    } catch (error) { console.error("Erro no processamento financeiro isolado:", error); }
+    } catch (error) { console.error("Erro no processamento financeiro:", error); }
 }
 
-async function buscar() {
-    // Busca e filtra chamando a mesma renderização segura
-    const t = document.getElementById('busca').value.toUpperCase();
-    const snap = await db.collection("servicos").orderBy("os", "desc").get();
-    
-    // Passa pela mesma lógica original de mapeamento antes de filtrar
+// ----------------------------------------------------------------------
+// RENDERIZAÇÃO DO KANBAN (A FUNÇÃO ORIGINAL CORRIGIDA COM D.ID)
+// ----------------------------------------------------------------------
+async function carregarHistorico() {
+    try {
+        const snap = await db.collection("servicos").orderBy("os", "desc").get();
+        cacheServicos = [];
+        snap.forEach(doc => { 
+            let obj = doc.data();
+            obj.id = doc.id; // GUARDA A IDENTIFICAÇÃO DO FIREBASE (O que gerava o ReferenceError)
+            cacheServicos.push(obj); 
+        });
+
+        // Tenta iniciar a inteligência financeira (isolada)
+        await processarFinanceiroEMEISeguro(); 
+        
+        // Renderiza o Kanban com o cache (Para a busca funcionar)
+        renderizarKanban(cacheServicos);
+    } catch (e) { console.error("Erro ao carregar banco de dados:", e); }
+}
+
+function renderizarKanban(dadosArray, filtroText = "") {
     clientesFieis.clear(); 
     mapaGarantias.clear();
-    let docs = [];
-    snap.forEach(doc => docs.push(doc.data()));
-    let docsCronologicos = [...docs].reverse(); 
+    let abandonados = 0;
+
+    let docsCronologicos = [...dadosArray].reverse(); 
     docsCronologicos.forEach(d => {
         if(d.categoria !== 'VENDA_BALCAO' && d.serie) { mapaGarantias.set(String(d.serie).trim(), { os: d.os, data: d.data }); }
-        let s = d.status || "";
-        let finalizado = (s === '4. Entregue com sucesso de reparo' || s === 'Entregue ao Cliente' || s === '5. Devolvido sem reparo');
+        let s = String(d.status || "").toUpperCase();
+        let finalizado = (s.includes('4') || s.includes('ENTREGUE') || s.includes('5') || s.includes('DEVOLVIDO'));
         if(finalizado && d.cliente) { let nomeKey = String(d.cliente).toUpperCase().trim(); clientesFieis.set(nomeKey, (clientesFieis.get(nomeKey) || 0) + 1); }
     });
 
     let htmlOrcar = "", htmlExec = "", htmlConc = "", htmlEntr = "", htmlDevolv = "";
     let cOrcar = 0, cExec = 0, cConc = 0, cEntr = 0, cDevolv = 0;
 
-    snap.forEach(doc => {
-        const d = doc.data();
-        let searchTarget = `${d.cliente || ""} ${d.os || ""} ${d.equip || ""} ${d.defeito || ""}`.toUpperCase();
-        if (t && !searchTarget.includes(t)) return; // <-- Aqui aplica o filtro do campo de busca
+    dadosArray.forEach(d => {
+        try {
+            let searchTarget = `${d.cliente || ""} ${d.os || ""} ${d.equip || ""} ${d.defeito || ""}`.toUpperCase();
+            if (filtroText && !searchTarget.includes(filtroText)) return;
 
-        let tagExtra = "", garantiaTag = "", fidelidadeTag = "";
-        let dias = calcularDias(d.data);
-        if(d.classificacao === 'Retorno em Garantia') tagExtra += ` <span class="tag" style="background:#dc3545; color:white; font-weight:bold;">🚨 RETORNO DE GARANTIA</span>`;
-        if(d.cliente) { let nomeKey = String(d.cliente).toUpperCase().trim(); if (clientesFieis.get(nomeKey) >= 5) { fidelidadeTag = `<span class="tag" style="background:#ffc107; color:#000;">⭐ Fiel</span>`; } }
-        let stat = String(d.status).trim();
-        let finalizadoComSucesso = (stat === '4. Entregue com sucesso de reparo' || stat === 'Entregue ao Cliente');
-        let finalizadoSemReparo = (stat === '5. Devolvido sem reparo');
-        if(d.serie && d.categoria !== 'VENDA_BALCAO') {
-            let serieKey = String(d.serie).trim(); let ultimaDaSerie = mapaGarantias.get(serieKey);
-            if(ultimaDaSerie && ultimaDaSerie.os !== d.os) {
-                let diffDiasAnterior = calcularDias(ultimaDaSerie.data);
-                if(diffDiasAnterior <= 90 && !finalizadoComSucesso && !finalizadoSemReparo && d.classificacao !== 'Retorno em Garantia') {
-                    garantiaTag = `<br><span class="tag" style="background:#dc3545;">⚠️ ALERTA: SÉRIE JÁ ATENDIDA RECENTEMENTE</span>`;
+            let tagExtra = "", garantiaTag = "", fidelidadeTag = "";
+            let dias = calcularDias(d.data);
+            
+            if(d.classificacao === 'Retorno em Garantia') { tagExtra += ` <span class="tag" style="background:#dc3545; color:white; font-weight:bold;">🚨 RETORNO</span>`; }
+            
+            if(d.cliente) {
+                let nomeKey = String(d.cliente).toUpperCase().trim();
+                if (clientesFieis.get(nomeKey) >= 5) { fidelidadeTag = `<span class="tag" style="background:#ffc107; color:#000;">⭐ Fiel</span>`; }
+            }
+
+            let stat = String(d.status || "").trim().toUpperCase();
+            let finalizadoComSucesso = (stat.includes('4') || stat.includes('ENTREGUE'));
+            let finalizadoSemReparo = (stat.includes('5') || stat.includes('DEVOLVIDO'));
+
+            if (!finalizadoComSucesso && !finalizadoSemReparo && d.categoria !== 'VENDA_BALCAO' && dias > 180) { abandonados++; }
+
+            if(d.serie && d.categoria !== 'VENDA_BALCAO') {
+                let serieKey = String(d.serie).trim();
+                let ultimaDaSerie = mapaGarantias.get(serieKey);
+                if(ultimaDaSerie && String(ultimaDaSerie.os) !== String(d.os)) {
+                    let diffDiasAnterior = calcularDias(ultimaDaSerie.data);
+                    if(diffDiasAnterior <= 90 && !finalizadoComSucesso && !finalizadoSemReparo && d.classificacao !== 'Retorno em Garantia') {
+                        garantiaTag = `<br><span class="tag" style="background:#dc3545;">⚠️ ALERTA: SÉRIE JÁ ATENDIDA RECENTEMENTE</span>`;
+                    }
                 }
             }
-        }
-        if(d.categoria === 'VENDA_BALCAO') { tagExtra += ` <span class="tag" style="background:#6c757d;">🛒 VENDA</span>`; } 
-        else if(finalizadoComSucesso) {
-            let gO = converterParaDias(d.garO); let gP = converterParaDias(d.garP);
-            let obraAtiva = gO > 0 && dias <= gO; let pecasAtiva = gP > 0 && dias <= gP;
-            if (obraAtiva && pecasAtiva) tagExtra += ` <span class="tag" style="background:#28a745;">🛡️ Garantia: AMBAS</span>`;
-            else if (obraAtiva && !pecasAtiva) tagExtra += ` <span class="tag" style="background:#17a2b8;">🛡️ Garantia: MÃO DE OBRA</span>`;
-            else if (!obraAtiva && pecasAtiva) tagExtra += ` <span class="tag" style="background:#6f42c1;">🛡️ Garantia: PEÇAS</span>`;
-            else tagExtra += ` <span class="tag" style="background:#6c757d;">❌ GARANTIA EXPIRADA</span>`;
-        } else if(finalizadoSemReparo) { tagExtra += ` <span class="tag" style="background:#000;">⚫ SEM REPARO</span>`; } 
-        else if(dias > 180) { tagExtra += ` <span class="tag" style="background:red;">🚨 ABANDONADO</span>`; }
-        let previsaoTag = "";
-        if(d.dataPrev && stat !== '3. Concluída' && stat !== 'Concluída' && !finalizadoComSucesso && !finalizadoSemReparo) {
-            let dataObj = converterParaDataObj(d.dataPrev);
-            if (dataObj) {
-                let diasParaEntrega = Math.floor((dataObj - new Date()) / (1000 * 60 * 60 * 24));
-                if(diasParaEntrega < 0) previsaoTag = `<span class="tag" style="background:#dc3545;">⏰ ATRASADO!</span>`;
-                else if(diasParaEntrega === 0) previsaoTag = `<span class="tag" style="background:#ffc107; color:black;">⏰ ENTREGA HOJE</span>`;
-                else previsaoTag = `<span class="tag" style="background:#17a2b8;">⏳ Prev: ${d.dataPrev}</span>`;
-            }
-        }
-        let card = `
-        <div class="os-card">
-            <div style="margin-bottom:8px;">
-                <strong style="font-size:14px;">#${String(d.os).padStart(4, '0')} - ${d.cliente || "Sem Nome"}</strong> ${fidelidadeTag} <br>
-                <span style="color:#666;">${d.equip || "Balcão"} | ${d.data || ""}</span>
-                <div style="margin-top:5px;">${tagExtra} ${previsaoTag} ${garantiaTag}</div>
-            </div>
-            <div style="display:flex; gap:5px; margin-top:10px;">
-                <button class="btn-dark btn-small" style="padding:4px;" onclick="imprimirOS('${doc.id}')">🖨️ PDF</button>
-                <button class="btn-blue btn-small" style="padding:4px;" onclick="editarOS('${doc.id}')">✏️ Editar</button>
-                <button class="btn-red btn-small" style="padding:4px; flex:none;" onclick="excluirOS('${doc.id}')">🗑️</button>
-            </div>
-        </div>`;
 
-        if (stat === '1. Falta Orçar' || stat === 'Falta Orçar') { htmlOrcar += card; cOrcar++; }
-        else if (stat === '2. Executando' || stat === 'Executando') { htmlExec += card; cExec++; }
-        else if (stat === '3. Concluída' || stat === 'Concluída') { htmlConc += card; cConc++; }
-        else if (finalizadoComSucesso) { htmlEntr += card; cEntr++; }
-        else if (finalizadoSemReparo) { htmlDevolv += card; cDevolv++; }
+            if(d.categoria === 'VENDA_BALCAO') { tagExtra += ` <span class="tag" style="background:#6c757d;">🛒 VENDA</span>`; } 
+            else if(finalizadoComSucesso) {
+                let gO = converterParaDias(d.garO); let gP = converterParaDias(d.garP);
+                let obraAtiva = gO > 0 && dias <= gO; let pecasAtiva = gP > 0 && dias <= gP;
+                if (obraAtiva && pecasAtiva) tagExtra += ` <span class="tag" style="background:#28a745;">🛡️ Garantia: AMBAS</span>`;
+                else if (obraAtiva && !pecasAtiva) tagExtra += ` <span class="tag" style="background:#17a2b8;">🛡️ Garantia: MÃO DE OBRA</span>`;
+                else if (!obraAtiva && pecasAtiva) tagExtra += ` <span class="tag" style="background:#6f42c1;">🛡️ Garantia: PEÇAS</span>`;
+                else tagExtra += ` <span class="tag" style="background:#6c757d;">❌ GARANTIA EXPIRADA</span>`;
+            } else if(finalizadoSemReparo) { tagExtra += ` <span class="tag" style="background:#000;">⚫ SEM REPARO</span>`; } 
+            else if(dias > 180) { tagExtra += ` <span class="tag" style="background:red;">🚨 ABANDONADO</span>`; }
+            
+            let previsaoTag = "";
+            if(d.dataPrev && !stat.includes('3') && !finalizadoComSucesso && !finalizadoSemReparo) {
+                let dataObj = converterParaDataObj(d.dataPrev);
+                if (dataObj) {
+                    let diasParaEntrega = Math.floor((dataObj - new Date()) / (1000 * 60 * 60 * 24));
+                    if(diasParaEntrega < 0) previsaoTag = `<span class="tag" style="background:#dc3545;">⏰ ATRASADO!</span>`;
+                    else if(diasParaEntrega === 0) previsaoTag = `<span class="tag" style="background:#ffc107; color:black;">⏰ ENTREGA HOJE</span>`;
+                    else previsaoTag = `<span class="tag" style="background:#17a2b8;">⏳ Prev: ${d.dataPrev}</span>`;
+                }
+            }
+
+            // 🚀 O ERRO ESTAVA AQUI: Estava 'doc.id' (que não existe na array). Agora é 'd.id' 
+            let card = `
+            <div class="os-card">
+                <div style="margin-bottom:8px;">
+                    <strong style="font-size:14px;">#${String(d.os).padStart(4, '0')} - ${d.cliente || "Sem Nome"}</strong> ${fidelidadeTag} <br>
+                    <span style="color:#666;">${d.equip || "Balcão"} | ${d.data || ""}</span>
+                    <div style="margin-top:5px;">${tagExtra} ${previsaoTag} ${garantiaTag}</div>
+                </div>
+                <div style="display:flex; gap:5px; margin-top:10px;">
+                    <button class="btn-dark btn-small" style="padding:4px;" onclick="imprimirOS('${d.id}')">🖨️ PDF</button>
+                    <button class="btn-blue btn-small" style="padding:4px;" onclick="editarOS('${d.id}')">✏️ Editar</button>
+                    <button class="btn-red btn-small" style="padding:4px; flex:none;" onclick="excluirOS('${d.id}')">🗑️</button>
+                </div>
+            </div>`;
+
+            if (stat.includes('1') || stat.includes('ORÇAR')) { htmlOrcar += card; cOrcar++; }
+            else if (stat.includes('2') || stat.includes('EXECUTA')) { htmlExec += card; cExec++; }
+            else if (stat.includes('3') || stat.includes('CONCLU')) { htmlConc += card; cConc++; }
+            else if (stat.includes('4') || stat.includes('ENTREG')) { htmlEntr += card; cEntr++; }
+            else { htmlDevolv += card; cDevolv++; }
+
+        } catch (err) { console.error("OS ignorada na renderização por erro de formato.", err); }
     });
 
-    if(document.getElementById('kb-orcar')) {
-        document.getElementById('kb-orcar').innerHTML = htmlOrcar; document.getElementById('countOrcar').innerText = cOrcar;
+    let eOrcar = document.getElementById('kb-orcar');
+    if(eOrcar) {
+        eOrcar.innerHTML = htmlOrcar; document.getElementById('countOrcar').innerText = cOrcar;
         document.getElementById('kb-exec').innerHTML = htmlExec; document.getElementById('countExec').innerText = cExec;
         document.getElementById('kb-conc').innerHTML = htmlConc; document.getElementById('countConc').innerText = cConc;
         document.getElementById('kb-entr').innerHTML = htmlEntr; document.getElementById('countEntr').innerText = cEntr;
         document.getElementById('kb-devolv').innerHTML = htmlDevolv; document.getElementById('countDevolv').innerText = cDevolv;
     }
+
+    let elAbandonados = document.getElementById('alertaAbandono');
+    if(elAbandonados) {
+        if(abandonados > 0) { 
+            if(document.getElementById('qtdAbandonados')) document.getElementById('qtdAbandonados').innerText = abandonados; 
+            elAbandonados.style.display = 'block'; 
+        } else { elAbandonados.style.display = 'none'; }
+    }
 }
 
-async function excluirOS(id) { if(confirm("Excluir permanentemente?")) { await db.collection("servicos").doc(id).delete(); carregarHistorico(); } }
-
-async function editarOS(id) {
-    const doc = await db.collection("servicos").doc(id).get(); const d = doc.data();
-    if(d.categoria === 'VENDA_BALCAO') return alert("Vendas de balcão não podem ser editadas, exclua e refaça.");
-    tipoDocOriginal = d.tipo || 'ENTRADA'; editandoId = id;
-    
-    dataPagamentoAtual = d.dataPagamento || "";
-    if(!dataPagamentoAtual && d.status && (d.status === '4. Entregue com sucesso de reparo' || d.status === 'Entregue ao Cliente')) {
-        dataPagamentoAtual = d.data; 
-    }
-    
-    let s = d.status || "1. Falta Orçar";
-    if(s === "Falta Orçar") s = "1. Falta Orçar";
-    if(s === "Executando") s = "2. Executando";
-    if(s === "Concluída") s = "3. Concluída";
-    if(s === "Entregue ao Cliente") s = "4. Entregue com sucesso de reparo";
-    document.getElementById('status').value = s; 
-    
-    document.getElementById('classificacao').value = d.classificacao || "Novo Serviço";
-    document.getElementById('osOrigem').value = d.osOrigem || "";
-    document.getElementById('modalidade').value = d.modalidade || "Realizado na Loja";
-    document.getElementById('diarioBordo').value = d.diarioBordo || "";
-    document.getElementById('vVisita').value = d.vVisita || "";
-
-    document.getElementById('cliente').value = d.cliente || "";
-    document.getElementById('cpf').value = d.cpf || ""; document.getElementById('rg').value = d.rg || "";
-    document.getElementById('whatsapp').value = d.whatsapp || ""; document.getElementById('endCliente').value = d.endCliente || "";
-    document.getElementById('bairro').value = d.bairro || ""; document.getElementById('cep').value = d.cep || "";
-    document.getElementById('equip').value = d.equip || ""; document.getElementById('modelo').value = d.modelo || ""; document.getElementById('serie').value = d.serie || ""; 
-    
-    document.querySelectorAll('.chk-item').forEach(el => el.checked = false);
-    if(d.chkList) { d.chkList.split(', ').forEach(item => { const cb = document.querySelector(`.chk-item[value="${item}"]`); if(cb) cb.checked = true; }); }
-    if(d.chkFonte === "Sim") { const cb = document.querySelector(`.chk-item[value="Fonte/Carregador"]`); if(cb) cb.checked = true; }
-    if(d.chkCapa === "Sim") { const cb = document.querySelector(`.chk-item[value="Capa/Case"]`); if(cb) cb.checked = true; }
-    
-    document.getElementById('aces').value = d.aces || "";
-    document.getElementById('insLiga').value = d.inspecao?.liga || "-"; document.getElementById('insImagem').value = d.inspecao?.imagem || "-";
-    document.getElementById('insBarulho').value = d.inspecao?.barulho || "-"; document.getElementById('insTemp').value = d.inspecao?.temp || "-"; document.getElementById('insLed').value = d.inspecao?.led || "-";
-    
-    document.getElementById('defeito').value = d.defeito || ""; document.getElementById('laudo').value = d.laudo || ""; document.getElementById('servicos').value = d.servicos || "";
-    document.getElementById('emprestimo').value = d.emprestimo || "";
-    
-    document.getElementById('vPecas').value = d.vPecas || ""; 
-    document.getElementById('vCustoPecas').value = d.vCustoPecas || ""; 
-    document.getElementById('vObra').value = d.vObra || ""; 
-    document.getElementById('vDesc').value = d.vDesc || "";
-    document.getElementById('osPix').value = d.pagamentos?.pix || ""; document.getElementById('osDin').value = d.pagamentos?.din || "";
-    document.getElementById('osCred').value = d.pagamentos?.cred || ""; document.getElementById('osDeb').value = d.pagamentos?.deb || "";
-    document.getElementById('garPecas').value = d.garP || ""; document.getElementById('garObra').value = d.garO || "";
-    
-    if(d.data) { const [dia, mes, ano] = d.data.split('/'); document.getElementById('dataEntrada').value = `${ano}-${mes}-${dia}`; }
-    if(d.dataPrev) { const [dp, mp, yp] = d.dataPrev.split('/'); document.getElementById('dataPrev').value = `${yp}-${mp}-${dp}`; } else { document.getElementById('dataPrev').value = ""; }
-
-    document.getElementById('idEdicao').innerText = String(d.os).padStart(4, '0');
-    document.getElementById('avisoEdicao').style.display = 'block'; document.getElementById('botoesCriar').style.display = 'none';
-    document.getElementById('botaoSalvarEdicao').style.display = 'flex'; mudarAba('abaNovaOS');
+async function buscar() {
+    const t = document.getElementById('busca').value.toUpperCase();
+    renderizarKanban(cacheServicos, t);
 }
