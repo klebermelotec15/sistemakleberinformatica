@@ -5,15 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kleber Informática - ERP Premium Cloud</title>
     
-    <!-- FIREBASE E GOOGLE DRIVE API -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
     <script async defer src="https://accounts.google.com/gsi/client"></script>
 
-    <!-- PONTE PARA O ARQUIVO DE ESTILOS -->
     <link rel="stylesheet" href="css/style.css">
 
-    <!-- 🛡️ BLINDAGEM DE IMPRESSÃO (Força o MEI a não vazar para a OS) -->
     <style>
         @media print {
             .ocultar-na-impressao {
@@ -24,7 +21,6 @@
 </head>
 <body>
 
-<!-- MODAL DE BUSCA DE CLIENTE -->
 <div id="modalBuscaCliente" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:99999; justify-content:center; align-items:center;">
     <div style="background:white; padding:25px; border-radius:12px; width:450px; max-width:90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -33,12 +29,10 @@
         </div>
         <input type="text" id="inputBuscaCliente" onkeyup="filtrarClientesModal()" placeholder="Digite o nome do cliente..." style="margin-bottom:15px; font-size: 16px;">
         <div id="listaClientesModal" style="max-height:300px; overflow-y:auto; border:1px solid #ddd; border-radius:6px; background:#f9f9f9;">
-            <!-- Resultados aparecem aqui -->
-        </div>
+            </div>
     </div>
 </div>
 
-<!-- TELA DE LOGIN -->
 <div id="telaLogin">
     <div class="login-box">
         <h2 style="border:none; margin-top:0;">🔒 Área Restrita</h2>
@@ -48,7 +42,6 @@
     </div>
 </div>
 
-<!-- NAVBAR -->
 <div class="navbar no-print" id="menuNavegacao" style="display:none;">
     <img id="navLogo" src="logo.png.png" alt="Logomarca" style="height: 38px; border-radius: 4px; display: none; margin-right: auto; background: white; padding: 2px;">
     <button onclick="mudarAba('abaNovaOS')" id="btn-abaNovaOS" class="ativo">📝 1. Nova OS</button>
@@ -62,12 +55,10 @@
     <button class="btn-sair" onclick="sairSistema()" style="margin-left: auto;">Sair 🚪</button>
 </div>
 
-<!-- CONTAINER PRINCIPAL -->
 <div class="container" id="conteinerPrincipal" style="display:none;">
     
     <div id="alertaBackupInteligente" style="background: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 4px; display: none; color: #856404;"></div>
 
-    <!-- ABA 1: NOVA OS -->
     <div id="abaNovaOS" class="aba ativa no-print">
         <div id="avisoEdicao" style="display:none; background: #fff3cd; padding:15px; border-radius:8px; margin-bottom:20px;">
             <div style="display:flex; justify-content: space-between; align-items: center;">
@@ -210,7 +201,6 @@
         </div>
     </div>
 
-    <!-- ABA 2: CRM DE ORÇAMENTOS -->
     <div id="abaCRM" class="aba no-print">
         <h2 style="margin-top: 0;">🤝 Esteira de Orçamentos (CRM)</h2>
         <p style="color:#666; font-size:13px; margin-bottom:20px;">Gere orçamentos rápidos e converta em Ordem de Serviço (OS) com um clique quando o cliente aprovar.</p>
@@ -230,7 +220,6 @@
         </div>
     </div>
 
-    <!-- ABA 3: KANBAN E HISTÓRICO -->
     <div id="abaHistorico" class="aba no-print">
         <h2 style="margin-top: 0;">📂 Quadro Kanban & Histórico</h2>
         <input type="text" id="busca" onkeyup="buscar()" placeholder="🔍 Buscar cliente, OS ou equipamento..." style="margin-bottom:15px;">
@@ -263,7 +252,6 @@
         </div>
     </div>
 
-    <!-- ABA 4: PDV (VENDA RÁPIDA) -->
     <div id="abaPDV" class="aba no-print">
         <h2 style="margin-top: 0;">🛒 Venda de Balcão (PDV)</h2>
         <p style="color:#666; font-size:13px; margin-bottom:20px;">Use esta tela para registar vendas diretas. O recibo gerado oculta os laudos técnicos.</p>
@@ -288,7 +276,6 @@
         </div>
     </div>
 
-    <!-- ABA 5: CONTRATOS B2B -->
     <div id="abaB2B" class="aba no-print">
         <h2 style="margin-top: 0;">🏢 Gestão de Contratos e SLA (B2B)</h2>
         <p style="color:#666; font-size:13px; margin-bottom:20px;">Cadastre empresas. O sistema irá gerar OS automáticas todo dia 1º para previsibilidade de caixa.</p>
@@ -309,19 +296,17 @@
 
         <h3 style="margin-top: 20px; border-bottom: 1px solid #ccc;">Empresas com Contratos Ativos</h3>
         <div id="listaContratos" style="display: grid; gap: 10px;">
-            <!-- Lista renderizada pelo b2b.js -->
-        </div>
+            </div>
     </div>
 
-    <!-- ABA 6: FINANCEIRO MENSAL E MEI -->
     <div id="abaFinanceiro" class="aba no-print">
         <h2 style="margin-top: 0;">📊 Painel Financeiro Mensal & Integração MEI</h2>
-        <p style="color:#666;">Filtre o mês abaixo. O sistema calculará os lucros e enviará a Receita Bruta (Valor cobrado) diretamente para o formulário do MEI.</p>
+        <p style="color:#666;">Filtre o mês abaixo. O sistema calculará os lucros baseados no Regime de Caixa e enviará a Receita Bruta diretamente para o MEI.</p>
         
         <div style="display:flex; gap:15px; background:#e8f4fd; padding:15px; border-radius:10px; margin-bottom:20px; border:1px solid #b8daff;">
             <div style="flex:1;">
                 <label style="color:#0056b3; font-weight:bold;">Filtrar por Mês:</label>
-                <select id="finMes" onchange="mudarMesFinanceiro()" style="font-size:16px; padding:8px; width:100%;">
+                <select id="finMes" onchange="carregarHistorico()" style="font-size:16px; padding:8px; width:100%;">
                     <option value="JANEIRO">JANEIRO</option><option value="FEVEREIRO">FEVEREIRO</option>
                     <option value="MARÇO">MARÇO</option><option value="ABRIL">ABRIL</option>
                     <option value="MAIO">MAIO</option><option value="JUNHO">JUNHO</option>
@@ -332,19 +317,18 @@
             </div>
             <div style="flex:1;">
                 <label style="color:#0056b3; font-weight:bold;">Filtrar por Ano:</label>
-                <input type="number" id="finAno" value="2026" onchange="mudarMesFinanceiro()" style="font-size:16px; padding:8px; width:100%;">
+                <input type="number" id="finAno" value="2026" onchange="carregarHistorico()" style="font-size:16px; padding:8px; width:100%;">
             </div>
         </div>
 
         <div class="dashboard">
             <div class="dash-card dash-blue"><h4>Peças (Lucro)</h4><h2 id="dashLucroPecas">R$ 0,00</h2></div>
-            <div class="dash-card dash-warning"><h4>Mão de Obra</h4><h2 id="dashObra" style="color:black;">R$ 0,00</h2></div>
+            <div class="dash-card dash-warning"><h4>Mão de Obra + B2B</h4><h2 id="dashObra" style="color:black;">R$ 0,00</h2></div>
             <div class="dash-card dash-info"><h4>Vendas PDV</h4><h2 id="dashPDV">R$ 0,00</h2></div>
             <div class="dash-card dash-green"><h4>Total Geral</h4><h2 id="dashTotal">R$ 0,00</h2></div>
         </div>
     </div>
 
-    <!-- ABA 7: RELATÓRIO MEI -->
     <div id="abaRelatorioMEI" class="aba no-print">
         <h2 style="margin-top: 0;">📄 Relatório Mensal das Receitas Brutas (MEI)</h2>
         <p style="color:#666; font-size:13px; margin-bottom:20px;">Preencha os valores mensais. O sistema calcula os totais automaticamente.</p>
@@ -398,7 +382,6 @@
         <button class="btn-dark" onclick="imprimirMEI()" style="width:100%;">🖨️ GERAR E IMPRIMIR RELATÓRIO OFICIAL</button>
     </div>
 
-    <!-- ABA 8: CONFIGURAÇÕES E BACKUP -->
     <div id="abaConfig" class="aba no-print">
         <h2 style="margin-top: 0;">⚙️ Configurações, Backup e Lembretes</h2>
         
@@ -440,7 +423,6 @@
 
 </div>
 
-<!-- TELA DE DOCUMENTO / IMPRESSÃO DA OS E RECIBO -->
 <div id="telaDocumento" style="display: none;">
     <button class="btn-red no-print" onclick="fecharImpressao()" style="margin-bottom:20px; width:100%; font-size:16px; padding:15px;">⬅️ FECHAR IMPRESSÃO E VOLTAR</button>
     
@@ -553,36 +535,28 @@
         <strong>AVISO IMPORTANTE:</strong> Documento gerado eletronicamente. Orçamentos têm validade de 5 dias úteis a partir da emissão. Em caso de abandono de equipamento sem retirada após 180 dias, o mesmo será tratado como sucata para abatimento dos custos, isentando a empresa de obrigações legais.
     </div>
 
-    <!-- BLOCO DE ASSINATURA DA KLEBER INFORMÁTICA COM TRANSPARÊNCIA MATEMÁTICA -->
     <div class="pdf-assinaturas" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; page-break-inside: avoid;">
-        
         <div style="text-align: center; width: 45%;">
-            
             <div style="position: relative; width: 100%; display: flex; flex-direction: column; align-items: center;">
                 <img src="assinatura.png.png" alt="" style="height: 80px; width: 100%; object-fit: contain; margin-bottom: -15px; position: relative; z-index: 2; mix-blend-mode: multiply;">
-                
                 <div style="width: 100%; border-top: 2px solid #000; position: relative; z-index: 1;"></div>
             </div>
-            
             <div style="padding-top: 5px;">
                 <strong style="font-size: 14px;">Kleber Informática</strong><br>
                 <span style="font-size: 14px;">Kleber Melo</span>
             </div>
         </div>
 
-        <!-- 🚀 ÁREA DA ASSINATURA DO CLIENTE (OCULTA NO RECIBO DE VENDA) -->
         <div id="blocoAssinaturaCliente" style="text-align: center; width: 45%; padding-bottom: 18px;">
             <p style="margin: 0; border-top: 2px solid #000; padding-top: 5px;">
                 <strong style="font-size: 14px;">Assinatura do Cliente</strong>
             </p>
         </div>
-
     </div>
 
     <button class="btn-dark no-print" onclick="window.print()" style="margin-top:15px; width:100%;">🖨️ IMPRIMIR DOCUMENTO</button>
 </div>
 
-<!-- TELA DE DOCUMENTO / IMPRESSÃO DO RELATÓRIO MEI -->
 <div id="telaDocumentoMEI" style="display: none;">
     <button class="btn-red no-print" onclick="fecharImpressao()" style="margin-bottom:20px; width:100%; font-size:16px; padding:15px;">⬅️ FECHAR E VOLTAR AO SISTEMA</button>
     
@@ -672,7 +646,6 @@
     <button class="btn-dark no-print" onclick="window.print()" style="margin-top:20px; width:100%;">🖨️ IMPRIMIR RELATÓRIO MEI</button>
 </div>
 
-<!-- PONTES PARA O CÉREBRO DO SISTEMA -->
 <script src="JS/globals.js"></script>
 <script src="JS/ui.js"></script>
 <script src="JS/crm.js"></script>
