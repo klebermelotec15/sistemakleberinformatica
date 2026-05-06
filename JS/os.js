@@ -1,13 +1,5 @@
 // JS/os.js
-// Cérebro Financeiro e Lógico das Ordens de Serviço 
-// (O SEU Código Original Restaurado + Injeção Segura do MEI + Regime de Caixa)
-
-var editandoId = null;
-var tipoDocOriginal = 'ENTRADA';
-// Variável oculta para salvar a data de pagamento
-var dataPagamentoAtual = ""; 
-var mapaGarantias = new Map();
-var clientesFieis = new Map();
+// Cérebro Financeiro e Lógico das Ordens de Serviço (O SEU Código Original Restaurado + Injeção do MEI + Regime de Caixa)
 
 function calcularDias(dataStr) {
     if(!dataStr || typeof dataStr !== 'string') return 0;
@@ -111,6 +103,8 @@ async function salvarVendaPDV(imprimirRecibo) {
     
     const numOS = await obterProximaOS();
     const totalVenda = venda - descPDV;
+    
+    // 🚀 Lógica Financeira do PDV (Venda Balcão)
     const dataAtual = new Date().toLocaleDateString('pt-BR');
 
     const dados = {
@@ -120,7 +114,7 @@ async function salvarVendaPDV(imprimirRecibo) {
         vPecas: 0, vCustoPecas: 0, vObra: venda, vDesc: descPDV, total: totalVenda, faltaPagar: totalVenda - totalPago, vSinal: totalPago,
         pagamentos: { pix, din, cred, deb },
         data: dataAtual,
-        dataPagamento: dataAtual, // Venda balcão entra no caixa no mesmo dia
+        dataPagamento: dataAtual, // PDV entra direto no caixa hoje
         tipo: 'RECIBO_PAGAMENTO'
     };
 
@@ -155,17 +149,18 @@ async function salvarOS(tipoDoc) {
     let chkArr = [];
     document.querySelectorAll('.chk-item:checked').forEach(el => chkArr.push(el.value));
 
-    let numOS = editandoId ? parseInt(document.getElementById('idEdicao').innerText) : await obterProximaOS();
+    // A variável "editandoId" agora é lida diretamente da Janela, não corrompendo a Sintaxe do seu motor original
+    let numOS = window.editandoIdOS ? parseInt(document.getElementById('idEdicao').innerText) : await obterProximaOS();
 
     const totalOS = (vp + vo + vVisita) - vd;
 
-    // 🚀 LÓGICA DO REGIME DE CAIXA: Grava invisivelmente a data do pagamento se o status for finalizado
+    // 🚀 LÓGICA DO REGIME DE CAIXA: Grava invisivelmente a data em que você mudou para "Entregue"
     let statusAtual = document.getElementById('status').value;
-    let dataPagFinal = dataPagamentoAtual;
+    let dataPagFinal = window.dataPagamentoAtualOS || "";
     let pago = (statusAtual === '4. Entregue com sucesso de reparo' || statusAtual === 'Entregue ao Cliente');
     
     if (pago && !dataPagFinal) {
-        dataPagFinal = new Date().toLocaleDateString('pt-BR');
+        dataPagFinal = new Date().toLocaleDateString('pt-BR'); // Data do faturamento real
     } else if (!pago) {
         dataPagFinal = ""; 
     }
@@ -202,7 +197,7 @@ async function salvarOS(tipoDoc) {
         pagamentos: { pix, din, cred, deb },
         garP: document.getElementById('garPecas').value, garO: document.getElementById('garObra').value,
         data: dataFormatada, dataPrev: dataPrevFormatada, tipo: tipoDoc,
-        dataPagamento: dataPagFinal
+        dataPagamento: dataPagFinal // Campo Oculto de Contabilidade
     };
 
     if(!dados.cliente) return alert("Digite o nome do cliente!");
@@ -215,8 +210,8 @@ async function salvarOS(tipoDoc) {
         }).then(() => carregarClientesDaNuvem()); 
     }
 
-    if(editandoId) {
-        await db.collection("servicos").doc(editandoId).update(dados);
+    if(window.editandoIdOS) {
+        await db.collection("servicos").doc(window.editandoIdOS).update(dados);
         if (tipoDoc !== 'RECIBO_PAGAMENTO') limparFormularioOS();
         if (tipoDoc !== 'RECIBO_PAGAMENTO') mudarAba('abaHistorico'); 
     } else {
@@ -232,12 +227,12 @@ async function salvarOS(tipoDoc) {
 }
 
 function salvarEdicao(tipo) { 
-    salvarOS(tipo || tipoDocOriginal); 
+    salvarOS(tipo || window.tipoDocOriginalOS || 'ENTRADA'); 
 }
 
 function limparFormularioOS() {
-    editandoId = null;
-    dataPagamentoAtual = ""; // Reseta a memória de pagamento
+    window.editandoIdOS = null;
+    window.dataPagamentoAtualOS = "";
     document.getElementById('avisoEdicao').style.display = 'none';
     document.getElementById('botoesCriar').style.display = 'flex';
     document.getElementById('botaoSalvarEdicao').style.display = 'none';
@@ -276,11 +271,12 @@ async function imprimirOS(id) {
 }
 
 function prepararImpressao(d) {
+    // 🛡️ BLINDAGEM DE IMPRESSÃO: Garante que o MEI e o Sistema base fiquem invisíveis no PDF usando !important
     document.getElementById('conteinerPrincipal').setAttribute('style', 'display: none !important;');
     document.getElementById('telaDocumentoMEI').setAttribute('style', 'display: none !important;');
     document.getElementById('menuNavegacao').setAttribute('style', 'display: none !important;');
 
-    document.getElementById('telaDocumento').style.display = 'block';
+    document.getElementById('telaDocumento').setAttribute('style', 'display: block !important;');
 
     if(configGlobais.logo) { document.getElementById('docLogo').src = configGlobais.logo; document.getElementById('docLogo').style.display = 'inline-block'; }
     document.getElementById('docEnd').innerText = configGlobais.end || ""; document.getElementById('docTel').innerText = configGlobais.tel || "";
@@ -404,6 +400,7 @@ function prepararImpressao(d) {
 }
 
 function fecharImpressao() {
+    document.getElementById('telaDocumento').style.display = 'none';
     let cPrin = document.getElementById('conteinerPrincipal');
     let tMei = document.getElementById('telaDocumentoMEI');
     let mNav = document.getElementById('menuNavegacao');
@@ -411,23 +408,18 @@ function fecharImpressao() {
     if(cPrin) cPrin.setAttribute('style', 'display: block !important;');
     if(tMei) tMei.setAttribute('style', 'display: none !important;');
     if(mNav) mNav.setAttribute('style', 'display: flex !important;');
-    document.getElementById('telaDocumento').style.display = 'none';
 }
 
 // ----------------------------------------------------------------------
 // GESTÃO DE HISTÓRICO: O SEU CÓDIGO NATIVO ORIGINAL
 // ----------------------------------------------------------------------
-// Nova função que recalcula os lucros quando o mês é alterado
-window.mudarMesFinanceiro = async function() {
-    const snap = await db.collection("servicos").orderBy("os", "desc").get();
-    processarInteligencia(snap);
-};
 
 async function carregarHistorico() {
     try {
+        // LEITURA ORIGINAL NATIVA DA SUA BASE DE DADOS
         const snap = await db.collection("servicos").orderBy("os", "desc").get();
         
-        // Define o mês inicial na interface assim que o site carrega
+        // Define o mês inicial na interface de forma silenciosa para o MEI
         try {
             const date = new Date();
             const mesesStr = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
@@ -441,8 +433,9 @@ async function carregarHistorico() {
             }
         } catch(e) {}
 
+        // Passa o Firebase SNAP diretamente para não quebrar a sua estrutura original
         processarInteligencia(snap); 
-        renderizarKanban(snap); // Usando a leitura nativa (Firebase Snapshot) do seu código original!
+        renderizarKanban(snap); // O seu código que funcionava!
     } catch (e) { 
         console.error("Erro ao carregar banco de dados:", e); 
     }
@@ -450,10 +443,12 @@ async function carregarHistorico() {
 
 function processarInteligencia(snap) {
     try {
-        clientesFieis.clear(); mapaGarantias.clear();
+        // As suas lógicas originais declaradas diretamente no escopo seguro da função
+        let clientesFieisMap = new Map();
+        let mapaGarantiasMap = new Map();
         let lucroPecas = 0, totalObra = 0, totalPDV = 0, descontosAplicados = 0, abandonados = 0;
         
-        // Variáveis para receber o filtro do usuário
+        // Variáveis para a Integração Mensal do MEI
         let receitaBrutaComercio = 0, receitaBrutaServicos = 0;
         let finMesEl = document.getElementById('finMes');
         let finAnoEl = document.getElementById('finAno');
@@ -462,15 +457,19 @@ function processarInteligencia(snap) {
         let mesesMap = {"JANEIRO":"01", "FEVEREIRO":"02", "MARÇO":"03", "ABRIL":"04", "MAIO":"05", "JUNHO":"06", "JULHO":"07", "AGOSTO":"08", "SETEMBRO":"09", "OUTUBRO":"10", "NOVEMBRO":"11", "DEZEMBRO":"12"};
         let numMes = mesSel ? mesesMap[mesSel] : null;
 
-        let docs = []; snap.forEach(doc => docs.push(doc.data()));
+        let docs = []; snap.forEach(d => docs.push(d.data()));
         let docsCronologicos = [...docs].reverse(); 
         
         docsCronologicos.forEach(d => {
-            if(d.categoria !== 'VENDA_BALCAO' && d.serie) { mapaGarantias.set(String(d.serie).trim(), { os: d.os, data: d.data }); }
+            if(d.categoria !== 'VENDA_BALCAO' && d.serie) { mapaGarantiasMap.set(String(d.serie).trim(), { os: d.os, data: d.data }); }
             let s = d.status || "";
             let finalizado = (s === '4. Entregue com sucesso de reparo' || s === 'Entregue ao Cliente' || s === '5. Devolvido sem reparo');
-            if(finalizado && d.cliente) { let nomeKey = String(d.cliente).toUpperCase().trim(); clientesFieis.set(nomeKey, (clientesFieis.get(nomeKey) || 0) + 1); }
+            if(finalizado && d.cliente) { let nomeKey = String(d.cliente).toUpperCase().trim(); clientesFieisMap.set(nomeKey, (clientesFieisMap.get(nomeKey) || 0) + 1); }
         });
+
+        // Guardamos o resultado na janela de forma provisória para o renderizarKanban conseguir ler
+        window.clientesFieisTemporario = clientesFieisMap;
+        window.mapaGarantiasTemporario = mapaGarantiasMap;
 
         docs.forEach(d => {
             let s = d.status || "";
@@ -483,7 +482,7 @@ function processarInteligencia(snap) {
 
             if(finalizadoComSucesso || d.categoria === 'VENDA_BALCAO') { 
                 
-                // 🚀 LÓGICA DO REGIME DE CAIXA: Verifica se o Mês de Pagamento bate com o filtro
+                // 🚀 LÓGICA DO REGIME DE CAIXA: Verifica o mês do PAGAMENTO
                 let dataReferencia = d.dataPagamento || d.data;
                 let isMesmoMes = false;
                 
@@ -529,13 +528,14 @@ function processarInteligencia(snap) {
             } else { elAbandonados.style.display = 'none'; }
         }
 
-        // 2. 🚀 INJEÇÃO DO MEI: AUTO-PREENCHIMENTO DE CAIXA EM TEMPO REAL
+        // 2. 🚀 INJEÇÃO DO MEI: AUTO-PREENCHIMENTO
         if(document.getElementById('meiMes') && mesSel) document.getElementById('meiMes').value = mesSel;
         if(document.getElementById('meiAno') && anoSel) document.getElementById('meiAno').value = anoSel;
         
         if(document.getElementById('mei1')) document.getElementById('mei1').value = receitaBrutaComercio.toFixed(2);
         if(document.getElementById('mei7')) document.getElementById('mei7').value = receitaBrutaServicos.toFixed(2);
 
+        // Faz a matemática do relatório do MEI
         if(typeof window.calcMEI === 'function') { window.calcMEI(); } 
         else {
             let m1 = receitaBrutaComercio; let m2 = parseFloat(document.getElementById('mei2')?.value) || 0;
@@ -556,7 +556,7 @@ function renderizarKanban(snap, filtroText = "") {
 
     snap.forEach(doc => {
         try {
-            const d = doc.data(); // O MOTOR ORIGINAL NUNCA QUEBRA AQUI
+            const d = doc.data();
             let searchTarget = `${d.cliente || ""} ${d.os || ""} ${d.equip || ""} ${d.defeito || ""}`.toUpperCase();
             if (filtroText && !searchTarget.includes(filtroText)) return;
 
@@ -567,9 +567,13 @@ function renderizarKanban(snap, filtroText = "") {
                 tagExtra += ` <span class="tag" style="background:#dc3545; color:white; font-weight:bold;">🚨 RETORNO DE GARANTIA</span>`;
             }
 
+            // Resgata o histórico de clientes sem causar colisões globais
+            let cf = window.clientesFieisTemporario || new Map();
+            let mg = window.mapaGarantiasTemporario || new Map();
+
             if(d.cliente) {
                 let nomeKey = String(d.cliente).toUpperCase().trim();
-                if (clientesFieis.get(nomeKey) >= 5) { fidelidadeTag = `<span class="tag" style="background:#ffc107; color:#000;">⭐ Fiel</span>`; }
+                if (cf.get(nomeKey) >= 5) { fidelidadeTag = `<span class="tag" style="background:#ffc107; color:#000;">⭐ Fiel</span>`; }
             }
 
             let stat = String(d.status).trim();
@@ -578,7 +582,7 @@ function renderizarKanban(snap, filtroText = "") {
 
             if(d.serie && d.categoria !== 'VENDA_BALCAO') {
                 let serieKey = String(d.serie).trim();
-                let ultimaDaSerie = mapaGarantias.get(serieKey);
+                let ultimaDaSerie = mg.get(serieKey);
                 if(ultimaDaSerie && ultimaDaSerie.os !== d.os) {
                     let diffDiasAnterior = calcularDias(ultimaDaSerie.data);
                     if(diffDiasAnterior <= 90 && !finalizadoComSucesso && !finalizadoSemReparo && d.classificacao !== 'Retorno em Garantia') {
@@ -654,12 +658,13 @@ async function excluirOS(id) { if(confirm("Excluir permanentemente?")) { await d
 async function editarOS(id) {
     const doc = await db.collection("servicos").doc(id).get(); const d = doc.data();
     if(d.categoria === 'VENDA_BALCAO') return alert("Vendas de balcão não podem ser editadas, exclua e refaça.");
-    tipoDocOriginal = d.tipo || 'ENTRADA'; editandoId = id;
+    window.tipoDocOriginalOS = d.tipo || 'ENTRADA'; 
+    window.editandoIdOS = id;
     
     // Recupera a data de pagamento para o Regime de Caixa não a perder
-    dataPagamentoAtual = d.dataPagamento || "";
-    if(!dataPagamentoAtual && d.status && (d.status === '4. Entregue com sucesso de reparo' || d.status === 'Entregue ao Cliente')) {
-        dataPagamentoAtual = d.data; // Fallback se OS for antiga e foi paga no passado
+    window.dataPagamentoAtualOS = d.dataPagamento || "";
+    if(!window.dataPagamentoAtualOS && d.status && (d.status === '4. Entregue com sucesso de reparo' || d.status === 'Entregue ao Cliente')) {
+        window.dataPagamentoAtualOS = d.data; // Fallback se OS for antiga e foi paga no passado
     }
     
     let s = d.status || "1. Falta Orçar";
