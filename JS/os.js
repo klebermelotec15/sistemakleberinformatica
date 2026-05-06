@@ -1,8 +1,5 @@
 // JS/os.js
-// Cérebro Financeiro e Lógico das Ordens de Serviço (Versão 100% Restaurada com MEI Automático e Assinatura Segura)
-
-var mapaGarantias = new Map();
-var clientesFieis = new Map();
+// Cérebro Financeiro e Lógico das Ordens de Serviço (O SEU Código Original Restaurado + Injeção do MEI)
 
 function calcularDias(dataStr) {
     if(!dataStr || typeof dataStr !== 'string') return 0;
@@ -256,16 +253,12 @@ async function imprimirOS(id) {
 }
 
 function prepararImpressao(d) {
-    // 🛡️ BLINDAGEM DE IMPRESSÃO: Garante que o MEI e o Sistema base fiquem invisíveis no PDF
-    let cPrin = document.getElementById('conteinerPrincipal');
-    let tMei = document.getElementById('telaDocumentoMEI');
-    let mNav = document.getElementById('menuNavegacao');
-    
-    if(cPrin) cPrin.classList.add('ocultar-na-impressao');
-    if(tMei) tMei.classList.add('ocultar-na-impressao');
-    if(mNav) mNav.classList.add('ocultar-na-impressao');
+    // 🛡️ BLINDAGEM DE IMPRESSÃO: Garante que o MEI e o Sistema base fiquem invisíveis no PDF usando !important
+    document.getElementById('conteinerPrincipal').setAttribute('style', 'display: none !important;');
+    document.getElementById('telaDocumentoMEI').setAttribute('style', 'display: none !important;');
+    document.getElementById('menuNavegacao').setAttribute('style', 'display: none !important;');
 
-    document.getElementById('telaDocumento').style.display = 'block';
+    document.getElementById('telaDocumento').setAttribute('style', 'display: block !important;');
 
     if(configGlobais.logo) { document.getElementById('docLogo').src = configGlobais.logo; document.getElementById('docLogo').style.display = 'inline-block'; }
     document.getElementById('docEnd').innerText = configGlobais.end || ""; document.getElementById('docTel').innerText = configGlobais.tel || "";
@@ -389,29 +382,15 @@ function prepararImpressao(d) {
 }
 
 function fecharImpressao() {
-    document.getElementById('telaDocumento').style.display = 'none';
-    let cPrin = document.getElementById('conteinerPrincipal');
-    let tMei = document.getElementById('telaDocumentoMEI');
-    let mNav = document.getElementById('menuNavegacao');
-    
-    if(cPrin) cPrin.classList.remove('ocultar-na-impressao');
-    if(tMei) tMei.classList.remove('ocultar-na-impressao');
-    if(mNav) mNav.classList.remove('ocultar-na-impressao');
+    document.getElementById('telaDocumento').setAttribute('style', 'display: none !important;');
+    document.getElementById('conteinerPrincipal').setAttribute('style', 'display: block !important;');
+    document.getElementById('telaDocumentoMEI').setAttribute('style', 'display: none !important;');
+    document.getElementById('menuNavegacao').setAttribute('style', 'display: flex !important;');
 }
-
-// ----------------------------------------------------------------------
-// GESTÃO DE HISTÓRICO E KANBAN (BASE ORIGINAL COM TRY CATCH + MEI)
-// ----------------------------------------------------------------------
-// 🚀 Criado atalho para recarregar quando o mês for alterado
-window.mudarMesFinanceiro = function() {
-    carregarHistorico();
-};
 
 async function carregarHistorico() {
     try {
-        const snap = await db.collection("servicos").orderBy("os", "desc").get();
-        
-        // 🚀 Inicializador Seguro dos Filtros Financeiros do MEI
+        // Configuração Inicial de Data para a Aba Financeira e MEI
         try {
             const date = new Date();
             const mesesStr = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
@@ -425,12 +404,10 @@ async function carregarHistorico() {
             }
         } catch(e) {}
 
-        // Passa o Firebase SNAP diretamente para não quebrar a sua estrutura original
+        const snap = await db.collection("servicos").orderBy("os", "desc").get();
         processarInteligencia(snap); 
         renderizarKanban(snap);
-    } catch (e) { 
-        console.error("Erro ao carregar banco de dados:", e); 
-    }
+    } catch (e) { console.error("Erro ao carregar banco de dados:", e); }
 }
 
 function processarInteligencia(snap) {
@@ -438,7 +415,7 @@ function processarInteligencia(snap) {
         clientesFieis.clear(); mapaGarantias.clear();
         let lucroPecas = 0, totalObra = 0, totalPDV = 0, descontosAplicados = 0, abandonados = 0;
         
-        // Variáveis para a Integração Mensal do MEI
+        // --- INÍCIO DA LÓGICA MEI (Isolada) ---
         let receitaBrutaComercio = 0, receitaBrutaServicos = 0;
         let finMesEl = document.getElementById('finMes');
         let finAnoEl = document.getElementById('finAno');
@@ -446,6 +423,7 @@ function processarInteligencia(snap) {
         let anoSel = finAnoEl ? String(finAnoEl.value) : null;
         let mesesMap = {"JANEIRO":"01", "FEVEREIRO":"02", "MARÇO":"03", "ABRIL":"04", "MAIO":"05", "JUNHO":"06", "JULHO":"07", "AGOSTO":"08", "SETEMBRO":"09", "OUTUBRO":"10", "NOVEMBRO":"11", "DEZEMBRO":"12"};
         let numMes = mesSel ? mesesMap[mesSel] : null;
+        // --- FIM DA LÓGICA MEI ---
 
         let docs = []; snap.forEach(d => docs.push(d.data()));
         let docsCronologicos = [...docs].reverse(); 
@@ -462,8 +440,7 @@ function processarInteligencia(snap) {
             let finalizado = (s === '4. Entregue com sucesso de reparo' || s === 'Entregue ao Cliente' || s === '5. Devolvido sem reparo');
 
             if(finalizado) { 
-                
-                // LÓGICA DO MEI: Verifica se esta OS pertence ao mês selecionado no filtro
+                // Lógica MEI (Filtro por mês para injetar na aba MEI)
                 let isMesmoMes = false;
                 if(d.data && numMes && anoSel) {
                     let partes = String(d.data).split('/');
@@ -473,29 +450,26 @@ function processarInteligencia(snap) {
                 }
 
                 if (d.categoria === 'VENDA_BALCAO') { 
-                    if(isMesmoMes) {
-                        totalPDV += parseFloat(d.total) || 0; 
-                        receitaBrutaComercio += parseFloat(d.total) || 0; // MEI COMERCIO
-                    }
+                    totalPDV += parseFloat(d.total) || 0; 
+                    if(isMesmoMes) receitaBrutaComercio += parseFloat(d.total) || 0;
                 } 
                 else {
                     let vp = parseFloat(d.vPecas) || 0; let vc = parseFloat(d.vCustoPecas) || 0; 
                     let vo = parseFloat(d.vObra) || 0; let vd = parseFloat(d.vDesc) || 0;
                     let vvis = parseFloat(d.vVisita) || 0; 
 
+                    lucroPecas += (vp - vc);
+                    totalObra += (vo + vvis);
+                    descontosAplicados += vd;
+                    
                     if(isMesmoMes) {
-                        lucroPecas += (vp - vc);
-                        totalObra += (vo + vvis);
-                        descontosAplicados += vd;
-                        
-                        receitaBrutaComercio += vp; // MEI COMERCIO (Peças Cobradas)
-                        receitaBrutaServicos += (vo + vvis); // MEI SERVICOS (Mão de Obra + Visita)
+                        receitaBrutaComercio += vp; 
+                        receitaBrutaServicos += (vo + vvis);
                     }
                 }
             } else if (calcularDias(d.data) > 180 && d.categoria !== 'VENDA_BALCAO') { abandonados++; }
         });
 
-        // 1. Atualiza Dashboard Financeiro com a matemática de lucro
         let totalGeral = (lucroPecas + totalObra - descontosAplicados) + totalPDV;
         if(document.getElementById('dashLucroPecas')) document.getElementById('dashLucroPecas').innerText = "R$ " + lucroPecas.toFixed(2); 
         if(document.getElementById('dashObra')) document.getElementById('dashObra').innerText = "R$ " + totalObra.toFixed(2);
@@ -510,26 +484,12 @@ function processarInteligencia(snap) {
             } else { elAbandonados.style.display = 'none'; }
         }
 
-        // 2. 🚀 INJEÇÃO DO MEI: AUTO-PREENCHIMENTO COM A RECEITA BRUTA
-        if(document.getElementById('meiMes') && mesSel) document.getElementById('meiMes').value = mesSel;
-        if(document.getElementById('meiAno') && anoSel) document.getElementById('meiAno').value = anoSel;
-        
+        // --- INJEÇÃO DO MEI ---
         if(document.getElementById('mei1')) document.getElementById('mei1').value = receitaBrutaComercio.toFixed(2);
         if(document.getElementById('mei7')) document.getElementById('mei7').value = receitaBrutaServicos.toFixed(2);
-
-        // Faz a matemática do relatório do MEI
-        if(typeof window.calcMEI === 'function') { window.calcMEI(); } 
-        else {
-            let m1 = receitaBrutaComercio; let m2 = parseFloat(document.getElementById('mei2')?.value) || 0;
-            if(document.getElementById('mei3')) document.getElementById('mei3').innerText = (m1 + m2).toFixed(2);
-            let m7 = receitaBrutaServicos; let m8 = parseFloat(document.getElementById('mei8')?.value) || 0;
-            if(document.getElementById('mei9')) document.getElementById('mei9').innerText = (m7 + m8).toFixed(2);
-            let m4 = parseFloat(document.getElementById('mei4')?.value) || 0; let m5 = parseFloat(document.getElementById('mei5')?.value) || 0;
-            if(document.getElementById('mei6')) document.getElementById('mei6').innerText = (m4 + m5).toFixed(2);
-            if(document.getElementById('mei10')) document.getElementById('mei10').innerText = ((m1+m2) + (m4+m5) + (m7+m8)).toFixed(2);
-        }
-
-    } catch (error) { console.error("Ignorando erro na Inteligência Mensal:", error); }
+        if(typeof window.calcMEI === 'function') { window.calcMEI(); }
+        
+    } catch (error) { console.error("Ignorando erro de dados antigos na Inteligência:", error); }
 }
 
 function renderizarKanban(snap, filtroText = "") {
@@ -537,7 +497,6 @@ function renderizarKanban(snap, filtroText = "") {
     let cOrcar = 0, cExec = 0, cConc = 0, cEntr = 0, cDevolv = 0;
 
     snap.forEach(doc => {
-        // 🛡️ BLINDAGEM DE CRASH AQUI - SE UMA OS TIVER ERRO, AS OUTRAS CONTINUAM
         try {
             const d = doc.data();
             let searchTarget = `${d.cliente || ""} ${d.os || ""} ${d.equip || ""} ${d.defeito || ""}`.toUpperCase();
@@ -592,7 +551,6 @@ function renderizarKanban(snap, filtroText = "") {
                 }
             }
 
-            // O ID Original do Firebase (doc.id) MANTIDO AQUI para não quebrar a edição
             let card = `
             <div class="os-card">
                 <div style="margin-bottom:8px;">
@@ -613,7 +571,7 @@ function renderizarKanban(snap, filtroText = "") {
             else if (finalizadoComSucesso) { htmlEntr += card; cEntr++; }
             else if (finalizadoSemReparo) { htmlDevolv += card; cDevolv++; }
 
-        } catch (err) { console.error("OS silenciosamente ignorada no Kanban por erro de formato:", doc.id, err); }
+        } catch (err) { console.error("OS ignorada na renderização por erro de formato:", doc.id, err); }
     });
 
     if(document.getElementById('kb-orcar')) {
@@ -684,3 +642,8 @@ async function editarOS(id) {
     document.getElementById('avisoEdicao').style.display = 'block'; document.getElementById('botoesCriar').style.display = 'none';
     document.getElementById('botaoSalvarEdicao').style.display = 'flex'; mudarAba('abaNovaOS');
 }
+
+// 🛡️ GATILHO DE SEGURANÇA: Dispara o Histórico automaticamente ao carregar o sistema
+document.addEventListener("DOMContentLoaded", function() {
+    setTimeout(() => { if(typeof carregarHistorico === 'function') carregarHistorico(); }, 500);
+});
