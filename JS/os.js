@@ -1,9 +1,11 @@
 // JS/os.js
-// Cérebro Financeiro e Lógico (Motor Firebase Original Restaurado com Inteligência MEI e Regime de Caixa)
+// Cérebro Financeiro e Lógico das Ordens de Serviço 
+// (O SEU Código Original Restaurado + Injeção Segura do MEI + Regime de Caixa)
 
 var editandoId = null;
 var tipoDocOriginal = 'ENTRADA';
-var dataPagamentoAtual = ""; // Variável global do Regime de Caixa
+// Variável oculta para salvar a data de pagamento
+var dataPagamentoAtual = ""; 
 var mapaGarantias = new Map();
 var clientesFieis = new Map();
 
@@ -118,7 +120,7 @@ async function salvarVendaPDV(imprimirRecibo) {
         vPecas: 0, vCustoPecas: 0, vObra: venda, vDesc: descPDV, total: totalVenda, faltaPagar: totalVenda - totalPago, vSinal: totalPago,
         pagamentos: { pix, din, cred, deb },
         data: dataAtual,
-        dataPagamento: dataAtual, // Regime de Caixa: PDV entra e sai no dia
+        dataPagamento: dataAtual, // Venda balcão entra no caixa no mesmo dia
         tipo: 'RECIBO_PAGAMENTO'
     };
 
@@ -157,7 +159,7 @@ async function salvarOS(tipoDoc) {
 
     const totalOS = (vp + vo + vVisita) - vd;
 
-    // 🚀 LÓGICA DO REGIME DE CAIXA: Grava invisivelmente a data do pagamento
+    // 🚀 LÓGICA DO REGIME DE CAIXA: Grava invisivelmente a data do pagamento se o status for finalizado
     let statusAtual = document.getElementById('status').value;
     let dataPagFinal = dataPagamentoAtual;
     let pago = (statusAtual === '4. Entregue com sucesso de reparo' || statusAtual === 'Entregue ao Cliente');
@@ -235,7 +237,7 @@ function salvarEdicao(tipo) {
 
 function limparFormularioOS() {
     editandoId = null;
-    dataPagamentoAtual = "";
+    dataPagamentoAtual = ""; // Reseta a memória de pagamento
     document.getElementById('avisoEdicao').style.display = 'none';
     document.getElementById('botoesCriar').style.display = 'flex';
     document.getElementById('botaoSalvarEdicao').style.display = 'none';
@@ -415,11 +417,17 @@ function fecharImpressao() {
 // ----------------------------------------------------------------------
 // GESTÃO DE HISTÓRICO: O SEU CÓDIGO NATIVO ORIGINAL
 // ----------------------------------------------------------------------
+// Nova função que recalcula os lucros quando o mês é alterado
+window.mudarMesFinanceiro = async function() {
+    const snap = await db.collection("servicos").orderBy("os", "desc").get();
+    processarInteligencia(snap);
+};
+
 async function carregarHistorico() {
     try {
-        // Fetch nativo direto do Firebase (O que garante que nunca vai dar erro no doc.data)
         const snap = await db.collection("servicos").orderBy("os", "desc").get();
         
+        // Define o mês inicial na interface assim que o site carrega
         try {
             const date = new Date();
             const mesesStr = ["JANEIRO","FEVEREIRO","MARÇO","ABRIL","MAIO","JUNHO","JULHO","AGOSTO","SETEMBRO","OUTUBRO","NOVEMBRO","DEZEMBRO"];
@@ -434,7 +442,7 @@ async function carregarHistorico() {
         } catch(e) {}
 
         processarInteligencia(snap); 
-        renderizarKanban(snap); // Manteve a leitura nativa original
+        renderizarKanban(snap); // Usando a leitura nativa (Firebase Snapshot) do seu código original!
     } catch (e) { 
         console.error("Erro ao carregar banco de dados:", e); 
     }
@@ -445,6 +453,7 @@ function processarInteligencia(snap) {
         clientesFieis.clear(); mapaGarantias.clear();
         let lucroPecas = 0, totalObra = 0, totalPDV = 0, descontosAplicados = 0, abandonados = 0;
         
+        // Variáveis para receber o filtro do usuário
         let receitaBrutaComercio = 0, receitaBrutaServicos = 0;
         let finMesEl = document.getElementById('finMes');
         let finAnoEl = document.getElementById('finAno');
@@ -505,6 +514,7 @@ function processarInteligencia(snap) {
             } 
         });
 
+        // 1. Atualiza Dashboard Financeiro com a matemática de lucro
         let totalGeral = (lucroPecas + totalObra - descontosAplicados) + totalPDV;
         if(document.getElementById('dashLucroPecas')) document.getElementById('dashLucroPecas').innerText = "R$ " + lucroPecas.toFixed(2); 
         if(document.getElementById('dashObra')) document.getElementById('dashObra').innerText = "R$ " + totalObra.toFixed(2);
@@ -519,9 +529,10 @@ function processarInteligencia(snap) {
             } else { elAbandonados.style.display = 'none'; }
         }
 
-        // 🚀 INJEÇÃO DO MEI
+        // 2. 🚀 INJEÇÃO DO MEI: AUTO-PREENCHIMENTO DE CAIXA EM TEMPO REAL
         if(document.getElementById('meiMes') && mesSel) document.getElementById('meiMes').value = mesSel;
         if(document.getElementById('meiAno') && anoSel) document.getElementById('meiAno').value = anoSel;
+        
         if(document.getElementById('mei1')) document.getElementById('mei1').value = receitaBrutaComercio.toFixed(2);
         if(document.getElementById('mei7')) document.getElementById('mei7').value = receitaBrutaServicos.toFixed(2);
 
