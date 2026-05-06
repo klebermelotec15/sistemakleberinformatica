@@ -1,5 +1,5 @@
 // JS/os.js
-// Cérebro Financeiro e Lógico das Ordens de Serviço (Híbridas e Automatizadas)
+// Cérebro Financeiro e Lógico das Ordens de Serviço (Versão 100% Restaurada)
 
 function calcularDias(dataStr) {
     if(!dataStr || typeof dataStr !== 'string') return 0;
@@ -31,32 +31,21 @@ async function obterProximaOS() {
     return snap.empty ? 1 : snap.docs[0].data().os + 1;
 }
 
-/*
- * NOVA FUNÇÃO EDUCACIONAL E DE AUTOMAÇÃO: buscarCpfCnpj()
- * Esta função atua como um detetive de dados. Disparada quando o utilizador sai do campo de CPF/CNPJ.
- */
 async function buscarCpfCnpj() {
-    // 1. Captura o valor que o técnico digitou e remove pontos e traços para fazer uma busca limpa
     let docInput = document.getElementById('cpf').value;
     let numLimpo = docInput.replace(/\D/g, ''); 
 
-    // Se o número for muito pequeno, encerra a função sem fazer pesquisas inúteis
     if (numLimpo.length < 11) return; 
 
-    // 2. TENTATIVA 1: Busca no Banco de Dados Próprio (Firebase)
-    // Protegemos a requisição com try/catch para não quebrar a página em caso de erro na nuvem
     try {
-        // Tenta encontrar o cliente procurando pelo número sujo ou limpo na base
         let snapshot = await db.collection("clientes").where("cpf", "==", docInput).get();
         if (snapshot.empty && docInput !== numLimpo) {
             snapshot = await db.collection("clientes").where("cpf", "==", numLimpo).get();
         }
         
-        // Se a "foto" da base de dados não estiver vazia, significa que achámos o cliente!
         if (!snapshot.empty) {
             let clienteDados = snapshot.docs[0].data();
             
-            // Injeção dos dados recuperados nos campos visuais da tela
             document.getElementById('cliente').value = clienteDados.nome || "";
             document.getElementById('whatsapp').value = clienteDados.zap || "";
             document.getElementById('rg').value = clienteDados.rg || "";
@@ -65,28 +54,23 @@ async function buscarCpfCnpj() {
             document.getElementById('bairro').value = clienteDados.bairro || "";
             
             alert("✅ Dados do Cliente preenchidos automaticamente com base no seu histórico!");
-            return; // Encerra a função, pois o objetivo já foi atingido
+            return; 
         }
     } catch (error) {
         console.error("Aviso: Falha ao procurar o documento na nuvem local.", error);
     }
 
-    // 3. TENTATIVA 2: Busca na Receita Federal (Apenas se for um CNPJ, ou seja, 14 dígitos)
     if (numLimpo.length === 14) {
         try {
-            // Utilizamos a API pública BrasilAPI que retorna dados públicos de empresas
             let response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${numLimpo}`);
             
-            // Se o servidor do governo responder com "OK" (200), lemos o pacote JSON
             if (response.ok) {
                 let dados = await response.json();
                 
-                // Distribuição dos dados públicos para os campos do sistema
                 document.getElementById('cliente').value = dados.razao_social || "";
                 document.getElementById('whatsapp').value = dados.ddd_telefone_1 || "";
                 document.getElementById('cep').value = dados.cep || "";
                 
-                // Concatenação inteligente da morada com o número e o complemento (se houver)
                 let endCompleto = dados.logradouro;
                 if (dados.numero) endCompleto += ", " + dados.numero;
                 if (dados.complemento) endCompleto += " - " + dados.complemento;
@@ -168,7 +152,11 @@ async function salvarOS(tipoDoc) {
     const dados = {
         os: numOS, categoria: 'SERVICO', 
         status: document.getElementById('status').value,
+        
+        classificacao: document.getElementById('classificacao').value,
+        osOrigem: document.getElementById('osOrigem').value,
         modalidade: document.getElementById('modalidade').value, 
+        
         cliente: document.getElementById('cliente').value, cpf: document.getElementById('cpf').value,
         rg: document.getElementById('rg').value, whatsapp: document.getElementById('whatsapp').value,
         endCliente: document.getElementById('endCliente').value, bairro: document.getElementById('bairro').value,
@@ -234,7 +222,10 @@ function limparFormularioOS() {
     
     document.querySelectorAll('.chk-item').forEach(el => el.checked = false);
     
+    document.getElementById('classificacao').value = "Novo Serviço";
+    document.getElementById('osOrigem').value = "";
     document.getElementById('modalidade').value = "Realizado na Loja";
+    
     document.getElementById('insLiga').value = "-";
     document.getElementById('insImagem').value = "-";
     document.getElementById('insBarulho').value = "-";
@@ -262,10 +253,25 @@ async function imprimirOS(id) {
 }
 
 function prepararImpressao(d) {
+    // 🛡️ BLINDAGEM DE IMPRESSÃO: Garante que o MEI e o Sistema base fiquem invisíveis no PDF
+    document.getElementById('conteinerPrincipal').classList.add('ocultar-na-impressao');
+    document.getElementById('telaDocumentoMEI').classList.add('ocultar-na-impressao');
+    document.getElementById('menuNavegacao').classList.add('ocultar-na-impressao');
+
+    // Liga a tela de impressão da OS
+    document.getElementById('telaDocumento').style.display = 'block';
+
     if(configGlobais.logo) { document.getElementById('docLogo').src = configGlobais.logo; document.getElementById('docLogo').style.display = 'inline-block'; }
     document.getElementById('docEnd').innerText = configGlobais.end || ""; document.getElementById('docTel').innerText = configGlobais.tel || "";
     document.getElementById('resOS').innerText = String(d.os).padStart(4, '0');
     document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=OS:${d.os}-Cliente:${encodeURIComponent(d.cliente || '')}`;
+
+    if(d.osOrigem) {
+        document.getElementById('boxOsOrigem').style.display = 'block';
+        document.getElementById('resOsOrigem').innerText = d.osOrigem;
+    } else {
+        document.getElementById('boxOsOrigem').style.display = 'none';
+    }
 
     let vd = parseFloat(d.vDesc) || 0;
     let vpec = parseFloat(d.vPecas) || 0;
@@ -282,7 +288,6 @@ function prepararImpressao(d) {
         document.getElementById('alertaDevolvidoPDF').style.display = 'none';
     }
 
-    document.getElementById('docTituloPrincipal').innerText = "ORDEM DE SERVIÇO"; 
     document.getElementById('boxLaudo').style.display = 'block';
     document.getElementById('secEquipamento').style.display = 'block';
     document.getElementById('termoJuridico').style.display = 'block'; 
@@ -314,7 +319,12 @@ function prepararImpressao(d) {
             document.getElementById('rowInspecao').style.display = 'none'; 
             document.getElementById('boxLaudo').style.display = 'none'; 
             document.getElementById('termoJuridico').innerHTML = `<strong>TERMO DE QUITAÇÃO:</strong> Declaramos para os devidos fins que os valores descritos neste documento referentes à prestação de serviços foram recebidos, dando plena e total quitação.`;
+        } else if (d.classificacao === 'Retorno em Garantia') {
+            document.getElementById('docTituloPrincipal').innerText = "RETORNO EM GARANTIA";
+            document.getElementById('rowInspecao').style.display = 'flex';
+            document.getElementById('termoJuridico').innerHTML = `<strong>AVISO IMPORTANTE:</strong> Documento gerado eletronicamente para acionamento de garantia. O equipamento será avaliado tecnicamente para confirmação do defeito na peça ou serviço previamente executado.`;
         } else {
+            document.getElementById('docTituloPrincipal').innerText = "ORDEM DE SERVIÇO"; 
             document.getElementById('rowInspecao').style.display = 'flex';
             document.getElementById('termoJuridico').innerHTML = `<strong>AVISO IMPORTANTE:</strong> Documento gerado eletronicamente. Orçamentos têm validade de 5 dias úteis a partir da emissão. Em caso de abandono de equipamento sem retirada após 180 dias, o mesmo será tratado como sucata para abatimento dos custos, isentando a empresa de obrigações legais.`;
         }
@@ -369,10 +379,15 @@ function prepararImpressao(d) {
     if(pagText.length > 0) { document.getElementById('rowMetodosPagamento').style.display = 'flex'; document.getElementById('resMeiosPag').innerText = pagText.join(' | '); } 
     else { document.getElementById('rowMetodosPagamento').style.display = 'none'; }
 
-    document.getElementById('conteinerPrincipal').style.display = 'none'; 
-    document.getElementById('telaDocumentoMEI').style.display = 'none';
-    document.getElementById('telaDocumento').style.display = 'block'; 
     window.scrollTo(0, 0);
+}
+
+function fecharImpressao() {
+    // 🛡️ Remove as blindagens para o sistema voltar ao normal na tela
+    document.getElementById('telaDocumento').style.display = 'none';
+    document.getElementById('conteinerPrincipal').classList.remove('ocultar-na-impressao');
+    document.getElementById('telaDocumentoMEI').classList.remove('ocultar-na-impressao');
+    document.getElementById('menuNavegacao').classList.remove('ocultar-na-impressao');
 }
 
 async function carregarHistorico() {
@@ -437,6 +452,10 @@ function renderizarKanban(snap, filtroText = "") {
             let tagExtra = "", garantiaTag = "", fidelidadeTag = "";
             let dias = calcularDias(d.data);
             
+            if(d.classificacao === 'Retorno em Garantia') {
+                tagExtra += ` <span class="tag" style="background:#dc3545; color:white; font-weight:bold;">🚨 RETORNO DE GARANTIA</span>`;
+            }
+
             if(d.cliente) {
                 let nomeKey = String(d.cliente).toUpperCase().trim();
                 if (clientesFieis.get(nomeKey) >= 5) { fidelidadeTag = `<span class="tag" style="background:#ffc107; color:#000;">⭐ Fiel</span>`; }
@@ -451,22 +470,22 @@ function renderizarKanban(snap, filtroText = "") {
                 let ultimaDaSerie = mapaGarantias.get(serieKey);
                 if(ultimaDaSerie && ultimaDaSerie.os !== d.os) {
                     let diffDiasAnterior = calcularDias(ultimaDaSerie.data);
-                    if(diffDiasAnterior <= 90 && !finalizadoComSucesso && !finalizadoSemReparo) {
-                        garantiaTag = `<br><span class="tag" style="background:#dc3545;">⚠️ RETORNO/GARANTIA</span>`;
+                    if(diffDiasAnterior <= 90 && !finalizadoComSucesso && !finalizadoSemReparo && d.classificacao !== 'Retorno em Garantia') {
+                        garantiaTag = `<br><span class="tag" style="background:#dc3545;">⚠️ ALERTA: SÉRIE JÁ ATENDIDA RECENTEMENTE</span>`;
                     }
                 }
             }
 
-            if(d.categoria === 'VENDA_BALCAO') { tagExtra = `<span class="tag" style="background:#6c757d;">🛒 VENDA</span>`; } 
+            if(d.categoria === 'VENDA_BALCAO') { tagExtra += ` <span class="tag" style="background:#6c757d;">🛒 VENDA</span>`; } 
             else if(finalizadoComSucesso) {
                 let gO = converterParaDias(d.garO); let gP = converterParaDias(d.garP);
                 let obraAtiva = gO > 0 && dias <= gO; let pecasAtiva = gP > 0 && dias <= gP;
-                if (obraAtiva && pecasAtiva) tagExtra = `<span class="tag" style="background:#28a745;">🛡️ Garantia: AMBAS</span>`;
-                else if (obraAtiva && !pecasAtiva) tagExtra = `<span class="tag" style="background:#17a2b8;">🛡️ Garantia: MÃO DE OBRA</span>`;
-                else if (!obraAtiva && pecasAtiva) tagExtra = `<span class="tag" style="background:#6f42c1;">🛡️ Garantia: PEÇAS</span>`;
-                else tagExtra = `<span class="tag" style="background:#6c757d;">❌ GARANTIA EXPIRADA</span>`;
-            } else if(finalizadoSemReparo) { tagExtra = `<span class="tag" style="background:#000;">⚫ SEM REPARO</span>`; } 
-            else if(dias > 180) { tagExtra = `<span class="tag" style="background:red;">🚨 ABANDONADO</span>`; }
+                if (obraAtiva && pecasAtiva) tagExtra += ` <span class="tag" style="background:#28a745;">🛡️ Garantia: AMBAS</span>`;
+                else if (obraAtiva && !pecasAtiva) tagExtra += ` <span class="tag" style="background:#17a2b8;">🛡️ Garantia: MÃO DE OBRA</span>`;
+                else if (!obraAtiva && pecasAtiva) tagExtra += ` <span class="tag" style="background:#6f42c1;">🛡️ Garantia: PEÇAS</span>`;
+                else tagExtra += ` <span class="tag" style="background:#6c757d;">❌ GARANTIA EXPIRADA</span>`;
+            } else if(finalizadoSemReparo) { tagExtra += ` <span class="tag" style="background:#000;">⚫ SEM REPARO</span>`; } 
+            else if(dias > 180) { tagExtra += ` <span class="tag" style="background:red;">🚨 ABANDONADO</span>`; }
             
             let previsaoTag = "";
             if(d.dataPrev && stat !== '3. Concluída' && stat !== 'Concluída' && !finalizadoComSucesso && !finalizadoSemReparo) {
@@ -484,7 +503,7 @@ function renderizarKanban(snap, filtroText = "") {
                 <div style="margin-bottom:8px;">
                     <strong style="font-size:14px;">#${String(d.os).padStart(4, '0')} - ${d.cliente || "Sem Nome"}</strong> ${fidelidadeTag} <br>
                     <span style="color:#666;">${d.equip || "Balcão"} | ${d.data || ""}</span>
-                    <div>${tagExtra} ${previsaoTag} ${garantiaTag}</div>
+                    <div style="margin-top:5px;">${tagExtra} ${previsaoTag} ${garantiaTag}</div>
                 </div>
                 <div style="display:flex; gap:5px; margin-top:10px;">
                     <button class="btn-dark btn-small" style="padding:4px;" onclick="imprimirOS('${doc.id}')">🖨️ PDF</button>
@@ -531,6 +550,8 @@ async function editarOS(id) {
     if(s === "Entregue ao Cliente") s = "4. Entregue com sucesso de reparo";
     document.getElementById('status').value = s; 
     
+    document.getElementById('classificacao').value = d.classificacao || "Novo Serviço";
+    document.getElementById('osOrigem').value = d.osOrigem || "";
     document.getElementById('modalidade').value = d.modalidade || "Realizado na Loja";
     document.getElementById('diarioBordo').value = d.diarioBordo || "";
     document.getElementById('vVisita').value = d.vVisita || "";
