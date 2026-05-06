@@ -1,5 +1,39 @@
 // JS/os.js
-// Cérebro Financeiro e Lógico das Ordens de Serviço (Molde Original + Regime de Caixa + B2B)
+// Cérebro Financeiro e Lógico (Motor Original Mantido - Sem Variáveis Globais - Busca de OS Origem Adicionada)
+
+// 🚀 FUNÇÃO DE AUTOMAÇÃO DE RETORNO EM GARANTIA
+async function buscarOSOrigem() {
+    let osInput = document.getElementById('osOrigem').value;
+    let numLimpo = parseInt(osInput.replace(/\D/g, ''));
+
+    if (!numLimpo || isNaN(numLimpo)) return;
+
+    try {
+        let snapshot = await db.collection("servicos").where("os", "==", numLimpo).get();
+        
+        if (!snapshot.empty) {
+            let d = snapshot.docs[0].data();
+            
+            document.getElementById('cliente').value = d.cliente || "";
+            document.getElementById('cpf').value = d.cpf || "";
+            document.getElementById('rg').value = d.rg || "";
+            document.getElementById('whatsapp').value = d.whatsapp || "";
+            document.getElementById('endCliente').value = d.endCliente || "";
+            document.getElementById('bairro').value = d.bairro || "";
+            document.getElementById('cep').value = d.cep || "";
+            
+            document.getElementById('equip').value = d.equip || "";
+            document.getElementById('modelo').value = d.modelo || "";
+            document.getElementById('serie').value = d.serie || "";
+            
+            alert(`✅ Dados da OS ${numLimpo} recuperados com sucesso!`);
+        } else {
+            alert(`⚠️ OS ${numLimpo} não encontrada no sistema.`);
+        }
+    } catch (error) {
+        console.error("Erro ao buscar OS de origem:", error);
+    }
+}
 
 function calcularDias(dataStr) {
     if(!dataStr || typeof dataStr !== 'string') return 0;
@@ -146,17 +180,21 @@ async function salvarOS(tipoDoc) {
     let chkArr = [];
     document.querySelectorAll('.chk-item:checked').forEach(el => chkArr.push(el.value));
 
-    // Utiliza as variáveis que você já tem no seu globals.js
-    let numOS = window.editandoId ? parseInt(document.getElementById('idEdicao').innerText) : await obterProximaOS();
+    // Proteção de variável global
+    let numOS = (typeof editandoId !== 'undefined' && editandoId) ? parseInt(document.getElementById('idEdicao').innerText) : await obterProximaOS();
+
     const totalOS = (vp + vo + vVisita) - vd;
 
-    // Lógica do Regime de Caixa (Guardar quando entregou)
+    // Lógica do Regime de Caixa
     let statusAtual = document.getElementById('status').value;
-    let dataPagFinal = window.dataPagamentoAtual || "";
+    let dataPagFinal = (typeof window.dataPagamentoAtual !== 'undefined') ? window.dataPagamentoAtual : "";
     let pago = (statusAtual === '4. Entregue com sucesso de reparo' || statusAtual === 'Entregue ao Cliente');
     
-    if (pago && !dataPagFinal) { dataPagFinal = new Date().toLocaleDateString('pt-BR'); } 
-    else if (!pago) { dataPagFinal = ""; }
+    if (pago && !dataPagFinal) {
+        dataPagFinal = new Date().toLocaleDateString('pt-BR');
+    } else if (!pago) {
+        dataPagFinal = ""; 
+    }
 
     const dados = {
         os: numOS, categoria: 'SERVICO', 
@@ -203,8 +241,8 @@ async function salvarOS(tipoDoc) {
         }).then(() => carregarClientesDaNuvem()); 
     }
 
-    if(window.editandoId) {
-        await db.collection("servicos").doc(window.editandoId).update(dados);
+    if(typeof editandoId !== 'undefined' && editandoId) {
+        await db.collection("servicos").doc(editandoId).update(dados);
         if (tipoDoc !== 'RECIBO_PAGAMENTO') limparFormularioOS();
         if (tipoDoc !== 'RECIBO_PAGAMENTO') mudarAba('abaHistorico'); 
     } else {
@@ -220,12 +258,16 @@ async function salvarOS(tipoDoc) {
 }
 
 function salvarEdicao(tipo) { 
-    salvarOS(tipo || window.tipoDocOriginal || 'ENTRADA'); 
+    if(typeof tipoDocOriginal !== 'undefined') {
+        salvarOS(tipo || tipoDocOriginal || 'ENTRADA'); 
+    } else {
+        salvarOS(tipo || 'ENTRADA');
+    }
 }
 
 function limparFormularioOS() {
-    window.editandoId = null;
-    window.dataPagamentoAtual = ""; 
+    if(typeof editandoId !== 'undefined') editandoId = null;
+    window.dataPagamentoAtual = "";
     document.getElementById('avisoEdicao').style.display = 'none';
     document.getElementById('botoesCriar').style.display = 'flex';
     document.getElementById('botaoSalvarEdicao').style.display = 'none';
@@ -302,7 +344,7 @@ function prepararImpressao(d) {
     document.getElementById('termoJuridico').style.display = 'block'; 
     document.getElementById('rowGarantias').style.display = 'flex';
 
-    // Ocultar Assinatura do Cliente apenas nos Recibos
+    // 🚀 Lógica de Ocultar a Assinatura do Cliente
     let blocoAssinatura = document.getElementById('blocoAssinaturaCliente');
 
     if(d.categoria === 'VENDA_BALCAO') {
@@ -317,7 +359,7 @@ function prepararImpressao(d) {
         document.getElementById('resPecas').innerText = "-";
         document.getElementById('lblDesc').innerText = "Desconto (R$)"; 
         document.getElementById('resDesc').innerText = vd ? vd.toFixed(2) : "0.00";
-        if(blocoAssinatura) blocoAssinatura.style.display = 'none';
+        if(blocoAssinatura) blocoAssinatura.style.display = 'none'; // Esconde na Venda
     } else {
         document.getElementById('tituloTecnico').innerText = "3. DETALHES TÉCNICOS DO ATENDIMENTO";
         document.getElementById('lblDefeito').innerText = "3.1. Defeito Relatado / Produto"; 
@@ -332,17 +374,17 @@ function prepararImpressao(d) {
             document.getElementById('rowInspecao').style.display = 'none'; 
             document.getElementById('boxLaudo').style.display = 'none'; 
             document.getElementById('termoJuridico').innerHTML = `<strong>TERMO DE QUITAÇÃO:</strong> Declaramos para os devidos fins que os valores descritos neste documento referentes à prestação de serviços foram recebidos, dando plena e total quitação.`;
-            if(blocoAssinatura) blocoAssinatura.style.display = 'none';
+            if(blocoAssinatura) blocoAssinatura.style.display = 'none'; // Esconde no Recibo
         } else if (d.classificacao === 'Retorno em Garantia') {
             document.getElementById('docTituloPrincipal').innerText = "RETORNO EM GARANTIA";
             document.getElementById('rowInspecao').style.display = 'flex';
             document.getElementById('termoJuridico').innerHTML = `<strong>AVISO IMPORTANTE:</strong> Documento gerado eletronicamente para acionamento de garantia. O equipamento será avaliado tecnicamente para confirmação do defeito na peça ou serviço previamente executado.`;
-            if(blocoAssinatura) blocoAssinatura.style.display = 'block';
+            if(blocoAssinatura) blocoAssinatura.style.display = 'block'; // Mostra na OS
         } else {
             document.getElementById('docTituloPrincipal').innerText = "ORDEM DE SERVIÇO"; 
             document.getElementById('rowInspecao').style.display = 'flex';
             document.getElementById('termoJuridico').innerHTML = `<strong>AVISO IMPORTANTE:</strong> Documento gerado eletronicamente. Orçamentos têm validade de 5 dias úteis a partir da emissão. Em caso de abandono de equipamento sem retirada após 180 dias, o mesmo será tratado como sucata para abatimento dos custos, isentando a empresa de obrigações legais.`;
-            if(blocoAssinatura) blocoAssinatura.style.display = 'block';
+            if(blocoAssinatura) blocoAssinatura.style.display = 'block'; // Mostra na OS
         }
     }
 
@@ -399,7 +441,6 @@ function prepararImpressao(d) {
 }
 
 function fecharImpressao() {
-    document.getElementById('telaDocumento').style.display = 'none';
     let cPrin = document.getElementById('conteinerPrincipal');
     let tMei = document.getElementById('telaDocumentoMEI');
     let mNav = document.getElementById('menuNavegacao');
@@ -407,13 +448,15 @@ function fecharImpressao() {
     if(cPrin) cPrin.setAttribute('style', 'display: block !important;');
     if(tMei) tMei.setAttribute('style', 'display: none !important;');
     if(mNav) mNav.setAttribute('style', 'display: flex !important;');
+    document.getElementById('telaDocumento').style.display = 'none';
 }
 
 // ----------------------------------------------------------------------
-// RENDERIZAÇÃO DO KANBAN ORIGINAL (O MESMO QUE FUNCIONOU)
+// RENDERIZAÇÃO DO KANBAN ORIGINAL (O MESMO QUE FUNCIONOU NA SUA BASE)
 // ----------------------------------------------------------------------
 window.mudarMesFinanceiro = async function() {
-    carregarHistorico();
+    const snap = await db.collection("servicos").orderBy("os", "desc").get();
+    processarInteligenciaFinanceiraSegura(snap);
 };
 
 async function carregarHistorico() {
@@ -433,14 +476,14 @@ async function carregarHistorico() {
             }
         } catch(e) {}
 
-        await processarFinanceiroEMEISeguro(snap); 
-        renderizarKanbanOriginal(snap); 
+        renderizarKanban(snap); // O Kanban corre primeiro e isolado.
+        processarInteligenciaFinanceiraSegura(snap); // As finanças correm depois.
     } catch (e) { 
         console.error("Erro ao carregar banco de dados:", e); 
     }
 }
 
-function renderizarKanbanOriginal(snap) {
+function renderizarKanban(snap) {
     if(typeof clientesFieis !== 'undefined') clientesFieis.clear(); 
     if(typeof mapaGarantias !== 'undefined') mapaGarantias.clear();
     let abandonados = 0;
@@ -558,9 +601,9 @@ function renderizarKanbanOriginal(snap) {
 }
 
 // ----------------------------------------------------------------------
-// FUNÇÃO FINANCEIRA ISOLADA E INQUEBRÁVEL (MEI, B2B E REGIME DE CAIXA)
+// FUNÇÃO FINANCEIRA ISOLADA (MEI, B2B E REGIME DE CAIXA)
 // ----------------------------------------------------------------------
-async function processarFinanceiroEMEISeguro(snap) {
+async function processarInteligenciaFinanceiraSegura(snap) {
     try {
         let lucroPecas = 0, totalObra = 0, totalPDV = 0, descontosAplicados = 0;
         let receitaBrutaComercio = 0, receitaBrutaServicos = 0;
@@ -579,7 +622,7 @@ async function processarFinanceiroEMEISeguro(snap) {
             
             if(pago || d.categoria === 'VENDA_BALCAO') { 
                 
-                // Regime de caixa
+                // 🚀 LÓGICA DO REGIME DE CAIXA: Olha para a data de Pagamento
                 let dataRef = d.dataPagamento || d.data; 
                 if(dataRef && numMes && anoSel) {
                     let partes = String(dataRef).split('/');
@@ -604,6 +647,7 @@ async function processarFinanceiroEMEISeguro(snap) {
             } 
         });
 
+        // 🚀 SOMAR CONTRATOS B2B ATIVOS NA MÃO DE OBRA
         try {
             const snapB2B = await db.collection("contratos").where("status", "==", "Ativo").get();
             let totalMensalContratos = 0;
@@ -613,7 +657,7 @@ async function processarFinanceiroEMEISeguro(snap) {
             });
             totalObra += totalMensalContratos;
             receitaBrutaServicos += totalMensalContratos;
-        } catch(e) { console.log("B2B não processado no momento."); }
+        } catch(e) { console.log("B2B não processado."); }
 
         let totalGeral = (lucroPecas + totalObra - descontosAplicados) + totalPDV;
         
@@ -622,6 +666,7 @@ async function processarFinanceiroEMEISeguro(snap) {
         if(document.getElementById('dashPDV')) document.getElementById('dashPDV').innerText = "R$ " + totalPDV.toFixed(2); 
         if(document.getElementById('dashTotal')) document.getElementById('dashTotal').innerText = "R$ " + totalGeral.toFixed(2);
         
+        // AUTO-PREENCHIMENTO DO MEI
         if(document.getElementById('meiMes') && mesSel) document.getElementById('meiMes').value = mesSel;
         if(document.getElementById('meiAno') && anoSel) document.getElementById('meiAno').value = anoSel;
         if(document.getElementById('mei1')) document.getElementById('mei1').value = receitaBrutaComercio.toFixed(2);
@@ -636,16 +681,17 @@ async function buscar() {
     const t = document.getElementById('busca').value.toUpperCase();
     const snap = await db.collection("servicos").orderBy("os", "desc").get();
     
-    if(typeof clientesFieis !== 'undefined') clientesFieis.clear(); 
-    if(typeof mapaGarantias !== 'undefined') mapaGarantias.clear();
+    // Processamento customizado de busca sem interferir nas var globais
+    let cf = new Map();
+    let mg = new Map();
     let docs = [];
     snap.forEach(doc => docs.push(doc.data()));
     let docsCronologicos = [...docs].reverse(); 
     docsCronologicos.forEach(d => {
-        if(d.categoria !== 'VENDA_BALCAO' && d.serie && typeof mapaGarantias !== 'undefined') { mapaGarantias.set(String(d.serie).trim(), { os: d.os, data: d.data }); }
+        if(d.categoria !== 'VENDA_BALCAO' && d.serie) { mg.set(String(d.serie).trim(), { os: d.os, data: d.data }); }
         let s = d.status || "";
         let finalizado = (s === '4. Entregue com sucesso de reparo' || s === 'Entregue ao Cliente' || s === '5. Devolvido sem reparo');
-        if(finalizado && d.cliente && typeof clientesFieis !== 'undefined') { let nomeKey = String(d.cliente).toUpperCase().trim(); clientesFieis.set(nomeKey, (clientesFieis.get(nomeKey) || 0) + 1); }
+        if(finalizado && d.cliente) { let nomeKey = String(d.cliente).toUpperCase().trim(); cf.set(nomeKey, (cf.get(nomeKey) || 0) + 1); }
     });
 
     let htmlOrcar = "", htmlExec = "", htmlConc = "", htmlEntr = "", htmlDevolv = "";
@@ -659,12 +705,12 @@ async function buscar() {
         let tagExtra = "", garantiaTag = "", fidelidadeTag = "";
         let dias = calcularDias(d.data);
         if(d.classificacao === 'Retorno em Garantia') tagExtra += ` <span class="tag" style="background:#dc3545; color:white; font-weight:bold;">🚨 RETORNO DE GARANTIA</span>`;
-        if(d.cliente && typeof clientesFieis !== 'undefined') { let nomeKey = String(d.cliente).toUpperCase().trim(); if (clientesFieis.get(nomeKey) >= 5) { fidelidadeTag = `<span class="tag" style="background:#ffc107; color:#000;">⭐ Fiel</span>`; } }
+        if(d.cliente) { let nomeKey = String(d.cliente).toUpperCase().trim(); if (cf.get(nomeKey) >= 5) { fidelidadeTag = `<span class="tag" style="background:#ffc107; color:#000;">⭐ Fiel</span>`; } }
         let stat = String(d.status).trim();
         let finalizadoComSucesso = (stat === '4. Entregue com sucesso de reparo' || stat === 'Entregue ao Cliente');
         let finalizadoSemReparo = (stat === '5. Devolvido sem reparo');
-        if(d.serie && d.categoria !== 'VENDA_BALCAO' && typeof mapaGarantias !== 'undefined') {
-            let serieKey = String(d.serie).trim(); let ultimaDaSerie = mapaGarantias.get(serieKey);
+        if(d.serie && d.categoria !== 'VENDA_BALCAO') {
+            let serieKey = String(d.serie).trim(); let ultimaDaSerie = mg.get(serieKey);
             if(ultimaDaSerie && ultimaDaSerie.os !== d.os) {
                 let diffDiasAnterior = calcularDias(ultimaDaSerie.data);
                 if(diffDiasAnterior <= 90 && !finalizadoComSucesso && !finalizadoSemReparo && d.classificacao !== 'Retorno em Garantia') {
@@ -681,7 +727,7 @@ async function buscar() {
             else if (!obraAtiva && pecasAtiva) tagExtra += ` <span class="tag" style="background:#6f42c1;">🛡️ Garantia: PEÇAS</span>`;
             else tagExtra += ` <span class="tag" style="background:#6c757d;">❌ GARANTIA EXPIRADA</span>`;
         } else if(finalizadoSemReparo) { tagExtra += ` <span class="tag" style="background:#000;">⚫ SEM REPARO</span>`; } 
-        else if(dias > 180) { tagExtra += ` <span class="tag" style="background:red;">🚨 ABANDONADO</span>`; }
+        
         let previsaoTag = "";
         if(d.dataPrev && stat !== '3. Concluída' && stat !== 'Concluída' && !finalizadoComSucesso && !finalizadoSemReparo) {
             let dataObj = converterParaDataObj(d.dataPrev);
