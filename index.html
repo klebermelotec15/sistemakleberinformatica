@@ -400,7 +400,7 @@
 
 </div>
 
-<!-- TELA DE DOCUMENTO / IMPRESSÃO DA OS - (Oculta por padrão para não interferir) -->
+<!-- TELA DE DOCUMENTO / IMPRESSÃO DA OS E RECIBO -->
 <div id="telaDocumento" style="display: none;">
     <button class="btn-red no-print" onclick="fecharImpressao()" style="margin-bottom:20px; width:100%; font-size:16px; padding:15px;">⬅️ FECHAR IMPRESSÃO E VOLTAR</button>
     
@@ -513,29 +513,31 @@
     </div>
 
     <!-- NOVO BLOCO DE ASSINATURA CUSTOMIZADA DA KLEBER INFORMÁTICA -->
-    <div class="pdf-assinaturas" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; page-break-inside: avoid;">
+    <div class="pdf-assinaturas" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; page-break-inside: avoid;">
         
-        <!-- ASSINATURA KLEBER (Conforme a sua Imagem Original) -->
+        <!-- ASSINATURA KLEBER (Ajustada com precisão à sua Imagem de Referência) -->
         <div style="text-align: center; width: 45%;">
-            <div style="font-size: 14px; margin-bottom: 25px;">
+            <div style="font-size: 14px; margin-bottom: 20px;">
                 <strong>PIX</strong><br>
                 24141755000174
             </div>
-            <div style="display: inline-block; text-align: center; width: 100%; position: relative;">
-                <div style="font-weight: bold; font-size: 14px; margin-bottom: 5px;">Belém</div>
-                
-                <!-- A imagem da sua assinatura manuscrita -->
-                <img src="assinatura.png" alt="Assinatura Kleber Melo" style="max-height: 70px; display: block; margin: 0 auto; margin-bottom: -15px; position: relative; z-index: 2;">
-                
-                <!-- A linha e a identificação -->
-                <div style="border-top: 2px solid #000; padding-top: 5px; position: relative; z-index: 1;">
-                    <strong style="font-size: 14px;">Kleber Informática</strong><br>
-                    <span style="font-size: 14px;">Kleber Melo</span>
-                </div>
+            <div style="font-weight: bold; font-size: 14px; margin-bottom: 5px;">Belém</div>
+            
+            <!-- Contêiner relativo para garantir a sobreposição da assinatura à linha preta -->
+            <div style="position: relative; width: 100%; display: flex; flex-direction: column; align-items: center;">
+                <!-- O atributo ALT foi removido para evitar a quebra do layout caso a imagem demore a carregar -->
+                <img src="assinatura.png" alt="" style="height: 60px; margin-bottom: -15px; position: relative; z-index: 2;">
+                <!-- A linha preta oficial -->
+                <div style="width: 100%; border-top: 2px solid #000; position: relative; z-index: 1;"></div>
+            </div>
+            
+            <div style="padding-top: 5px;">
+                <strong style="font-size: 14px;">Kleber Informática</strong><br>
+                <span style="font-size: 14px;">Kleber Melo</span>
             </div>
         </div>
 
-        <!-- ASSINATURA DO CLIENTE (Mantida para controle de recolha de equipamento) -->
+        <!-- ASSINATURA DO CLIENTE -->
         <div style="text-align: center; width: 45%; padding-bottom: 18px;">
             <p style="margin: 0; border-top: 2px solid #000; padding-top: 5px;">
                 <strong style="font-size: 14px;">Assinatura do Cliente</strong>
@@ -547,7 +549,7 @@
     <button class="btn-dark no-print" onclick="window.print()" style="margin-top:15px; width:100%;">🖨️ IMPRIMIR DOCUMENTO</button>
 </div>
 
-<!-- TELA DE DOCUMENTO / IMPRESSÃO DO RELATÓRIO MEI - (Oculta por padrão para não interferir) -->
+<!-- TELA DE DOCUMENTO / IMPRESSÃO DO RELATÓRIO MEI -->
 <div id="telaDocumentoMEI" style="display: none;">
     <button class="btn-red no-print" onclick="fecharImpressao()" style="margin-bottom:20px; width:100%; font-size:16px; padding:15px;">⬅️ FECHAR E VOLTAR AO SISTEMA</button>
     
